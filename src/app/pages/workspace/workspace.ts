@@ -6,6 +6,6 @@ import { Component } from '@angular/core';
   templateUrl: './workspace.html',
   styleUrl: './workspace.css',
 })
-export class Workspace {
+export class WorkspaceComponent {
 
 }

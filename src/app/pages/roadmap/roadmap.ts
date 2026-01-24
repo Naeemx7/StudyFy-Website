@@ -6,6 +6,6 @@ import { Component } from '@angular/core';
   templateUrl: './roadmap.html',
   styleUrl: './roadmap.css',
 })
-export class Roadmap {
+export class RoadmapComponent {
 
 }

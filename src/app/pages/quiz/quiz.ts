@@ -6,6 +6,6 @@ import { Component } from '@angular/core';
   templateUrl: './quiz.html',
   styleUrl: './quiz.css',
 })
-export class Quiz {
+export class QuizComponent {
 
 }
