@@ -1,24 +1,24 @@
 import { Routes } from '@angular/router';
-import { Landing } from './pages/landing/landing';
-import { Login } from './pages/auth/login/login';
-import { Signup } from './pages/auth/signup/signup';
-import { Dashboard } from './pages/dashboard/dashboard';
-import { Workspace } from './pages/workspace/workspace';
-import { Roadmap } from './pages/roadmap/roadmap';
-import { Quiz } from './pages/quiz/quiz';
-import { Analytics } from './pages/analytics/analytics';
-import { Profile } from './pages/profile/profile';
-import { Settings } from './pages/settings/settings';
+import { LandingComponent } from './pages/landing/landing';
+import { LoginComponent } from './pages/auth/login/login';
+import { SignupComponent } from './pages/auth/signup/signup';
+import { DashboardComponent } from './pages/dashboard/dashboard';
+import { WorkspaceComponent } from './pages/workspace/workspace';
+import { RoadmapComponent } from './pages/roadmap/roadmap';
+import { QuizComponent } from './pages/quiz/quiz';
+import { AnalyticsComponent } from './pages/analytics/analytics';
+import { ProfileComponent } from './pages/profile/profile';
+import { SettingsComponent } from './pages/settings/settings';
 
 export const routes: Routes = [
-  { path: '', component: Landing },
-  { path: 'login', component: Login },
-  { path: 'signup', component: Signup },
-  { path: 'dashboard', component: Dashboard },
-  { path: 'workspace', component: Workspace },
-  { path: 'roadmap', component: Roadmap },
-  { path: 'quiz', component: Quiz },
-  { path: 'analytics', component: Analytics },
-  { path: 'profile', component: Profile },
-  { path: 'settings', component: Settings },
+  { path: '', component: LandingComponent },
+  { path: 'login', component: LoginComponent },
+  { path: 'signup', component: SignupComponent },
+  { path: 'dashboard', component: DashboardComponent },
+  { path: 'workspace', component: WorkspaceComponent },
+  { path: 'roadmap', component: RoadmapComponent },
+  { path: 'quiz', component: QuizComponent },
+  { path: 'analytics', component: AnalyticsComponent },
+  { path: 'profile', component: ProfileComponent },
+  { path: 'settings', component: SettingsComponent },
 ];
