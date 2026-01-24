@@ -26,24 +26,28 @@
     </div>
 
     <!-- The Form -->
-    <form class="space-y-4">
-      
+    <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="space-y-4">
+      <div *ngIf="error" class="text-sm text-red-400">{{ error }}</div>
+
       <!-- Full Name -->
       <div class="space-y-1">
         <label class="text-sm font-medium" for="name">Full Name</label>
-        <input type="text" id="name" placeholder="Your full name" class="flex h-9 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-1 text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+        <input formControlName="name" type="text" id="name" placeholder="Your full name" class="flex h-9 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-1 text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+        <p *ngIf="signupForm.get('name')?.touched && signupForm.get('name')?.invalid" class="text-xs text-red-400">Enter your name.</p>
       </div>
 
       <!-- Email -->
       <div class="space-y-1">
         <label class="text-sm font-medium" for="email">Email</label>
-        <input type="email" id="email" placeholder="you@example.com" class="flex h-9 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-1 text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+        <input formControlName="email" type="email" id="email" placeholder="you@example.com" class="flex h-9 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-1 text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+        <p *ngIf="signupForm.get('email')?.touched && signupForm.get('email')?.invalid" class="text-xs text-red-400">Enter a valid email.</p>
       </div>
 
       <!-- Password -->
       <div class="space-y-1">
         <label class="text-sm font-medium" for="password">Password</label>
-        <input type="password" id="password" placeholder="********" class="flex h-9 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-1 text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+        <input formControlName="password" type="password" id="password" placeholder="********" class="flex h-9 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-1 text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+        <p *ngIf="signupForm.get('password')?.touched && signupForm.get('password')?.invalid" class="text-xs text-red-400">Min 8 characters.</p>
       </div>
 
       <!-- I am a... (Student/Professional Selector) -->
@@ -75,8 +79,8 @@
       </div>
 
       <!-- Submit Button -->
-      <button type="button" class="w-full bg-white text-black hover:bg-zinc-200 font-bold py-2 rounded-lg transition-colors mt-4">
-        Create Account
+      <button type="submit" [disabled]="loading || signupForm.invalid" class="w-full bg-white text-black hover:bg-zinc-200 font-bold py-2 rounded-lg transition-colors mt-4 disabled:opacity-60">
+        {{ loading ? 'Creating Account...' : 'Create Account' }}
       </button>
 
     </form>

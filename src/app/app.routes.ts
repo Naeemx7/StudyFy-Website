@@ -9,16 +9,17 @@ import { QuizComponent } from './pages/quiz/quiz';
 import { AnalyticsComponent } from './pages/analytics/analytics';
 import { ProfileComponent } from './pages/profile/profile';
 import { SettingsComponent } from './pages/settings/settings';
+import { AuthGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   { path: '', component: LandingComponent },
   { path: 'login', component: LoginComponent },
   { path: 'signup', component: SignupComponent },
-  { path: 'dashboard', component: DashboardComponent },
-  { path: 'workspace', component: WorkspaceComponent },
-  { path: 'roadmap', component: RoadmapComponent },
-  { path: 'quiz', component: QuizComponent },
-  { path: 'analytics', component: AnalyticsComponent },
-  { path: 'profile', component: ProfileComponent },
-  { path: 'settings', component: SettingsComponent },
+  { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard] },
+  { path: 'workspace', component: WorkspaceComponent, canActivate: [AuthGuard] },
+  { path: 'roadmap', component: RoadmapComponent, canActivate: [AuthGuard] },
+  { path: 'quiz', component: QuizComponent, canActivate: [AuthGuard] },
+  { path: 'analytics', component: AnalyticsComponent, canActivate: [AuthGuard] },
+  { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] },
+  { path: 'settings', component: SettingsComponent, canActivate: [AuthGuard] },
 ];
