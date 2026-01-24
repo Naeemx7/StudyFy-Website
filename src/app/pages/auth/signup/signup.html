@@ -1,7 +1,7 @@
 <div class="min-h-screen bg-black text-white flex items-center justify-center p-4">
   <!-- Reduced spacing from space-y-8 to space-y-6 to make it shorter -->
   <div class="w-full max-w-md space-y-6 bg-zinc-950 p-6 rounded-xl border border-zinc-800">
-    
+
     <!-- Header -->
     <div class="text-center">
       <h2 class="text-2xl font-bold tracking-tight">Sign up</h2>
@@ -55,10 +55,10 @@
       <div class="space-y-2">
         <label class="text-sm font-medium">I am a...</label>
         <div class="grid grid-cols-2 gap-4">
-          
+
           <!-- Student Box -->
           <!-- (click) changes variable. [ngClass] changes color based on variable -->
-          <div 
+          <div
             (click)="selectRole('student')"
             [ngClass]="selectedRole === 'student' ? 'border-indigo-600 bg-zinc-900' : 'border-zinc-700 bg-transparent opacity-50'"
             class="cursor-pointer border-2 rounded-lg p-3 flex flex-col items-center justify-center gap-2 hover:bg-zinc-800 transition">
@@ -67,7 +67,7 @@
           </div>
 
           <!-- Professional Box -->
-          <div 
+          <div
             (click)="selectRole('professional')"
             [ngClass]="selectedRole === 'professional' ? 'border-indigo-600 bg-zinc-900' : 'border-zinc-700 bg-transparent opacity-50'"
             class="cursor-pointer border-2 rounded-lg p-3 flex flex-col items-center justify-center gap-2 hover:bg-zinc-800 transition">
@@ -87,7 +87,7 @@
 
     <!-- Back to Login Link -->
     <div class="text-center text-sm text-zinc-400 mt-4">
-        Already have an account? 
+        Already have an account?
         <a routerLink="/login" class="font-bold text-white hover:underline cursor-pointer">Log in</a>
     </div>
   </div>

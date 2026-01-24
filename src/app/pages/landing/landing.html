@@ -1,8 +1,330 @@
 <app-landing-navbar></app-landing-navbar>
-<section id="features" class="min-h-screen p-10">
-  <h2 class="text-3xl font-bold">Features</h2>
+
+<!-- HERO -->
+<section class="bg-white">
+  <div class="mx-auto w-full max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+    <div class="py-14 sm:py-16 text-center">
+      <!-- pill -->
+
+  <div
+  class="mx-auto inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-xs text-gray-700 shadow-sm"
+>
+  <svg
+    class="h-5 w-5"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke-width="1.8"
+    stroke="currentColor"
+  >
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-2.846-2.846L2.5 12l2.846-.813a4.5 4.5 0 002.846-2.846L9 5.5l.813 2.846a4.5 4.5 0 002.846 2.846L15.5 12l-2.846.813a4.5 4.5 0 00-2.846 2.846zM18 7.5l.6 2.1a3 3 0 001.8 1.8L22.5 12l-2.1.6a3 3 0 00-1.8 1.8L18 16.5l-.6-2.1a3 3 0 00-1.8-1.8L13.5 12l2.1-.6a3 3 0 001.8-1.8L18 7.5z"
+    />
+  </svg>
+
+  <span>AI-powered learning companion</span>
+</div>
+
+
+      <!-- title -->
+      <h1
+        class="mt-7 text-5xl font-extrabold tracking-tight text-black sm:text-6xl md:text-7xl"
+      >
+        Don't just read.
+        <span class="block text-gray-500">Master it.</span>
+      </h1>
+
+      <!-- subtitle -->
+      <p class="mx-auto mt-6 max-w-2xl text-base leading-7 text-gray-600 sm:text-lg">
+        Upload your study materials. Get AI-powered summaries, quizzes, and
+        flashcards. Track your progress with visual roadmaps. Know exactly what
+        you've mastered.
+      </p>
+
+      <!-- buttons -->
+      <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <a
+          routerLink="/signup"
+          class="inline-flex items-center justify-center gap-2 rounded-xl bg-black px-6 py-3 text-sm font-semibold text-white hover:opacity-90 transition"
+        >
+          Start learning free
+          <span aria-hidden="true">→</span>
+        </a>
+
+
+      </div>
+
+      <p class="mt-4 text-xs text-gray-500">
+        No credit card required. Free for students.
+      </p>
+
+      <!-- preview card -->
+      <div class="mt-12 rounded-2xl border border-gray-100 bg-white shadow-[0_20px_60px_-30px_rgba(0,0,0,0.25)]">
+        <div class="p-6 sm:p-8">
+          <div class="grid gap-4 md:grid-cols-4">
+            <!-- left big -->
+            <div class="md:col-span-3 rounded-xl border border-gray-100 bg-gray-50 p-4">
+              <div class="flex items-center gap-2">
+                <div class="h-3 w-3 rounded bg-gray-200"></div>
+                <div class="h-3 w-24 rounded bg-gray-200"></div>
+              </div>
+
+              <div class="mt-4 grid gap-3 sm:grid-cols-3">
+                <div class="rounded-lg bg-white p-4 border border-gray-100">
+                  <div class="h-3 w-16 rounded bg-gray-100"></div>
+                  <div class="mt-3 h-3 w-full rounded bg-gray-100"></div>
+                  <div class="mt-2 h-3 w-4/5 rounded bg-gray-100"></div>
+                  <div class="mt-4 h-2 w-full rounded bg-gray-100"></div>
+                  <div class="mt-2 h-2 w-2/3 rounded bg-emerald-500"></div>
+                </div>
+
+                <div class="rounded-lg bg-white p-4 border border-gray-100">
+                  <div class="h-3 w-16 rounded bg-gray-100"></div>
+                  <div class="mt-3 h-3 w-full rounded bg-gray-100"></div>
+                  <div class="mt-2 h-3 w-4/5 rounded bg-gray-100"></div>
+                  <div class="mt-4 h-2 w-full rounded bg-gray-100"></div>
+                  <div class="mt-2 h-2 w-3/4 rounded bg-emerald-500"></div>
+                </div>
+
+                <div class="rounded-lg bg-white p-4 border border-gray-100">
+                  <div class="h-3 w-16 rounded bg-gray-100"></div>
+                  <div class="mt-3 h-3 w-full rounded bg-gray-100"></div>
+                  <div class="mt-2 h-3 w-4/5 rounded bg-gray-100"></div>
+                  <div class="mt-4 h-2 w-full rounded bg-gray-100"></div>
+                  <div class="mt-2 h-2 w-5/6 rounded bg-emerald-500"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- right small -->
+            <div class="space-y-3">
+              <div class="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                <div class="flex gap-2">
+                  <div class="h-10 w-10 rounded-lg bg-amber-100"></div>
+                  <div class="h-10 w-10 rounded-lg bg-amber-100"></div>
+                  <div class="h-10 w-10 rounded-lg bg-amber-100"></div>
+                </div>
+                <div class="mt-4 h-3 w-24 rounded bg-gray-200"></div>
+                <div class="mt-2 h-3 w-full rounded bg-gray-200"></div>
+              </div>
+
+              <div class="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                <div class="h-3 w-28 rounded bg-gray-200"></div>
+                <div class="mt-3 h-3 w-full rounded bg-gray-200"></div>
+                <div class="mt-2 h-3 w-4/5 rounded bg-gray-200"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
 </section>
 
-<section id="how-it-works" class="min-h-screen p-10">
-  <h2 class="text-3xl font-bold">How it works</h2>
+<!-- FEATURES -->
+<section id="features" class="border-t border-gray-100 bg-gray-50/30">
+  <div class="mx-auto w-full max-w-screen-2xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+    <div class="text-center">
+      <h2 class="text-3xl font-extrabold tracking-tight text-black sm:text-4xl">
+        Everything you need to study smarter
+      </h2>
+      <p class="mx-auto mt-3 max-w-2xl text-sm sm:text-base text-gray-600">
+        Powerful AI tools combined with visual progress tracking to help you actually
+        retain what you learn.
+      </p>
+    </div>
+
+    <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <!-- Card -->
+      <div class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+        <div class="grid h-10 w-10 place-items-center rounded-xl bg-gray-100 text-gray-600">
+  <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round"
+      d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5A3.375 3.375 0 0010.125 2.25H8.25A3.375 3.375 0 004.875 5.625v12.75A3.375 3.375 0 008.25 21.75h3.75m0-6h3.75m-3.75 3h2.25m6.75 3l-3-3m0 0l-3 3m3-3V15" />
+  </svg>
+</div>
+
+        <h3 class="text-base font-semibold text-black">Smart Document Analysis</h3>
+        <p class="mt-2 text-sm leading-6 text-gray-600">
+          Upload PDFs, notes, or any study material. Our AI extracts key concepts and creates structured summaries.
+        </p>
+      </div>
+
+      <div class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+  <path stroke-linecap="round" stroke-linejoin="round"
+    d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-2.846-2.846L2.5 12l2.846-.813a4.5 4.5 0 002.846-2.846L9 5.5l.813 2.846a4.5 4.5 0 002.846 2.846L15.5 12l-2.846.813a4.5 4.5 0 00-2.846 2.846zM18 7.5l.6 2.1a3 3 0 001.8 1.8L22.5 12l-2.1.6a3 3 0 00-1.8 1.8L18 16.5l-.6-2.1a3 3 0 00-1.8-1.8L13.5 12l2.1-.6a3 3 0 001.8-1.8L18 7.5z" />
+</svg>
+
+        <h3 class="text-base font-semibold text-black">AI-Generated Quizzes</h3>
+        <p class="mt-2 text-sm leading-6 text-gray-600">
+          Automatically generate quizzes from your content. Each question is tagged by topic for precise gap analysis.
+        </p>
+      </div>
+
+      <div class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+  <path stroke-linecap="round" stroke-linejoin="round"
+    d="M9 6l6-3 6 3v15l-6-3-6 3-6-3V3l6 3z" />
+  <path stroke-linecap="round" stroke-linejoin="round" d="M9 6v15" />
+  <path stroke-linecap="round" stroke-linejoin="round" d="M15 3v15" />
+</svg>
+
+        <h3 class="text-base font-semibold text-black">Visual Progress Roadmap</h3>
+        <p class="mt-2 text-sm leading-6 text-gray-600">
+          See your learning journey as a visual timeline. Know exactly what you've mastered and what needs review.
+        </p>
+      </div>
+
+      <div class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+  <path stroke-linecap="round" stroke-linejoin="round"
+    d="M3 3v18h18" />
+  <path stroke-linecap="round" stroke-linejoin="round"
+    d="M7 14v4" />
+  <path stroke-linecap="round" stroke-linejoin="round"
+    d="M12 10v8" />
+  <path stroke-linecap="round" stroke-linejoin="round"
+    d="M17 6v12" />
+</svg>
+
+        <h3 class="text-base font-semibold text-black">Performance Analytics</h3>
+        <p class="mt-2 text-sm leading-6 text-gray-600">
+          Detailed reports show your strengths and weaknesses. Get AI-powered recommendations before exams.
+        </p>
+      </div>
+
+      <div class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+  <path stroke-linecap="round" stroke-linejoin="round"
+    d="M12 3v9l4-2-4 11v-9l-4 2 4-11z" />
+</svg>
+
+        <h3 class="text-base font-semibold text-black">Instant Flashcards</h3>
+        <p class="mt-2 text-sm leading-6 text-gray-600">
+          One-click flashcard generation from any content. Spaced repetition helps you memorize faster.
+        </p>
+      </div>
+
+      <div class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+  <path stroke-linecap="round" stroke-linejoin="round"
+    d="M8.625 10.5h6.75m-6.75 3h4.5m-7.5 5.25V6.75A2.25 2.25 0 018.25 4.5h7.5A2.25 2.25 0 0118 6.75v6A2.25 2.25 0 0115.75 15H9l-3.75 3.75z" />
+</svg>
+
+        <h3 class="text-base font-semibold text-black">Context-Aware Chat</h3>
+        <p class="mt-2 text-sm leading-6 text-gray-600">
+          Ask questions about your documents. Get accurate answers with page references from your materials.
+        </p>
+      </div>
+    </div>
+  </div>
 </section>
+
+<!-- HOW IT WORKS -->
+<section id="how-it-works" class="border-t border-gray-100 bg-white">
+  <div class="mx-auto w-full max-w-screen-2xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+    <div class="text-center">
+      <h2 class="text-3xl font-extrabold tracking-tight text-black sm:text-4xl">
+        How it works
+      </h2>
+      <p class="mx-auto mt-3 max-w-xl text-sm sm:text-base text-gray-600">
+        From upload to mastery in four simple steps
+      </p>
+    </div>
+
+    <div class="mt-14 grid gap-10 md:grid-cols-4">
+      <div class="text-center md:text-left">
+        <div class="text-5xl font-extrabold text-gray-100">01</div>
+        <h3 class="mt-3 text-sm font-semibold text-black">Create a Space</h3>
+        <p class="mt-2 text-sm text-gray-600">
+          Organize your subjects into separate workspaces.
+        </p>
+      </div>
+
+      <div class="text-center md:text-left">
+        <div class="text-5xl font-extrabold text-gray-100">02</div>
+        <h3 class="mt-3 text-sm font-semibold text-black">Upload Materials</h3>
+        <p class="mt-2 text-sm text-gray-600">
+          Add PDFs, notes, or any study content.
+        </p>
+      </div>
+
+      <div class="text-center md:text-left">
+        <div class="text-5xl font-extrabold text-gray-100">03</div>
+        <h3 class="mt-3 text-sm font-semibold text-black">Study with AI</h3>
+        <p class="mt-2 text-sm text-gray-600">
+          Chat, quiz, and create flashcards instantly.
+        </p>
+      </div>
+
+      <div class="text-center md:text-left">
+        <div class="text-5xl font-extrabold text-gray-100">04</div>
+        <h3 class="mt-3 text-sm font-semibold text-black">Track Mastery</h3>
+        <p class="mt-2 text-sm text-gray-600">
+          See your progress on the visual roadmap.
+        </p>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="mt-20 border-t border-gray-100 pt-16 text-center">
+      <h3 class="text-3xl font-extrabold text-black sm:text-4xl">
+        Ready to study smarter?
+      </h3>
+      <p class="mx-auto mt-3 max-w-2xl text-sm sm:text-base text-gray-600">
+        Join thousands of students who are mastering their subjects with AI-powered learning.
+      </p>
+
+      <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <a
+          routerLink="/signup"
+          class="inline-flex items-center justify-center gap-2 rounded-xl bg-black px-6 py-3 text-sm font-semibold text-white hover:opacity-90 transition"
+        >
+          Get started for free
+          <span aria-hidden="true">→</span>
+        </a>
+
+      </div>
+
+      <div class="mt-5 flex flex-wrap items-center justify-center gap-6 text-xs text-gray-500">
+        <span class="inline-flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-emerald-500"></span> Free for students</span>
+        <span class="inline-flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-emerald-500"></span> No credit card</span>
+        <span class="inline-flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-emerald-500"></span> Cancel anytime</span>
+      </div>
+    </div>
+
+
+    <!-- Footer line -->
+<div
+  class="mt-16 flex items-center justify-between border-t border-gray-100 pt-8 text-xs text-gray-500"
+>
+  <div class="flex items-center gap-2">
+    <div class="grid h-8 w-8 place-items-center rounded-xl bg-black text-white">
+      <svg
+        class="h-4 w-4"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M9 4c-2 0-3.5 1.4-3.5 3.2c0 .7.2 1.4.6 2" />
+        <path d="M15 4c2 0 3.5 1.4 3.5 3.2c0 .7-.2 1.4-.6 2" />
+        <path d="M7 9c-1.7 0-3 1.3-3 3c0 1.3.8 2.4 2 2.8" />
+        <path d="M17 9c1.7 0 3 1.3 3 3c0 1.3-.8 2.4-2 2.8" />
+        <path d="M8 14c-.6.4-1 1.1-1 1.9C7 17.6 8.4 19 10 19h4c1.6 0 3-1.4 3-3.1c0-.8-.4-1.5-1-1.9" />
+        <path d="M12 7v10" />
+        <path d="M9.5 10.5h5" />
+      </svg>
+    </div>
+
+    <span class="font-semibold text-black">CodeName</span>
+  </div>
+
+  <span>Built for students. Powered by AI.</span>
+</div>

@@ -10,7 +10,7 @@ import { AuthService } from '../../../services/auth.service';
   imports: [CommonModule, RouterLink, ReactiveFormsModule],
   templateUrl: './signup.html',
   styleUrl: './signup.css'
-}) 
+})
 export class SignupComponent {
   selectedRole: 'student' | 'professional' = 'student';
   signupForm: FormGroup;
