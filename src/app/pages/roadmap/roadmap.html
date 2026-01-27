@@ -1,1 +1,333 @@
-<p>roadmap works!</p>
+<section class="bg-white pt-20 relative">
+  <div class="mx-auto w-full max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+    <!-- Top header (اختياري) -->
+    <div class="py-6" *ngIf="spaceTitle">
+      <div class="text-lg font-semibold text-gray-900">{{ spaceTitle }}</div>
+      <div class="text-sm text-gray-500" *ngIf="spaceSubtitle">{{ spaceSubtitle }}</div>
+    </div>
+
+    <!-- Main Card: Learning Roadmap -->
+    <div class="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8 shadow-soft">
+      <div class="flex items-start justify-between gap-6">
+        <div>
+          <h1 class="text-3xl font-extrabold tracking-tight text-gray-900">Learning Roadmap</h1>
+          <p class="mt-1 text-sm text-gray-600">Track your journey through {{ spaceTitle }}</p>
+
+          <div class="mt-5 h-2 w-full max-w-md overflow-hidden rounded-full bg-gray-100">
+            <div
+              class="h-full rounded-full bg-black transition-all"
+              [style.width.%]="overallPercent"
+            ></div>
+          </div>
+
+          <div class="mt-4 flex flex-wrap gap-2 text-xs font-semibold text-gray-700">
+            <span class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1">
+              <span class="h-2 w-2 rounded-full bg-emerald-600"></span>
+              Mastered: {{ masteredCount }}
+            </span>
+            <span class="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1">
+              <span class="h-2 w-2 rounded-full bg-amber-600"></span>
+              In Progress: {{ inProgressCount }}
+            </span>
+            <span class="inline-flex items-center gap-2 rounded-full bg-rose-50 px-3 py-1">
+              <span class="h-2 w-2 rounded-full bg-rose-600"></span>
+              Needs Review: {{ needsReviewCount }}
+            </span>
+          </div>
+        </div>
+
+        <div class="text-right">
+          <div class="text-3xl font-extrabold text-gray-900">{{ overallPercent }}%</div>
+          <div class="text-xs text-gray-500">Complete</div>
+
+          <div class="mt-3 text-2xl font-extrabold text-emerald-600">
+            {{ masteredCount }}/{{ totalCount }}
+          </div>
+          <div class="text-xs text-gray-500">Mastered</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grid -->
+    <div class="mt-10 grid gap-6 lg:grid-cols-3">
+      <div class="lg:col-span-2">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xs font-bold tracking-[0.16em] text-gray-500">YOUR PROGRESS PATH</h2>
+
+          <button
+            type="button"
+            class="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50 transition"
+            (click)="openPicker(fileInput)"
+          >
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="2"
+              stroke="currentColor"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Add File
+          </button>
+        </div>
+
+        <!-- List -->
+        <div class="mt-4 space-y-4">
+          <button
+            *ngFor="let f of files; let i = index; trackBy: trackById"
+            type="button"
+            class="w-full rounded-2xl border bg-white p-5 text-left shadow-sm transition hover:bg-gray-50"
+            [ngClass]="borderClass(f.status)"
+            (click)="openWorkspace(f)"
+          >
+            <div class="flex items-start gap-4">
+              <!-- Left timeline icon -->
+              <div class="relative">
+                <div
+                  class="grid h-12 w-12 place-items-center rounded-full text-white shadow"
+                  [ngClass]="statusIconBg(f.status)"
+                >
+                  <!-- MASTERED: check -->
+                  <ng-container *ngIf="f.status === 'MASTERED'">
+                    <svg
+                      class="h-6 w-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="2.5"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M4.5 12.75l6 6 9-13.5"
+                      />
+                    </svg>
+                  </ng-container>
+
+                  <!-- IN_PROGRESS: clock -->
+                  <ng-container *ngIf="f.status === 'IN_PROGRESS'">
+                    <svg
+                      class="h-6 w-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="2.5"
+                      stroke="currentColor"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2" />
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </ng-container>
+
+                  <!-- NEEDS_REVIEW: warning -->
+                  <ng-container *ngIf="f.status === 'NEEDS_REVIEW'">
+                    <svg
+                      class="h-6 w-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="2.5"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M12 9v3m0 4h.01M10.29 3.86l-7.5 13a1.5 1.5 0 001.3 2.25h15.82a1.5 1.5 0 001.3-2.25l-7.5-13a1.5 1.5 0 00-2.6 0z"
+                      />
+                    </svg>
+                  </ng-container>
+                </div>
+
+                <!-- number badge -->
+                <div
+                  class="absolute -right-1 -top-1 grid h-6 w-6 place-items-center rounded-full bg-white text-xs font-bold text-gray-900 shadow"
+                >
+                  {{ i + 1 }}
+                </div>
+              </div>
+
+              <!-- Content -->
+              <div class="min-w-0 flex-1">
+                <div class="flex items-start justify-between gap-4">
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-2">
+                      <!-- file icon -->
+                      <svg
+                        class="h-5 w-5 text-gray-500"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="2"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M19.5 14.25V9.75L14.25 4.5H7.5A3 3 0 004.5 7.5v9A3 3 0 007.5 19.5H12"
+                        />
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M14.25 4.5v3.75A1.5 1.5 0 0015.75 9.75h3.75"
+                        />
+                      </svg>
+
+                      <div class="truncate text-base font-extrabold text-gray-900">
+                        {{ f.name }}
+                      </div>
+                    </div>
+
+                    <div class="mt-1 text-sm text-gray-600">
+                      {{ f.description || formatSize(f.size) + ' • ' + f.type }}
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-3">
+                    <div class="text-sm font-bold text-gray-900">{{ f.progress }}%</div>
+                    <button
+                      type="button"
+                      class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                      (click)="removeFile(f.id, $event)"
+                    >
+                      Remove
+                    </button>
+                    <svg
+                      class="h-6 w-6 text-gray-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="2"
+                      stroke="currentColor"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+
+                <!-- ONE progress bar فقط (مفيش بار تاني) -->
+                <div class="mt-4 h-2 w-full overflow-hidden rounded-full bg-gray-100">
+                  <div
+                    class="h-full rounded-full transition-all"
+                    [ngClass]="barClass(f.status)"
+                    [style.width.%]="f.progress"
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </button>
+
+          <!-- Empty state -->
+          <div
+            *ngIf="files.length === 0"
+            class="rounded-2xl border border-dashed border-gray-200 bg-white p-10 text-center text-sm text-gray-500"
+          >
+            Upload files to start building your roadmap.
+          </div>
+
+          <!-- Upload more study material (BOTTOM like reference) -->
+          <button
+            type="button"
+            class="w-full rounded-2xl border border-dashed border-gray-200 bg-white p-7 text-left hover:bg-gray-50 transition"
+            (click)="openPicker(fileInput)"
+          >
+            <div class="flex items-center gap-4">
+              <div class="grid h-12 w-12 place-items-center rounded-full bg-gray-100 text-gray-600">
+                <svg
+                  class="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="2"
+                  stroke="currentColor"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+              </div>
+
+              <div class="text-base font-semibold text-gray-900">Upload more study material</div>
+            </div>
+          </button>
+
+          <input
+            #fileInput
+            type="file"
+            class="hidden"
+            multiple
+            accept=".pdf,.doc,.docx,.ppt,.pptx,.txt"
+            (change)="onFilesSelected($event)"
+          />
+        </div>
+      </div>
+
+      <!-- RIGHT: Legend + Tip -->
+      <div class="space-y-6">
+        <div class="rounded-2xl border border-gray-200 bg-white p-6">
+          <div class="text-xs font-bold tracking-[0.16em] text-gray-500">STATUS LEGEND</div>
+
+          <div class="mt-4 space-y-3 text-sm text-gray-700">
+            <div class="flex items-center gap-3">
+              <span class="h-3 w-3 rounded-full bg-emerald-600"></span>
+              <span>Mastered (80%+)</span>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <span class="h-3 w-3 rounded-full bg-amber-600"></span>
+              <span>In Progress</span>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <span class="h-3 w-3 rounded-full bg-rose-600"></span>
+              <span>Needs Review (&lt;50%)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Needs Attention card -->
+        <div *ngIf="needsAttentionFile" class="rounded-2xl border border-rose-200 bg-rose-50 p-6">
+          <div class="text-xs font-bold tracking-[0.16em] text-rose-600">NEEDS ATTENTION</div>
+          <div class="mt-4 text-sm font-semibold text-gray-900">{{ needsAttentionFile.name }}</div>
+          <p class="mt-2 text-sm text-gray-600">
+            You scored {{ needsAttentionFile.progress }}% on the last quiz. Consider reviewing the
+            related topics.
+          </p>
+          <button
+            type="button"
+            class="mt-4 w-full rounded-xl border border-rose-300 bg-white px-4 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-100 transition"
+          >
+            Review Now
+          </button>
+        </div>
+
+        <!-- Quick Actions card -->
+        <div class="rounded-2xl border border-gray-200 bg-white p-6">
+          <div class="text-xs font-bold tracking-[0.16em] text-gray-500">QUICK ACTIONS</div>
+          <div class="mt-4 space-y-3">
+            <button
+              class="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50 transition"
+            >
+              Continue Studying
+            </button>
+            <button
+              class="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50 transition"
+            >
+              Generate Full Summary
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="py-10"></div>
+  </div>
+
+  <div
+    *ngIf="isDragActive"
+    class="absolute inset-0 z-20 grid place-items-center bg-black/20 backdrop-blur-sm"
+  >
+    <div
+      class="rounded-2xl border-2 border-dashed border-gray-400 bg-white px-10 py-8 text-base font-semibold text-gray-800 shadow-sm"
+    >
+      Drop files anywhere to upload
+    </div>
+  </div>
+</section>
