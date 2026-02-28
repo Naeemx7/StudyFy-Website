@@ -1,7 +1,20 @@
+/**
+ * Navbar Component
+ * 
+ * The top navigation bar shown on all protected pages.
+ * Shows:
+ * - App logo and name
+ * - Navigation links (Dashboard, Analytics)
+ * - User profile dropdown with logout
+ * 
+ * Uses currentUser$ from AuthService to display user info.
+ */
+
 import { Component, inject, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { SpaceService } from '../../services/space.service';
 
 @Component({
   selector: 'app-navbar',
@@ -12,6 +25,7 @@ import { AuthService } from '../../services/auth.service';
 export class NavbarComponent {
   private elementRef = inject(ElementRef);
   private auth = inject(AuthService);
+  private spaceService = inject(SpaceService);
   private router = inject(Router);
   
   currentUser$ = this.auth.currentUser$;
@@ -29,12 +43,21 @@ export class NavbarComponent {
     }
   }
 
-  getInitials(name: string | undefined): string {
-    return name ? name.charAt(0).toUpperCase() : 'U';
+  /**
+   * Get user initials for avatar
+   * Uses userName now instead of name
+   */
+  getInitials(userName: string | undefined): string {
+    return userName ? userName.charAt(0).toUpperCase() : 'U';
   }
 
+  /**
+   * Logout user
+   * Clears auth data, clears cached spaces, redirects to login
+   */
   logout() {
     this.auth.logout();
+    this.spaceService.clearSpaces();
     this.router.navigate(['/login']);
   }
 }

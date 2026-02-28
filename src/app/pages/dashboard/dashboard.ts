@@ -1,4 +1,20 @@
-import { Component, inject } from '@angular/core';
+/**
+ * Dashboard Component
+ * 
+ * The main hub after login. Shows:
+ * - Welcome message with user's name
+ * - Quick stats (hardcoded for now)
+ * - List of user's spaces (from API)
+ * - Create new space button/modal
+ * 
+ * DATA FLOW:
+ * 1. Component initializes (ngOnInit)
+ * 2. Calls spaceService.loadSpaces() to fetch from API
+ * 3. Subscribes to spaces$ to display the list
+ * 4. When user creates space, calls spaceService.createSpace()
+ */
+
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
@@ -13,45 +29,67 @@ import { SpaceService } from '../../services/space.service';
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit {
   private auth = inject(AuthService);
   private spaceService = inject(SpaceService);
   private fb = inject(FormBuilder);
 
+  // User data from auth service
   currentUser$ = this.auth.currentUser$;
+  
+  // Spaces data from space service
   spaces$ = this.spaceService.spaces$;
+  spacesLoading$ = this.spaceService.loading$;
+  spacesError$ = this.spaceService.error$;
   
   // UI State for Modal
   showCreateModal = false;
   isCreating = false;
+  createError = '';
 
   // Form for creating a space
   createSpaceForm: FormGroup = this.fb.group({
-    title: ['', [Validators.required, Validators.minLength(3)]],
-    description: ['', [Validators.required, Validators.maxLength(100)]]
+    name: ['', [Validators.required, Validators.minLength(3)]],
+    description: ['', [Validators.maxLength(200)]]
   });
+
+  /**
+   * ngOnInit - Called when component initializes
+   * This is where we load data from APIs
+   */
+  ngOnInit(): void {
+    // Load spaces from backend
+    this.spaceService.loadSpaces().subscribe();
+  }
 
   openCreateModal() {
     this.showCreateModal = true;
+    this.createError = '';
   }
 
   closeCreateModal() {
     this.showCreateModal = false;
     this.createSpaceForm.reset();
+    this.createError = '';
   }
 
   onCreateSpace() {
     if (this.createSpaceForm.invalid) return;
 
     this.isCreating = true;
-    const { title, description } = this.createSpaceForm.value;
+    this.createError = '';
+    
+    const { name, description } = this.createSpaceForm.value;
 
-    this.spaceService.createSpace(title, description).subscribe({
+    this.spaceService.createSpace(name, description || '').subscribe({
       next: () => {
         this.isCreating = false;
         this.closeCreateModal();
       },
-      error: () => console.error('Failed to create space')
+      error: (err) => {
+        this.isCreating = false;
+        this.createError = err?.message || 'Failed to create space';
+      }
     });
   }
 }

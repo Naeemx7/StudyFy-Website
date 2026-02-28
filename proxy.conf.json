@@ -1,0 +1,11 @@
+{
+  "/api": {
+    "target": "http://graduation-test.runasp.net",
+    "secure": false,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/api": ""
+    },
+    "logLevel": "debug"
+  }
+}
