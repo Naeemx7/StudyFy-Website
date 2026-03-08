@@ -1,14 +1,14 @@
 /**
  * Environment Configuration
- * 
+ *
  * This file contains configuration values for the application.
  * - apiUrl: The base URL for all backend API calls
- * 
+ *
  * WHY WE USE '/api':
  * During development, we use a proxy to avoid CORS issues.
  * The proxy (configured in proxy.conf.json) forwards /api/* requests
  * to the actual backend server.
- * 
+ *
  * HOW IT WORKS:
  * - Your code calls: /api/Login
  * - Proxy forwards to: http://graduation-test.runasp.net/Login
@@ -17,8 +17,11 @@
 
 export const environment = {
   production: false,
-  
+
   // Use proxy path for development (avoids CORS issues)
   // The proxy forwards /api/* to the real backend
-  apiUrl: '/api'
+  apiUrl: '/api',
+
+  // Google OAuth Client ID for Sign-In
+  googleClientId: '567037118498-f37caa2jpb5gbj3ce2c6uudbb511267f.apps.googleusercontent.com'
 };
