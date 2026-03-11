@@ -32,11 +32,19 @@ export interface CreateSpaceRequest {
 /**
  * Response from POST /users/{userId}/spaces
  * Also the shape of each item in GET /users/{userId}/spaces array
+ * 
+ * NOTE: Backend returns "spaceId" for GET list, but might return "workspaceId" for CREATE
+ * We handle BOTH field names to be safe
  */
 export interface SpaceResponse {
-  workspaceId: string;    // Unique ID (UUID format) - NOTE: Backend calls it "workspaceId"
+  spaceId?: string;       // Used by GET /spaces (list)
+  workspaceId?: string;   // Used by POST /spaces (create) - per API docs
   name: string;           // Space name
   description?: string;   // Space description
+  createdAt?: string;     // When the space was created
+  totalFiles?: number;    // Number of files in the space
+  totalQuizzes?: number;  // Number of quizzes taken
+  averageScore?: number;  // Average quiz score
 }
 
 /**
@@ -81,14 +89,25 @@ export interface Space {
  * Backend uses different field names (workspaceId, name).
  * Our UI expects (id, title).
  * This function translates between them.
+ * 
+ * HANDLES BOTH:
+ * - GET /spaces returns "spaceId"
+ * - POST /spaces might return "workspaceId" (per API docs)
  */
 export function mapSpaceResponseToSpace(response: SpaceResponse): Space {
+  // Handle both spaceId and workspaceId - backend is inconsistent
+  const id = response.spaceId || response.workspaceId || '';
+  
+  if (!id) {
+    console.error('Space response missing both spaceId and workspaceId:', response);
+  }
+  
   return {
-    id: response.workspaceId,
+    id,
     title: response.name,
     description: response.description || '',
-    // Default values for frontend-only fields
-    progress: 0,
-    lastAccessed: new Date()
+    // Use averageScore from backend if available, otherwise 0
+    progress: response.averageScore ?? 0,
+    lastAccessed: response.createdAt ? new Date(response.createdAt) : new Date()
   };
 }

@@ -91,7 +91,15 @@ export class SpaceService {
           if (!Array.isArray(spacesData)) {
             return [];
           }
-          return spacesData.map(mapSpaceResponseToSpace);
+          // DEBUG: Log raw data from backend
+          console.log('Raw spaces from backend:', spacesData);
+          console.log('First space raw:', spacesData[0]);
+          
+          const mappedSpaces = spacesData.map(mapSpaceResponseToSpace);
+          console.log('Mapped spaces:', mappedSpaces);
+          console.log('First space mapped:', mappedSpaces[0]);
+          
+          return mappedSpaces;
         }),
         // Update local state
         tap(spaces => {
@@ -153,6 +161,7 @@ export class SpaceService {
    * Removes a space and all its contents.
    * 
    * ENDPOINT: DELETE /users/{userId}/spaces/{workspaceId}
+   * RESPONSE: { isSuccess: boolean, message: string, errors: string[] }
    */
   deleteSpace(spaceId: string): Observable<void> {
     const userId = this.auth.getCurrentUserId();
@@ -161,9 +170,29 @@ export class SpaceService {
       return throwError(() => new Error('User not logged in'));
     }
 
-    return this.http.delete<void>(`${environment.apiUrl}/users/${userId}/spaces/${spaceId}`)
+    // DEBUG: Log exactly what we're sending
+    const url = `${environment.apiUrl}/users/${userId}/spaces/${spaceId}`;
+    console.log('DELETE request - spaceId:', spaceId);
+    console.log('DELETE request - userId:', userId);
+    console.log('DELETE request - full URL:', url);
+
+    return this.http.delete<ApiResponse<void>>(url)
       .pipe(
-        // Remove from local state
+        // Check if delete was successful
+        map(response => {
+          console.log('Delete space response:', response);
+          if (!response.isSuccess) {
+            // Check for known backend bug: container doesn't exist
+            if (response.message?.includes('ContainerNotFound') || 
+                response.message?.includes('container does not exist')) {
+              throw new Error('This space cannot be deleted right now. Please contact support or try again later.');
+            }
+            throw new Error(response.message || 'Failed to delete space');
+          }
+          // Return void on success
+          return;
+        }),
+        // Remove from local state only after API confirms success
         tap(() => {
           const currentSpaces = this.spacesSubject.value;
           const updatedSpaces = currentSpaces.filter(s => s.id !== spaceId);
