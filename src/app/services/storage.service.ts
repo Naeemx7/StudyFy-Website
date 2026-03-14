@@ -240,9 +240,10 @@ export class StorageService {
   getReadUrl(spaceId: string, fileName: string): Observable<string> {
     return this.getSasUrls(spaceId, [fileName]).pipe(
       map(sasData => {
-        const readUrl = sasData.readSasUris[fileName];
+        // Try readSasUri first, fall back to writeSasUri (often has read permission too)
+        const readUrl = sasData.readSasUris?.[fileName] || sasData.writeSasUris?.[fileName];
         if (!readUrl) {
-          throw new Error(`No read URL for ${fileName}`);
+          throw new Error(`No SAS URL for ${fileName}`);
         }
         return readUrl;
       })

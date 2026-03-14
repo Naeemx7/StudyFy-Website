@@ -1,1 +1,285 @@
-<p>quiz works!</p>
+<app-navbar></app-navbar>
+
+<section class="min-h-screen bg-gray-50 pt-16">
+  <div class="mx-auto max-w-2xl px-4 py-8">
+
+    <!-- Loading State -->
+    @if (state === 'loading') {
+    <div class="rounded-2xl border border-gray-200 bg-white p-12 text-center shadow-sm">
+      <div class="h-10 w-10 mx-auto rounded-full border-2 border-gray-300 border-t-indigo-600 animate-spin"></div>
+      <p class="mt-4 text-sm font-semibold text-gray-900">Generating your quiz...</p>
+      <p class="mt-1 text-xs text-gray-500">{{ questionCount }} questions &bull; {{ difficulty }} difficulty</p>
+    </div>
+    }
+
+    <!-- Error State -->
+    @if (state === 'error') {
+    <div class="rounded-2xl border border-gray-200 bg-white p-12 text-center shadow-sm">
+      <div class="text-4xl mb-3">😕</div>
+      <p class="text-sm font-semibold text-gray-900">Something went wrong</p>
+      <p class="mt-1 text-xs text-rose-600">{{ errorMessage }}</p>
+      <div class="mt-6 flex items-center justify-center gap-3">
+        <button
+          type="button"
+          class="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+          (click)="goBack()"
+        >
+          Go Back
+        </button>
+        <button
+          type="button"
+          class="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800 transition"
+          (click)="retryQuiz()"
+        >
+          Try Again
+        </button>
+      </div>
+    </div>
+    }
+
+    <!-- Ready State (Quiz intro) -->
+    @if (state === 'ready') {
+    <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+      <div class="text-center">
+        <div class="inline-flex h-16 w-16 items-center justify-center rounded-full bg-indigo-50 mb-4">
+          <svg class="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-900">Ready to Test Your Knowledge?</h2>
+        <p class="mt-2 text-sm text-gray-500">
+          {{ questions.length }} multiple choice questions &bull; {{ difficulty }} difficulty
+        </p>
+      </div>
+
+      <div class="mt-6 rounded-xl bg-gray-50 border border-gray-100 p-4">
+        <div class="grid grid-cols-3 gap-4 text-center">
+          <div>
+            <div class="text-lg font-bold text-gray-900">{{ questions.length }}</div>
+            <div class="text-xs text-gray-500">Questions</div>
+          </div>
+          <div>
+            <div class="text-lg font-bold text-gray-900">{{ difficulty }}</div>
+            <div class="text-xs text-gray-500">Difficulty</div>
+          </div>
+          <div>
+            <div class="text-lg font-bold text-gray-900">80%</div>
+            <div class="text-xs text-gray-500">To Master</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 flex items-center justify-center gap-3">
+        <button
+          type="button"
+          class="rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+          (click)="goBack()"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition"
+          (click)="startQuiz()"
+        >
+          Start Quiz
+        </button>
+      </div>
+    </div>
+    }
+
+    <!-- In-Progress State -->
+    @if (state === 'in-progress' && currentQuestion) {
+    <div>
+      <!-- Progress bar -->
+      <div class="mb-6">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-semibold text-gray-500">Question {{ currentIndex + 1 }} of {{ questions.length }}</span>
+          <span class="text-xs font-semibold text-gray-500">{{ progress }}% complete</span>
+        </div>
+        <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+          <div
+            class="h-full rounded-full bg-indigo-600 transition-all duration-300"
+            [style.width.%]="progress"
+          ></div>
+        </div>
+      </div>
+
+      <!-- Question card -->
+      <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+        <h3 class="text-lg font-bold text-gray-900 leading-relaxed">{{ currentQuestion.question }}</h3>
+
+        <!-- Options -->
+        <div class="mt-6 space-y-3">
+          @for (option of currentQuestion.options; track option; let i = $index) {
+          <button
+            type="button"
+            class="w-full rounded-xl border-2 p-4 text-left text-sm transition"
+            [ngClass]="{
+              'border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300': currentQuestion.userAnswer === null,
+              'border-indigo-600 bg-indigo-50': currentQuestion.userAnswer === option && currentQuestion.isCorrect,
+              'border-red-400 bg-red-50': currentQuestion.userAnswer === option && currentQuestion.isCorrect === false,
+              'border-green-500 bg-green-50': currentQuestion.userAnswer !== null && option === currentQuestion.correctAnswer && currentQuestion.userAnswer !== option,
+              'border-gray-200 bg-gray-50 opacity-60': currentQuestion.userAnswer !== null && option !== currentQuestion.correctAnswer && currentQuestion.userAnswer !== option
+            }"
+            [disabled]="currentQuestion.userAnswer !== null"
+            (click)="selectAnswer(option)"
+          >
+            <div class="flex items-center gap-3">
+              <span class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold"
+                [ngClass]="{
+                  'border-gray-300 text-gray-500': currentQuestion.userAnswer === null,
+                  'border-indigo-600 text-indigo-600 bg-indigo-100': currentQuestion.userAnswer === option && currentQuestion.isCorrect,
+                  'border-red-400 text-red-500 bg-red-100': currentQuestion.userAnswer === option && currentQuestion.isCorrect === false,
+                  'border-green-500 text-green-600 bg-green-100': currentQuestion.userAnswer !== null && option === currentQuestion.correctAnswer && currentQuestion.userAnswer !== option,
+                  'border-gray-200 text-gray-400': currentQuestion.userAnswer !== null && option !== currentQuestion.correctAnswer && currentQuestion.userAnswer !== option
+                }"
+              >
+                {{ 'ABCD'[i] }}
+              </span>
+              <span class="font-medium" [ngClass]="currentQuestion.userAnswer !== null && option === currentQuestion.correctAnswer ? 'text-green-700' : 'text-gray-900'">
+                {{ option }}
+              </span>
+            </div>
+          </button>
+          }
+        </div>
+
+        <!-- Feedback & Next button -->
+        @if (currentQuestion.userAnswer !== null) {
+        <div class="mt-6 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            @if (currentQuestion.isCorrect) {
+            <span class="inline-flex items-center gap-1 text-sm font-semibold text-green-600">
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              Correct!
+            </span>
+            } @else {
+            <span class="inline-flex items-center gap-1 text-sm font-semibold text-red-600">
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              Incorrect
+            </span>
+            }
+          </div>
+          <button
+            type="button"
+            class="rounded-lg bg-gray-900 px-5 py-2 text-sm font-semibold text-white hover:bg-gray-800 transition"
+            (click)="nextQuestion()"
+          >
+            {{ currentIndex < questions.length - 1 ? 'Next Question' : 'See Results' }}
+          </button>
+        </div>
+        }
+      </div>
+
+      <!-- Score tracker -->
+      <div class="mt-4 flex items-center justify-center gap-6 text-xs text-gray-500">
+        <span>✅ {{ score }} correct</span>
+        <span>❌ {{ totalAnswered - score }} incorrect</span>
+      </div>
+    </div>
+    }
+
+    <!-- Completed State -->
+    @if (state === 'completed') {
+    <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+      <div class="text-center">
+        @if (scorePercent >= 80) {
+        <div class="inline-flex h-20 w-20 items-center justify-center rounded-full bg-green-50 mb-4">
+          <svg class="h-10 w-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
+          </svg>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-900">Excellent Work! 🎉</h2>
+        <p class="mt-1 text-sm text-green-600 font-medium">You've mastered this material!</p>
+        } @else if (scorePercent >= 50) {
+        <div class="inline-flex h-20 w-20 items-center justify-center rounded-full bg-amber-50 mb-4">
+          <span class="text-4xl">📚</span>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-900">Good Effort!</h2>
+        <p class="mt-1 text-sm text-amber-600 font-medium">Keep studying to reach mastery (80%+)</p>
+        } @else {
+        <div class="inline-flex h-20 w-20 items-center justify-center rounded-full bg-red-50 mb-4">
+          <span class="text-4xl">💪</span>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-900">Keep Going!</h2>
+        <p class="mt-1 text-sm text-red-600 font-medium">Review the material and try again</p>
+        }
+      </div>
+
+      <!-- Score display -->
+      <div class="mt-6 rounded-xl bg-gray-50 border border-gray-100 p-6">
+        <div class="text-center">
+          <div class="text-5xl font-extrabold" [ngClass]="{
+            'text-green-600': scorePercent >= 80,
+            'text-amber-600': scorePercent >= 50 && scorePercent < 80,
+            'text-red-600': scorePercent < 50
+          }">{{ scorePercent }}%</div>
+          <div class="text-sm text-gray-500 mt-1">{{ score }} out of {{ questions.length }} correct</div>
+        </div>
+
+        <div class="mt-4 grid grid-cols-3 gap-4 text-center">
+          <div>
+            <div class="text-lg font-bold text-green-600">{{ score }}</div>
+            <div class="text-xs text-gray-500">Correct</div>
+          </div>
+          <div>
+            <div class="text-lg font-bold text-red-500">{{ questions.length - score }}</div>
+            <div class="text-xs text-gray-500">Incorrect</div>
+          </div>
+          <div>
+            <div class="text-lg font-bold text-gray-900">{{ questions.length }}</div>
+            <div class="text-xs text-gray-500">Total</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Question review -->
+      <div class="mt-6 space-y-3">
+        <h3 class="text-xs font-bold tracking-widest text-gray-500 uppercase">Review Answers</h3>
+        @for (q of questions; track $index; let i = $index) {
+        <div class="rounded-xl border p-4"
+          [ngClass]="q.isCorrect ? 'border-green-200 bg-green-50/50' : 'border-red-200 bg-red-50/50'"
+        >
+          <div class="flex items-start gap-2">
+            @if (q.isCorrect) {
+            <svg class="h-5 w-5 text-green-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            } @else {
+            <svg class="h-5 w-5 text-red-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            }
+            <div class="min-w-0">
+              <p class="text-sm font-medium text-gray-900">{{ i + 1 }}. {{ q.question }}</p>
+              <p class="text-xs text-gray-500 mt-1">
+                Your answer: <span class="font-medium" [ngClass]="q.isCorrect ? 'text-green-600' : 'text-red-600'">{{ q.userAnswer }}</span>
+                @if (!q.isCorrect) {
+                &bull; Correct: <span class="font-medium text-green-600">{{ q.correctAnswer }}</span>
+                }
+              </p>
+            </div>
+          </div>
+        </div>
+        }
+      </div>
+
+      <!-- Actions -->
+      <div class="mt-8 flex items-center justify-center gap-3">
+        <button
+          type="button"
+          class="rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+          (click)="goBack()"
+        >
+          Back to Files
+        </button>
+        <button
+          type="button"
+          class="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition"
+          (click)="retryQuiz()"
+        >
+          Retry Quiz
+        </button>
+      </div>
+    </div>
+    }
+
+  </div>
+</section>
