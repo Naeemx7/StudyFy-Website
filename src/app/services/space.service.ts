@@ -203,7 +203,33 @@ export class SpaceService {
   }
 
   /**
-   * GET SINGLE SPACE BY ID
+   * GET SINGLE SPACE
+   * 
+   * Fetches a single space from the backend by ID.
+   * 
+   * ENDPOINT: GET /users/{userId}/spaces/{workspaceId}
+   */
+  getSpace(spaceId: string): Observable<Space> {
+    const userId = this.auth.getCurrentUserId();
+    
+    if (!userId) {
+      return throwError(() => new Error('User not logged in'));
+    }
+
+    return this.http.get<ApiResponse<SpaceResponse>>(`${environment.apiUrl}/users/${userId}/spaces/${spaceId}`)
+      .pipe(
+        map(response => {
+          if (!response.isSuccess) {
+            throw new Error(response.message || 'Failed to load space');
+          }
+          return mapSpaceResponseToSpace(response.data);
+        }),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * GET SINGLE SPACE BY ID (from local cache)
    * 
    * Returns a space from local state.
    * If not found locally, could fetch from API (not implemented yet).

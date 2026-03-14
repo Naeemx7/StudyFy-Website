@@ -1,17 +1,16 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
-
-type FileStatus = 'MASTERED' | 'IN_PROGRESS' | 'NEEDS_REVIEW';
+import { Router, ActivatedRoute } from '@angular/router';
+import { StorageService } from '../../services/storage.service';
+import { SpaceService } from '../../services/space.service';
+import { UploadProgress } from '../../models/storage.models';
 
 interface RoadmapFile {
-  id: string;
+  id: string;        // fileId from backend (or temp id before content extraction)
   name: string;
   size: number;
   type: string;
-  status: FileStatus;
-  progress: number; // 0 - 100
-  description?: string;
+  uploadedAt?: Date;
 }
 
 @Component({
@@ -24,53 +23,51 @@ interface RoadmapFile {
 export class RoadmapComponent implements OnInit {
   spaceTitle = '';
   spaceSubtitle = '';
+  spaceId = '';
 
   files: RoadmapFile[] = [];
+  uploadProgress: UploadProgress[] = [];
+  isUploading = false;
+  loadingFiles = false;
+  errorMessage = '';
 
   isDragActive = false;
   private dragCounter = 0;
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private route: ActivatedRoute,
+    private storageService: StorageService,
+    private spaceService: SpaceService
+  ) {}
 
   ngOnInit(): void {
-    this.files = [
-      {
-        id: crypto.randomUUID(),
-        name: 'Intro to Processes.pdf',
-        size: 1024,
-        type: 'application/pdf',
-        status: 'MASTERED',
-        progress: 92,
-        description: 'Covers PCB, process states, and context switching fundamentals.',
+    // Get spaceId from route params
+    this.spaceId = this.route.snapshot.paramMap.get('spaceId') || '';
+
+    if (!this.spaceId) {
+      this.router.navigate(['/dashboard']);
+      return;
+    }
+
+    // Load space info
+    this.spaceService.getSpace(this.spaceId).subscribe({
+      next: (space) => {
+        this.spaceTitle = space.title;
+        this.spaceSubtitle = space.description;
       },
-      {
-        id: crypto.randomUUID(),
-        name: 'CPU Scheduling.pdf',
-        size: 1024,
-        type: 'application/pdf',
-        status: 'MASTERED',
-        progress: 85,
-        description: 'FCFS, SJF, Priority, and Round Robin algorithms explained.',
-      },
-      {
-        id: crypto.randomUUID(),
-        name: 'Virtual Memory.pdf',
-        size: 1024,
-        type: 'application/pdf',
-        status: 'IN_PROGRESS',
-        progress: 45,
-        description: 'Paging, segmentation, and page replacement strategies.',
-      },
-      {
-        id: crypto.randomUUID(),
-        name: 'Memory Management.pdf',
-        size: 1024,
-        type: 'application/pdf',
-        status: 'NEEDS_REVIEW',
-        progress: 38,
-        description: 'Allocation strategies, fragmentation, and compaction.',
-      },
-    ];
+      error: () => {
+        this.spaceTitle = 'Study Space';
+      }
+    });
+
+    // Load saved files from localStorage
+    this.loadFilesFromStorage();
+
+    // Subscribe to upload progress
+    this.storageService.uploadProgress$.subscribe(progress => {
+      this.uploadProgress = progress;
+    });
   }
 
   // ===== Upload =====
@@ -143,27 +140,49 @@ export class RoadmapComponent implements OnInit {
   }
 
   private addFiles(selected: File[]) {
-    const mapped: RoadmapFile[] = selected.map((f) => ({
-      id: crypto.randomUUID(),
-      name: f.name,
-      size: f.size,
-      type: f.type || 'application/octet-stream',
-      status: 'IN_PROGRESS',
-      progress: 0,
-      description: 'Click to open the AI Workspace.',
-    }));
+    if (selected.length === 0) return;
 
-    this.files = [...this.files, ...mapped];
+    this.isUploading = true;
+    this.errorMessage = '';
+
+    // Upload files via StorageService (real Azure upload)
+    this.storageService.uploadFiles(this.spaceId, selected).subscribe({
+      next: (fileNames) => {
+        // Add uploaded files to the list
+        const mapped: RoadmapFile[] = selected.map((f) => ({
+          id: f.name,
+          name: f.name,
+          size: f.size,
+          type: f.type || 'application/octet-stream',
+          uploadedAt: new Date(),
+        }));
+
+        this.files = [...this.files, ...mapped];
+        this.saveFilesToStorage();
+        this.isUploading = false;
+        this.storageService.clearProgress();
+      },
+      error: (err) => {
+        this.isUploading = false;
+        this.errorMessage = err.message || 'Upload failed';
+        this.storageService.clearProgress();
+      }
+    });
   }
 
   removeFile(id: string, ev?: MouseEvent) {
     ev?.stopPropagation();
     this.files = this.files.filter((f) => f.id !== id);
+    this.saveFilesToStorage();
   }
 
   // ===== Navigation =====
   openWorkspace(file: RoadmapFile) {
-    this.router.navigate(['/workspace', file.id]);
+    this.router.navigate(['/workspace', this.spaceId, file.name]);
+  }
+
+  goBack() {
+    this.router.navigate(['/dashboard']);
   }
 
   // ===== UI helpers =====
@@ -176,50 +195,45 @@ export class RoadmapComponent implements OnInit {
     return `${mb.toFixed(1)} MB`;
   }
 
-  statusIconBg(status: FileStatus) {
-    if (status === 'MASTERED') return 'bg-emerald-600';
-    if (status === 'IN_PROGRESS') return 'bg-amber-600';
-    return 'bg-rose-600';
-  }
-
-  borderClass(status: FileStatus) {
-    if (status === 'MASTERED') return 'border-emerald-300';
-    if (status === 'IN_PROGRESS') return 'border-amber-300';
-    return 'border-rose-300';
-  }
-
-  barClass(status: FileStatus) {
-    if (status === 'MASTERED') return 'bg-emerald-600';
-    if (status === 'IN_PROGRESS') return 'bg-amber-600';
-    return 'bg-rose-600';
-  }
-
-  get needsAttentionFile() {
-    return this.files.find((f) => f.status === 'NEEDS_REVIEW') ?? null;
-  }
-
-  get masteredCount() {
-    return this.files.filter((f) => f.status === 'MASTERED').length;
+  getFileIcon(type: string): string {
+    if (type.includes('pdf')) return '📄';
+    if (type.includes('audio')) return '🎵';
+    if (type.includes('image')) return '🖼️';
+    if (type.includes('video')) return '🎬';
+    if (type.includes('text') || type.includes('document')) return '📝';
+    return '📎';
   }
 
   get totalCount() {
     return this.files.length;
   }
 
-  get overallPercent() {
-    if (this.totalCount === 0) return 0;
-    return Math.round((this.masteredCount / this.totalCount) * 100);
-  }
-
-  get inProgressCount() {
-    return this.files.filter((f) => f.status === 'IN_PROGRESS').length;
-  }
-
-  get needsReviewCount() {
-    return this.files.filter((f) => f.status === 'NEEDS_REVIEW').length;
+  getUploadProgressFor(fileName: string): number {
+    const p = this.uploadProgress.find(up => up.fileName === fileName);
+    return p ? p.progress : 0;
   }
 
   trackById(_: number, file: RoadmapFile) {
     return file.id;
+  }
+
+  // ===== LocalStorage persistence =====
+  private get storageKey(): string {
+    return `asc_files_${this.spaceId}`;
+  }
+
+  private saveFilesToStorage(): void {
+    localStorage.setItem(this.storageKey, JSON.stringify(this.files));
+  }
+
+  private loadFilesFromStorage(): void {
+    const saved = localStorage.getItem(this.storageKey);
+    if (saved) {
+      try {
+        this.files = JSON.parse(saved);
+      } catch {
+        this.files = [];
+      }
+    }
   }
 }
