@@ -2,7 +2,6 @@ import { Component, OnInit, inject, ViewChild, ElementRef, AfterViewChecked } fr
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { forkJoin, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { StorageService } from '../../services/storage.service';
@@ -34,7 +33,6 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
 
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private sanitizer = inject(DomSanitizer);
   private storageService = inject(StorageService);
   private aiService = inject(AiService);
 
@@ -44,11 +42,10 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
 
   // File state
   fileContent = '';
+  fileTopic = '';
   fileId = '';
-  safePdfUrl: SafeResourceUrl | null = null;
   isPdf = false;
   loadingContent = true;
-  loadingPdf = true;
   contentError = '';
 
   // Chat state
@@ -77,27 +74,8 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
 
     this.isPdf = this.fileName.toLowerCase().endsWith('.pdf');
 
-    // Get read URL for PDF display
-    if (this.isPdf) {
-      this.loadPdfUrl();
-    }
-
-    // Get extracted text content (needed for AI operations)
+    // Load extracted text content (works for all file types including PDFs)
     this.loadFileContent();
-  }
-
-  private loadPdfUrl(): void {
-    this.loadingPdf = true;
-    this.storageService.getReadUrl(this.spaceId, this.fileName).subscribe({
-      next: (url) => {
-        this.safePdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
-        this.loadingPdf = false;
-      },
-      error: () => {
-        this.contentError = 'Could not load PDF preview';
-        this.loadingPdf = false;
-      }
-    });
   }
 
   private loadFileContent(): void {
@@ -105,23 +83,41 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
     this.storageService.getFileContent(this.spaceId, this.fileName).subscribe({
       next: (content) => {
         this.fileId = content.fileId;
-        this.fileContent = typeof content.result === 'string'
-          ? content.result
-          : JSON.stringify(content.result, null, 2);
+        this.extractDisplayContent(content.result);
         this.loadingContent = false;
         // Persist the real UUID fileId back to localStorage
         this.updateFileIdInStorage(this.fileName, this.fileId);
       },
       error: (err) => {
         this.loadingContent = false;
-        // If content extraction fails but we have a PDF, still show it
-        if (this.isPdf) {
-          this.contentError = '';
-        } else {
-          this.contentError = err.message || 'Failed to load file content';
-        }
+        this.contentError = err.message || 'Failed to load file content';
       }
     });
+  }
+
+  private extractDisplayContent(result: any): void {
+    if (!result) {
+      this.fileContent = '';
+      return;
+    }
+    if (typeof result === 'string') {
+      this.fileContent = result;
+      return;
+    }
+    // Handle API response structure: {responseTitle, responseContent: {topic, cleanContent}}
+    if (result.responseContent) {
+      const rc = result.responseContent;
+      if (typeof rc === 'string') {
+        this.fileContent = rc;
+        return;
+      }
+      if (rc.topic) this.fileTopic = rc.topic;
+      if (rc.cleanContent) {
+        this.fileContent = rc.cleanContent;
+        return;
+      }
+    }
+    this.fileContent = JSON.stringify(result, null, 2);
   }
 
   // ===== AI Actions =====

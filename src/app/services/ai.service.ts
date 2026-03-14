@@ -164,7 +164,12 @@ export class AiService {
   /**
    * Error handler
    */
-  private handleError = (error: HttpErrorResponse): Observable<never> => {
+  private handleError = (error: HttpErrorResponse | Error): Observable<never> => {
+    // Pass through plain Error objects (e.g., from isSuccess:false API responses)
+    if (!(error instanceof HttpErrorResponse)) {
+      return throwError(() => error);
+    }
+
     let message = 'An error occurred';
 
     if (error.status === 0) {
