@@ -40,8 +40,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   // This is where we stored it after login
   const token = localStorage.getItem('asc_jwt_token');
   
-  // If we have a token, add it to the request header
-  if (token) {
+  // Skip auth header for external URLs (e.g., Azure Blob Storage uses SAS tokens in URL)
+  const isExternalRequest = req.url.startsWith('https://') || req.url.startsWith('http://');
+  
+  // If we have a token, add it to the request header (only for our backend API)
+  if (token && !isExternalRequest) {
     // Clone the request and add the Authorization header
     // We clone because HttpRequest is immutable (cannot be changed directly)
     req = req.clone({

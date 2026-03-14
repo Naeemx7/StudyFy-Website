@@ -40,7 +40,8 @@
       </div>
 
       <!-- User Dropdown -->
-      <div class="relative ml-2" *ngIf="currentUser$ | async as user">
+      @if (currentUser$ | async; as user) {
+      <div class="relative ml-2">
         <button (click)="toggleDropdown(); $event.stopPropagation()" class="flex items-center gap-2 hover:bg-gray-100 rounded-full p-1 pr-3 transition-colors">
           <div class="h-8 w-8 rounded-full bg-indigo-600 flex items-center justify-center text-sm font-medium text-white shadow-sm ring-2 ring-white">
             {{ getInitials(user.userName) }}
@@ -50,7 +51,8 @@
         </button>
 
         <!-- Dropdown Menu -->
-        <div *ngIf="isDropdownOpen" class="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-gray-100 py-1 z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+        @if (isDropdownOpen) {
+        <div class="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-gray-100 py-1 z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
           <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/50 rounded-t-xl">
             <p class="text-sm font-semibold text-gray-900">{{ user.userName }}</p>
             <p class="text-xs text-gray-500 truncate">{{ user.email }}</p>
@@ -71,7 +73,9 @@
             </button>
           </div>
         </div>
+        }
       </div>
+      }
     </div>
   </div>
 </nav>

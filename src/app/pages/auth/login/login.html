@@ -27,7 +27,8 @@
     </div>
 
     <!-- Registration Success Message (shown after redirect from signup) -->
-    <div *ngIf="registrationMessage" class="p-3 bg-green-900/30 border border-green-700 rounded-lg text-sm text-green-400">
+    @if (registrationMessage) {
+    <div class="p-3 bg-green-900/30 border border-green-700 rounded-lg text-sm text-green-400">
       <div class="flex items-start gap-2">
         <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -35,22 +36,28 @@
         <span>{{ registrationMessage }}</span>
       </div>
     </div>
+    }
 
     <!-- Error Message -->
-    <div *ngIf="error" class="p-3 bg-red-900/30 border border-red-700 rounded-lg text-sm text-red-400">
+    @if (error) {
+    <div class="p-3 bg-red-900/30 border border-red-700 rounded-lg text-sm text-red-400">
       {{ error }}
     </div>
+    }
 
-    <form *ngIf="!showGoogleProfileForm" [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-6">
+    @if (!showGoogleProfileForm) {
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-6">
 
       <!-- Username Field -->
       <div class="space-y-2">
         <label class="text-sm font-medium" for="userName">Username</label>
         <input formControlName="userName" type="text" id="userName" placeholder="Your username"
           class="flex h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-600">
-        <p *ngIf="hasError('userName')" class="text-xs text-red-400">
+        @if (hasError('userName')) {
+        <p class="text-xs text-red-400">
           Username is required.
         </p>
+        }
       </div>
 
       <!-- Password Field -->
@@ -61,9 +68,11 @@
         </div>
         <input formControlName="password" type="password" id="password" placeholder="••••••••"
           class="flex h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-600">
-        <p *ngIf="hasError('password')" class="text-xs text-red-400">
+        @if (hasError('password')) {
+        <p class="text-xs text-red-400">
           Password is required (min 6 characters).
         </p>
+        }
       </div>
 
       <!-- Submit Button -->
@@ -72,9 +81,11 @@
         {{ loading ? 'Signing In...' : 'Sign In' }}
       </button>
     </form>
+    }
 
     <!-- Google Profile Completion Form -->
-    <div *ngIf="showGoogleProfileForm" class="space-y-4">
+    @if (showGoogleProfileForm) {
+    <div class="space-y-4">
       <p class="text-sm text-zinc-400">Complete your profile to sign in with Google.</p>
 
       <!-- I am a... (Student/Professional Selector) -->
@@ -108,7 +119,9 @@
         <select [formControl]="googleTargetControl" id="googleLoginTarget"
           class="flex h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 appearance-none cursor-pointer">
           <option [ngValue]="null" disabled>Select your objective...</option>
-          <option *ngFor="let opt of targetOptions" [ngValue]="opt.value">{{ opt.label }}</option>
+          @for (opt of targetOptions; track opt.value) {
+          <option [ngValue]="opt.value">{{ opt.label }}</option>
+          }
         </select>
       </div>
 
@@ -130,6 +143,7 @@
         ← Back to regular sign in
       </button>
     </div>
+    }
 
     <div class="text-center text-sm text-zinc-400">
         Don't have an account?
@@ -139,14 +153,15 @@
 </div>
 
 <!-- Forgot Password Modal -->
-<div *ngIf="showForgotPassword" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+@if (showForgotPassword) {
+<div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
   <div class="w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-xl p-6 shadow-2xl space-y-5">
 
     <div class="flex justify-between items-center">
       <h3 class="text-lg font-bold text-white">
-        <span *ngIf="forgotStep === 'email'">Reset Password</span>
-        <span *ngIf="forgotStep === 'otp'">Enter OTP</span>
-        <span *ngIf="forgotStep === 'reset'">New Password</span>
+        @if (forgotStep === 'email') { <span>Reset Password</span> }
+        @if (forgotStep === 'otp') { <span>Enter OTP</span> }
+        @if (forgotStep === 'reset') { <span>New Password</span> }
       </h3>
       <button (click)="closeForgotPassword()" class="text-zinc-400 hover:text-white text-2xl leading-none">&times;</button>
     </div>
@@ -159,38 +174,49 @@
     </div>
 
     <!-- Success -->
-    <div *ngIf="forgotSuccess" class="p-3 bg-green-900/30 border border-green-700 rounded-lg text-sm text-green-400">
+    @if (forgotSuccess) {
+    <div class="p-3 bg-green-900/30 border border-green-700 rounded-lg text-sm text-green-400">
       {{ forgotSuccess }}
     </div>
+    }
 
     <!-- Error -->
-    <div *ngIf="forgotError" class="p-3 bg-red-900/30 border border-red-700 rounded-lg text-sm text-red-400">
+    @if (forgotError) {
+    <div class="p-3 bg-red-900/30 border border-red-700 rounded-lg text-sm text-red-400">
       {{ forgotError }}
     </div>
+    }
 
     <!-- Step 1: Email -->
-    <form *ngIf="forgotStep === 'email'" [formGroup]="forgotEmailForm" (ngSubmit)="onForgotEmailSubmit()" class="space-y-4">
+    @if (forgotStep === 'email') {
+    <form [formGroup]="forgotEmailForm" (ngSubmit)="onForgotEmailSubmit()" class="space-y-4">
       <p class="text-sm text-zinc-400">Enter your email address and we'll send you an OTP to reset your password.</p>
       <div class="space-y-1">
         <label class="text-sm font-medium text-zinc-300" for="forgotEmail">Email</label>
         <input id="forgotEmail" formControlName="email" type="email" placeholder="you@example.com"
           class="flex h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-600">
-        <p *ngIf="forgotEmailForm.get('email')?.touched && forgotEmailForm.get('email')?.invalid" class="text-xs text-red-400">Enter a valid email.</p>
+        @if (forgotEmailForm.get('email')?.touched && forgotEmailForm.get('email')?.invalid) {
+        <p class="text-xs text-red-400">Enter a valid email.</p>
+        }
       </div>
       <button type="submit" [disabled]="forgotLoading || forgotEmailForm.invalid"
         class="w-full bg-white text-black hover:bg-zinc-200 font-bold py-2.5 rounded-lg transition-colors disabled:opacity-60">
         {{ forgotLoading ? 'Sending...' : 'Send OTP' }}
       </button>
     </form>
+    }
 
     <!-- Step 2: OTP -->
-    <form *ngIf="forgotStep === 'otp'" [formGroup]="forgotOtpForm" (ngSubmit)="onForgotOtpSubmit()" class="space-y-4">
+    @if (forgotStep === 'otp') {
+    <form [formGroup]="forgotOtpForm" (ngSubmit)="onForgotOtpSubmit()" class="space-y-4">
       <p class="text-sm text-zinc-400">We sent an OTP code to <span class="text-white font-medium">{{ forgotEmail }}</span>. Enter it below to verify your identity.</p>
       <div class="space-y-1">
         <label class="text-sm font-medium text-zinc-300" for="forgotOtp">OTP Code</label>
         <input id="forgotOtp" formControlName="otp" type="text" placeholder="Enter OTP" autocomplete="one-time-code"
           class="flex h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white text-center tracking-[0.3em] placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-600">
-        <p *ngIf="forgotOtpForm.get('otp')?.touched && forgotOtpForm.get('otp')?.invalid" class="text-xs text-red-400">OTP is required.</p>
+        @if (forgotOtpForm.get('otp')?.touched && forgotOtpForm.get('otp')?.invalid) {
+        <p class="text-xs text-red-400">OTP is required.</p>
+        }
       </div>
       <button type="submit" [disabled]="forgotLoading || forgotOtpForm.invalid"
         class="w-full bg-white text-black hover:bg-zinc-200 font-bold py-2.5 rounded-lg transition-colors disabled:opacity-60">
@@ -200,44 +226,60 @@
         ← Back to email
       </button>
     </form>
+    }
 
     <!-- Step 3: Reset Password -->
-    <form *ngIf="forgotStep === 'reset'" [formGroup]="forgotResetForm" (ngSubmit)="onForgotResetSubmit()" class="space-y-4">
+    @if (forgotStep === 'reset') {
+    <form [formGroup]="forgotResetForm" (ngSubmit)="onForgotResetSubmit()" class="space-y-4">
       <p class="text-sm text-zinc-400">Enter your new password below.</p>
 
       <!-- Show which email is being used -->
-      <div *ngIf="forgotEmail" class="p-2.5 bg-zinc-900 border border-zinc-700 rounded-lg">
+      @if (forgotEmail) {
+      <div class="p-2.5 bg-zinc-900 border border-zinc-700 rounded-lg">
         <p class="text-xs text-zinc-500">Resetting password for</p>
         <p class="text-sm text-white font-medium">{{ forgotEmail }}</p>
       </div>
+      }
 
       <!-- Email input when no email from previous steps -->
-      <div *ngIf="!forgotEmail" class="space-y-1">
+      @if (!forgotEmail) {
+      <div class="space-y-1">
         <label class="text-sm font-medium text-zinc-300" for="forgotEmailDirect">Email</label>
         <input id="forgotEmailDirect" type="email" placeholder="you@example.com" [(ngModel)]="forgotEmail" [ngModelOptions]="{standalone: true}"
           class="flex h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-600">
       </div>
+      }
 
       <div class="space-y-1">
         <label class="text-sm font-medium text-zinc-300" for="newPassword">New Password</label>
         <input id="newPassword" formControlName="newPassword" type="password" placeholder="••••••••" autocomplete="new-password"
           class="flex h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-600">
         <div class="text-xs text-zinc-500">Only letters, digits, and @$!%*?&amp; allowed. Must have uppercase, lowercase, digit, and special char.</div>
-        <p *ngIf="forgotResetForm.get('newPassword')?.touched && forgotResetForm.get('newPassword')?.hasError('required')" class="text-xs text-red-400">Password is required.</p>
-        <p *ngIf="forgotResetForm.get('newPassword')?.touched && forgotResetForm.get('newPassword')?.hasError('minlength')" class="text-xs text-red-400">Minimum 6 characters.</p>
-        <p *ngIf="forgotResetForm.get('newPassword')?.touched && forgotResetForm.get('newPassword')?.hasError('passwordStrength')" class="text-xs text-red-400">Must have uppercase, lowercase, digit &amp; special char (@$!%*?&amp;).</p>
+        @if (forgotResetForm.get('newPassword')?.touched && forgotResetForm.get('newPassword')?.hasError('required')) {
+        <p class="text-xs text-red-400">Password is required.</p>
+        }
+        @if (forgotResetForm.get('newPassword')?.touched && forgotResetForm.get('newPassword')?.hasError('minlength')) {
+        <p class="text-xs text-red-400">Minimum 6 characters.</p>
+        }
+        @if (forgotResetForm.get('newPassword')?.touched && forgotResetForm.get('newPassword')?.hasError('passwordStrength')) {
+        <p class="text-xs text-red-400">Must have uppercase, lowercase, digit &amp; special char (@$!%*?&amp;).</p>
+        }
       </div>
       <div class="space-y-1">
         <label class="text-sm font-medium text-zinc-300" for="confirmNewPassword">Confirm Password</label>
         <input id="confirmNewPassword" formControlName="confirmPassword" type="password" placeholder="••••••••" autocomplete="new-password"
           class="flex h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-600">
-        <p *ngIf="resetPasswordMismatch" class="text-xs text-red-400">Passwords do not match.</p>
+        @if (resetPasswordMismatch) {
+        <p class="text-xs text-red-400">Passwords do not match.</p>
+        }
       </div>
       <button type="submit" [disabled]="forgotLoading || forgotResetForm.invalid"
         class="w-full bg-white text-black hover:bg-zinc-200 font-bold py-2.5 rounded-lg transition-colors disabled:opacity-60">
         {{ forgotLoading ? 'Resetting...' : 'Reset Password' }}
       </button>
     </form>
+    }
 
   </div>
 </div>
+}

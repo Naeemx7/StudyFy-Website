@@ -84,19 +84,25 @@
       </div>
 
       <!-- Loading State -->
-      <div *ngIf="spacesLoading$ | async" class="flex items-center justify-center py-12">
+      @if (spacesLoading$ | async) {
+      <div class="flex items-center justify-center py-12">
         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
         <span class="ml-3 text-gray-500">Loading spaces...</span>
       </div>
+      }
 
       <!-- Error State -->
-      <div *ngIf="spacesError$ | async as error" class="bg-red-50 border border-red-200 rounded-xl p-4 text-red-600">
+      @if (spacesError$ | async; as error) {
+      <div class="bg-red-50 border border-red-200 rounded-xl p-4 text-red-600">
         {{ error }}
       </div>
+      }
 
       <!-- Spaces Grid -->
-      <div *ngIf="!(spacesLoading$ | async)" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div *ngFor="let space of spaces$ | async" 
+      @if (!(spacesLoading$ | async)) {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (space of spaces$ | async; track space.id) {
+        <div
            class="bg-white border border-gray-200 rounded-xl p-6 hover:border-indigo-200 hover:shadow-lg transition-all duration-300 cursor-pointer group flex flex-col h-full transform hover:-translate-y-1 relative">
            
            <!-- Delete Button (top-right, shows on hover) -->
@@ -109,7 +115,7 @@
            </button>
 
            <!-- Clickable area for navigation -->
-           <a [routerLink]="['/roadmap']" [queryParams]="{ id: space.id }" class="absolute inset-0 z-0"></a>
+           <a [routerLink]="['/roadmap', space.id]" class="absolute inset-0 z-0"></a>
            
            <!-- Icon -->
            <div class="w-12 h-12 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-center text-gray-600 mb-5 group-hover:bg-indigo-50 group-hover:text-indigo-600 group-hover:border-indigo-100 transition-colors relative z-[1] pointer-events-none">
@@ -131,6 +137,7 @@
             </div>
            </div>
         </div>
+        }
 
          <!-- New Space Placeholder (Dotted border) -->
          <button (click)="openCreateModal()" class="border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center text-gray-400 hover:border-gray-300 hover:text-gray-500 hover:bg-white transition-all h-full min-h-[220px] group">
@@ -140,11 +147,13 @@
             <span class="text-sm font-medium">Create new space</span>
          </button>
       </div>
+      }
     </div>
   </main>
 
   <!-- Create Space Modal -->
-  <div *ngIf="showCreateModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+  @if (showCreateModal) {
+  <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
     <div class="w-full max-w-md bg-white rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
       
       <div class="flex justify-between items-center mb-6">
@@ -153,16 +162,20 @@
       </div>
 
       <!-- Error in modal -->
-      <div *ngIf="createError" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+      @if (createError) {
+      <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
         {{ createError }}
       </div>
+      }
 
       <form [formGroup]="createSpaceForm" (ngSubmit)="onCreateSpace()" class="space-y-4">
         <div class="space-y-1.5">
           <label class="text-sm font-semibold text-gray-700">Name</label>
           <input formControlName="name" type="text" placeholder="e.g. Advanced Algorithms" 
             class="w-full h-11 px-3 bg-white border border-gray-300 rounded-xl focus:border-black focus:ring-1 focus:ring-black focus:outline-none placeholder:text-gray-400 text-sm transition-all">
-          <p *ngIf="createSpaceForm.get('name')?.touched && createSpaceForm.get('name')?.invalid" class="text-xs text-red-500">Name is required (min 3 characters)</p>
+          @if (createSpaceForm.get('name')?.touched && createSpaceForm.get('name')?.invalid) {
+          <p class="text-xs text-red-500">Name is required (min 3 characters)</p>
+          }
         </div>
 
         <div class="space-y-1.5">
@@ -175,16 +188,21 @@
           <button type="button" (click)="closeCreateModal()" class="flex-1 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors text-sm">Cancel</button>
           <button type="submit" [disabled]="createSpaceForm.invalid || isCreating" 
             class="flex-1 py-2.5 rounded-xl bg-black text-white font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors flex justify-center text-sm shadow-lg shadow-black/20">
-            <span *ngIf="!isCreating">Create Space</span>
-            <span *ngIf="isCreating" class="animate-pulse">Creating...</span>
+            @if (!isCreating) {
+            <span>Create Space</span>
+            } @else {
+            <span class="animate-pulse">Creating...</span>
+            }
           </button>
         </div>
       </form>
     </div>
   </div>
+  }
 
   <!-- Delete Confirmation Modal -->
-  <div *ngIf="showDeleteModal && spaceToDelete" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+  @if (showDeleteModal && spaceToDelete) {
+  <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
     <div class="w-full max-w-sm bg-white rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
       
       <div class="flex flex-col items-center text-center">
@@ -202,9 +220,11 @@
         </p>
 
         <!-- Error message -->
-        <div *ngIf="deleteError" class="w-full mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+        @if (deleteError) {
+        <div class="w-full mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
           {{ deleteError }}
         </div>
+        }
 
         <div class="flex gap-3 w-full">
           <button (click)="cancelDelete()" 
@@ -215,12 +235,16 @@
           <button (click)="deleteSpace()" 
                   [disabled]="isDeleting"
                   class="flex-1 py-2.5 rounded-xl bg-red-600 text-white font-medium hover:bg-red-700 disabled:opacity-50 transition-colors flex justify-center text-sm">
-            <span *ngIf="!isDeleting">Delete</span>
-            <span *ngIf="isDeleting" class="animate-pulse">Deleting...</span>
+            @if (!isDeleting) {
+            <span>Delete</span>
+            } @else {
+            <span class="animate-pulse">Deleting...</span>
+            }
           </button>
         </div>
       </div>
     </div>
   </div>
+  }
 
 </div>
