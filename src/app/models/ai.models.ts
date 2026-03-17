@@ -1,6 +1,6 @@
 /**
  * AI Models (DTOs)
- * 
+ *
  * These match the WorkspaceAI endpoints from the backend API:
  * - POST /summary       - Generate AI summary from files
  * - POST /flashcards    - Generate flashcards from files
@@ -61,7 +61,7 @@ export interface ApiResponse<T> {
 /** Response from POST /summary and POST /flashcards (GeminiResponseDto) */
 export interface GeminiResponse {
   responseTitle: string;
-  responseContent: string;
+  responseContent: unknown;
 }
 
 /** Response from POST /quiz */

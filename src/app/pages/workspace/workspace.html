@@ -1,28 +1,23 @@
 <section class="h-screen flex flex-col bg-gray-50">
-  <!-- Workspace header -->
   <div class="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-3 shrink-0">
     <div class="flex items-center gap-4">
-      <button
-        type="button"
-        class="text-gray-400 hover:text-gray-900 transition"
-        (click)="goBack()"
-      >
+      <button type="button" class="text-gray-400 hover:text-gray-900 transition" (click)="goBack()">
         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
         </svg>
       </button>
       <div>
         <h1 class="text-base font-bold text-gray-900">{{ fileName }}</h1>
-        <p class="text-xs text-emerald-600 font-medium">In Progress</p>
+        <p class="text-xs font-medium text-emerald-600">In Progress</p>
       </div>
     </div>
 
-    <!-- AI action buttons -->
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-100 p-1">
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
-        (click)="onSummarize()"
+        class="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition disabled:opacity-50"
+        [ngClass]="activeTab === 'summary' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'"
+        (click)="selectTab('summary')"
         [disabled]="isProcessing || !fileId"
       >
         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -32,8 +27,9 @@
       </button>
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
-        (click)="onFlashcards()"
+        class="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition disabled:opacity-50"
+        [ngClass]="activeTab === 'flashcards' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'"
+        (click)="selectTab('flashcards')"
         [disabled]="isProcessing || !fileId"
       >
         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -43,8 +39,9 @@
       </button>
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800 transition disabled:opacity-50"
-        (click)="onQuiz()"
+        class="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition disabled:opacity-50"
+        [ngClass]="activeTab === 'quiz' ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'"
+        (click)="selectTab('quiz')"
         [disabled]="isProcessing || !fileId"
       >
         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -55,52 +52,347 @@
     </div>
   </div>
 
-  <!-- Main content: split layout -->
   <div class="flex flex-1 overflow-hidden">
-    <!-- LEFT: Document viewer (55%) -->
-    <div class="w-[55%] border-r border-gray-200 flex flex-col overflow-hidden bg-white">
-      <!-- Loading state -->
+    <div class="w-[55%] border-r border-gray-200 bg-white flex flex-col overflow-hidden">
       @if (loadingContent) {
       <div class="flex-1 flex items-center justify-center">
         <div class="text-center">
-          <div class="h-8 w-8 mx-auto rounded-full border-2 border-gray-300 border-t-gray-900 animate-spin"></div>
+          <div class="mx-auto h-8 w-8 rounded-full border-2 border-gray-300 border-t-gray-900 animate-spin"></div>
           <p class="mt-3 text-sm text-gray-500">Loading content...</p>
         </div>
       </div>
-      }
-
-      <!-- Error state -->
-      @if (contentError && !loadingContent) {
+      } @else if (contentError) {
       <div class="flex-1 flex items-center justify-center p-6">
         <div class="text-center">
           <p class="text-sm text-rose-600">{{ contentError }}</p>
-          <button
-            type="button"
-            class="mt-3 text-sm font-semibold text-gray-700 hover:text-gray-900"
-            (click)="goBack()"
-          >
+          <button type="button" class="mt-3 text-sm font-semibold text-gray-700 hover:text-gray-900" (click)="goBack()">
             Go back to files
           </button>
         </div>
       </div>
-      }
+      } @else {
+      <div class="border-b border-gray-200 px-6 py-4 shrink-0">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-[0.18em] text-gray-500">{{ activeTab === 'summary' ? 'Summary' : activeTab === 'flashcards' ? 'Flashcards' : 'Quiz Mode' }}</p>
+            <h2 class="mt-1 text-lg font-bold text-gray-900">{{ activeTab === 'summary' ? (summaryTitle || 'Document Summary') : activeTab === 'flashcards' ? (flashcardsTitle || 'Study Flashcards') : 'Practice Quiz' }}</h2>
+            <p class="mt-1 text-sm text-gray-500">
+              {{ activeTab === 'summary' ? 'The workspace opens here automatically and summarizes the selected PDF.' : activeTab === 'flashcards' ? 'Review AI-generated study cards for the current file.' : 'Quiz Mode now stays in the left workspace instead of opening in chat.' }}
+            </p>
+          </div>
 
-      <!-- Document content viewer -->
-      @if (!loadingContent && fileContent && !contentError) {
-      <div class="flex-1 overflow-y-auto p-6">
-        @if (fileTopic) {
-        <h2 class="text-lg font-bold text-gray-900 mb-4">{{ fileTopic }}</h2>
-        }
-        <div class="prose prose-sm max-w-none">
-          <pre class="whitespace-pre-wrap text-sm text-gray-800 font-sans leading-relaxed">{{ fileContent }}</pre>
+          <button
+            type="button"
+            class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
+            (click)="regenerateActiveTab()"
+            [disabled]="isProcessing || !fileId"
+          >
+            {{ isProcessing ? processingAction : 'Regenerate' }}
+          </button>
         </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-6">
+        @if (activeTab === 'summary') {
+          @if (summaryState === 'loading') {
+          <div class="flex h-full items-center justify-center">
+            <div class="text-center">
+              <div class="mx-auto h-8 w-8 rounded-full border-2 border-gray-300 border-t-gray-900 animate-spin"></div>
+              <p class="mt-3 text-sm text-gray-500">Generating summary...</p>
+            </div>
+          </div>
+          }
+
+          @if (summaryState === 'error') {
+          <div class="rounded-2xl border border-rose-200 bg-rose-50 p-6">
+            <p class="text-sm font-semibold text-rose-700">{{ summaryError }}</p>
+            <button type="button" class="mt-4 rounded-lg border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-rose-50 transition" (click)="regenerateActiveTab()">
+              Try Again
+            </button>
+          </div>
+          }
+
+          @if (summaryState === 'ready') {
+          <div class="space-y-6">
+            @if (fileTopic) {
+            <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+              <div class="text-xs font-bold uppercase tracking-[0.18em] text-gray-500">Source Topic</div>
+              <div class="mt-2 text-base font-semibold text-gray-900">{{ fileTopic }}</div>
+            </div>
+            }
+
+            <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+              <pre class="whitespace-pre-wrap text-sm font-sans leading-7 text-gray-800">{{ summaryContent }}</pre>
+            </div>
+          </div>
+          }
+        }
+
+        @if (activeTab === 'flashcards') {
+          @if (flashcardsState === 'loading') {
+          <div class="flex h-full items-center justify-center">
+            <div class="text-center">
+              <div class="mx-auto h-8 w-8 rounded-full border-2 border-gray-300 border-t-gray-900 animate-spin"></div>
+              <p class="mt-3 text-sm text-gray-500">Generating flashcards...</p>
+            </div>
+          </div>
+          }
+
+          @if (flashcardsState === 'error') {
+          <div class="rounded-2xl border border-rose-200 bg-rose-50 p-6">
+            <p class="text-sm font-semibold text-rose-700">{{ flashcardsError }}</p>
+            <button type="button" class="mt-4 rounded-lg border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-rose-50 transition" (click)="regenerateActiveTab()">
+              Try Again
+            </button>
+          </div>
+          }
+
+          @if (flashcardsState === 'ready') {
+            @if (flashcards.length > 0) {
+            <div class="space-y-5">
+              <div class="flex items-center justify-between text-xs font-semibold text-gray-500">
+                <span>Card {{ flashcardIndex + 1 }} of {{ flashcards.length }}</span>
+                <span>{{ flashcardShowsBack ? 'Back Side' : 'Front Side' }}</span>
+              </div>
+
+              <button
+                type="button"
+                class="w-full rounded-2xl border border-gray-200 bg-white p-7 text-left shadow-sm transition hover:border-gray-300"
+                (click)="toggleFlashcardSide()"
+              >
+                <div class="text-xs font-bold uppercase tracking-[0.16em]" [ngClass]="flashcardShowsBack ? 'text-emerald-700' : 'text-gray-500'">
+                  {{ flashcardShowsBack ? 'Back' : 'Front' }}
+                </div>
+                <p class="mt-4 min-h-[220px] text-lg leading-8" [ngClass]="flashcardShowsBack ? 'text-emerald-950' : 'font-semibold text-gray-900'">
+                  {{ flashcardShowsBack ? currentFlashcard?.back : currentFlashcard?.front }}
+                </p>
+                <div class="mt-5 text-xs font-medium text-gray-400">Click card to flip</div>
+              </button>
+
+              <div class="flex items-center justify-center gap-4">
+                <button
+                  type="button"
+                  class="inline-flex h-12 w-12 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 transition hover:bg-gray-50 disabled:opacity-40"
+                  (click)="goToPreviousFlashcard()"
+                  [disabled]="!canGoToPreviousFlashcard"
+                >
+                  <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                  </svg>
+                </button>
+
+                <button
+                  type="button"
+                  class="inline-flex h-12 w-12 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 transition hover:bg-gray-50 disabled:opacity-40"
+                  (click)="goToNextFlashcard()"
+                  [disabled]="!canGoToNextFlashcard"
+                >
+                  <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            } @else {
+            <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+              <pre class="whitespace-pre-wrap text-sm font-sans leading-7 text-gray-800">{{ flashcardsRawContent }}</pre>
+            </div>
+            }
+          }
+        }
+
+        @if (activeTab === 'quiz') {
+          @if (quizState === 'loading') {
+          <div class="rounded-2xl border border-gray-200 bg-white p-10 text-center shadow-sm">
+            <div class="mx-auto h-10 w-10 rounded-full border-2 border-gray-300 border-t-gray-900 animate-spin"></div>
+            <p class="mt-4 text-sm font-semibold text-gray-900">Generating your quiz...</p>
+            <p class="mt-1 text-xs text-gray-500">{{ questionCount }} questions • {{ difficulty }} difficulty</p>
+          </div>
+          }
+
+          @if (quizState === 'error') {
+          <div class="rounded-2xl border border-rose-200 bg-rose-50 p-8 text-center">
+            <p class="text-sm font-semibold text-rose-700">{{ quizError }}</p>
+            <button type="button" class="mt-4 rounded-lg border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-rose-50 transition" (click)="retryQuiz()">
+              Try Again
+            </button>
+          </div>
+          }
+
+          @if (quizState === 'ready') {
+          <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+            <div class="text-center">
+              <div class="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-full bg-indigo-50">
+                <svg class="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 class="mt-4 text-2xl font-bold text-gray-900">Ready to Test Your Knowledge?</h3>
+              <p class="mt-2 text-sm text-gray-500">{{ quizQuestions.length }} questions generated from this file</p>
+            </div>
+
+            <div class="mt-6 grid grid-cols-3 gap-4 rounded-xl border border-gray-100 bg-gray-50 p-4 text-center">
+              <div>
+                <div class="text-lg font-bold text-gray-900">{{ quizQuestions.length }}</div>
+                <div class="text-xs text-gray-500">Questions</div>
+              </div>
+              <div>
+                <div class="text-lg font-bold text-gray-900">{{ difficulty }}</div>
+                <div class="text-xs text-gray-500">Difficulty</div>
+              </div>
+              <div>
+                <div class="text-lg font-bold text-gray-900">80%</div>
+                <div class="text-xs text-gray-500">To Master</div>
+              </div>
+            </div>
+
+            <div class="mt-6 flex items-center justify-center gap-3">
+              <button type="button" class="rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition" (click)="selectTab('summary')">
+                Back to Summary
+              </button>
+              <button type="button" class="rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition" (click)="startQuiz()">
+                Start Quiz
+              </button>
+            </div>
+          </div>
+          }
+
+          @if (quizState === 'in-progress' && currentQuestion) {
+          <div>
+            <div class="mb-6">
+              <div class="mb-2 flex items-center justify-between">
+                <span class="text-xs font-semibold text-gray-500">Question {{ currentIndex + 1 }} of {{ quizQuestions.length }}</span>
+                <span class="text-xs font-semibold text-gray-500">{{ quizProgress }}% complete</span>
+              </div>
+              <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                <div class="h-full rounded-full bg-indigo-600 transition-all duration-300" [style.width.%]="quizProgress"></div>
+              </div>
+            </div>
+
+            <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+              <h3 class="text-lg font-bold leading-relaxed text-gray-900">{{ currentQuestion.question }}</h3>
+
+              <div class="mt-6 space-y-3">
+                @for (option of currentQuestion.options; track option; let i = $index) {
+                <button
+                  type="button"
+                  class="w-full rounded-xl border-2 p-4 text-left text-sm transition"
+                  [ngClass]="{
+                    'border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300': currentQuestion.userAnswer === null,
+                    'border-indigo-600 bg-indigo-50': currentQuestion.userAnswer === option && currentQuestion.isCorrect,
+                    'border-red-400 bg-red-50': currentQuestion.userAnswer === option && currentQuestion.isCorrect === false,
+                    'border-green-500 bg-green-50': currentQuestion.userAnswer !== null && option === currentQuestion.correctAnswer && currentQuestion.userAnswer !== option,
+                    'border-gray-200 bg-gray-50 opacity-60': currentQuestion.userAnswer !== null && option !== currentQuestion.correctAnswer && currentQuestion.userAnswer !== option
+                  }"
+                  [disabled]="currentQuestion.userAnswer !== null"
+                  (click)="selectAnswer(option)"
+                >
+                  <div class="flex items-center gap-3">
+                    <span
+                      class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold"
+                      [ngClass]="{
+                        'border-gray-300 text-gray-500': currentQuestion.userAnswer === null,
+                        'border-indigo-600 text-indigo-600 bg-indigo-100': currentQuestion.userAnswer === option && currentQuestion.isCorrect,
+                        'border-red-400 text-red-500 bg-red-100': currentQuestion.userAnswer === option && currentQuestion.isCorrect === false,
+                        'border-green-500 text-green-600 bg-green-100': currentQuestion.userAnswer !== null && option === currentQuestion.correctAnswer && currentQuestion.userAnswer !== option,
+                        'border-gray-200 text-gray-400': currentQuestion.userAnswer !== null && option !== currentQuestion.correctAnswer && currentQuestion.userAnswer !== option
+                      }"
+                    >
+                      {{ 'ABCD'[i] }}
+                    </span>
+                    <span class="font-medium" [ngClass]="currentQuestion.userAnswer !== null && option === currentQuestion.correctAnswer ? 'text-green-700' : 'text-gray-900'">
+                      {{ option }}
+                    </span>
+                  </div>
+                </button>
+                }
+              </div>
+
+              @if (currentQuestion.userAnswer !== null) {
+              <div class="mt-6 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  @if (currentQuestion.isCorrect) {
+                  <span class="inline-flex items-center gap-1 text-sm font-semibold text-green-600">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Correct!
+                  </span>
+                  } @else {
+                  <span class="inline-flex items-center gap-1 text-sm font-semibold text-red-600">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Incorrect
+                  </span>
+                  }
+                </div>
+                <button type="button" class="rounded-lg bg-gray-900 px-5 py-2 text-sm font-semibold text-white hover:bg-gray-800 transition" (click)="nextQuestion()">
+                  {{ currentIndex < quizQuestions.length - 1 ? 'Next Question' : 'See Results' }}
+                </button>
+              </div>
+              }
+            </div>
+
+            <div class="mt-4 flex items-center justify-center gap-6 text-xs text-gray-500">
+              <span>✅ {{ score }} correct</span>
+              <span>❌ {{ totalAnswered - score }} incorrect</span>
+            </div>
+          </div>
+          }
+
+          @if (quizState === 'completed') {
+          <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+            <div class="text-center">
+              <div class="mx-auto inline-flex h-20 w-20 items-center justify-center rounded-full" [ngClass]="scorePercent >= 80 ? 'bg-green-50' : scorePercent >= 50 ? 'bg-amber-50' : 'bg-red-50'">
+                <span class="text-4xl">{{ scorePercent >= 80 ? '🏆' : scorePercent >= 50 ? '📚' : '💪' }}</span>
+              </div>
+              <h3 class="mt-4 text-2xl font-bold text-gray-900">{{ scorePercent >= 80 ? 'Excellent Work!' : scorePercent >= 50 ? 'Good Effort!' : 'Keep Going!' }}</h3>
+              <p class="mt-2 text-sm font-medium" [ngClass]="scorePercent >= 80 ? 'text-green-600' : scorePercent >= 50 ? 'text-amber-600' : 'text-red-600'">
+                {{ scorePercent >= 80 ? 'You have mastered this file.' : scorePercent >= 50 ? 'Review a bit more to reach mastery.' : 'Review the summary and flashcards, then try again.' }}
+              </p>
+            </div>
+
+            <div class="mt-6 rounded-xl border border-gray-100 bg-gray-50 p-6 text-center">
+              <div class="text-5xl font-extrabold" [ngClass]="{
+                'text-green-600': scorePercent >= 80,
+                'text-amber-600': scorePercent >= 50 && scorePercent < 80,
+                'text-red-600': scorePercent < 50
+              }">{{ scorePercent }}%</div>
+              <div class="mt-1 text-sm text-gray-500">{{ score }} out of {{ quizQuestions.length }} correct</div>
+            </div>
+
+            <div class="mt-6 space-y-3">
+              @for (question of quizQuestions; track $index; let i = $index) {
+              <div class="rounded-xl border p-4" [ngClass]="question.isCorrect ? 'border-green-200 bg-green-50/50' : 'border-red-200 bg-red-50/50'">
+                <p class="text-sm font-medium text-gray-900">{{ i + 1 }}. {{ question.question }}</p>
+                <p class="mt-1 text-xs text-gray-500">
+                  Your answer:
+                  <span class="font-semibold" [ngClass]="question.isCorrect ? 'text-green-600' : 'text-red-600'">{{ question.userAnswer }}</span>
+                  @if (!question.isCorrect) {
+                  • Correct: <span class="font-semibold text-green-600">{{ question.correctAnswer }}</span>
+                  }
+                </p>
+              </div>
+              }
+            </div>
+
+            <div class="mt-8 flex items-center justify-center gap-3">
+              <button type="button" class="rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition" (click)="selectTab('summary')">
+                Back to Summary
+              </button>
+              <button type="button" class="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition" (click)="retryQuiz()">
+                Retry Quiz
+              </button>
+            </div>
+          </div>
+          }
+        }
       </div>
       }
     </div>
 
-    <!-- RIGHT: AI Chat panel (45%) -->
     <div class="w-[45%] flex flex-col bg-white">
-      <!-- Chat header -->
       <div class="border-b border-gray-200 px-5 py-4 shrink-0">
         <div class="flex items-center gap-2">
           <svg class="h-5 w-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -108,118 +400,58 @@
           </svg>
           <h2 class="text-sm font-bold text-gray-900">AI Assistant</h2>
         </div>
-        <p class="text-xs text-gray-500 mt-0.5 ml-7">Ask questions about this document</p>
+        <p class="mt-0.5 ml-7 text-xs text-gray-500">Ask questions about this document</p>
       </div>
 
-      <!-- Messages -->
       <div #chatContainer class="flex-1 overflow-y-auto p-5 space-y-4">
-        <!-- Welcome state -->
-        @if (messages.length === 0 && !isProcessing) {
+        @if (messages.length === 0) {
         <div class="flex justify-start">
-          <div class="max-w-[90%] rounded-2xl rounded-bl-md bg-indigo-50 border border-indigo-100 px-4 py-3">
-            <p class="text-sm text-indigo-900 leading-relaxed">
-              Hello! I'm your AI study companion for <strong>{{ fileName }}</strong>. 
-              I've analyzed the document and I'm ready to help you master the concepts. 
-              What would you like to explore?
+          <div class="max-w-[90%] rounded-2xl rounded-bl-md border border-indigo-100 bg-indigo-50 px-4 py-3">
+            <p class="text-sm leading-relaxed text-indigo-900">
+              Hello! I'm your AI study companion for <strong>{{ fileName }}</strong>. Use the tabs on the left to open the summary, flashcards, and quiz directly in the workspace.
             </p>
           </div>
         </div>
         }
 
-        <!-- Chat messages -->
         @for (msg of messages; track $index) {
         <div class="flex" [ngClass]="msg.role === 'user' ? 'justify-end' : 'justify-start'">
-          <!-- User message -->
           @if (msg.role === 'user') {
-          <div class="max-w-[80%] rounded-2xl rounded-br-md bg-indigo-600 px-4 py-2.5 text-sm text-white">
-            {{ msg.content }}
-          </div>
+          <div class="max-w-[80%] rounded-2xl rounded-br-md bg-indigo-600 px-4 py-2.5 text-sm text-white">{{ msg.content }}</div>
           }
 
-          <!-- AI message -->
           @if (msg.role === 'ai') {
           <div class="max-w-[90%] rounded-2xl rounded-bl-md border border-gray-200 bg-gray-50 px-4 py-3">
             @if (msg.title) {
-            <div class="text-sm font-bold text-gray-900 mb-2">{{ msg.title }}</div>
+            <div class="mb-2 text-sm font-bold text-gray-900">{{ msg.title }}</div>
             }
-            <div class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{{ msg.content }}</div>
+            <div class="whitespace-pre-wrap text-sm leading-relaxed text-gray-700">{{ msg.content }}</div>
           </div>
           }
-        </div>
-        }
-
-        <!-- Processing indicator -->
-        @if (isProcessing) {
-        <div class="flex justify-start">
-          <div class="rounded-2xl rounded-bl-md border border-gray-200 bg-gray-50 px-4 py-3">
-            <div class="flex items-center gap-2">
-              <div class="h-4 w-4 rounded-full border-2 border-gray-300 border-t-indigo-600 animate-spin"></div>
-              <span class="text-sm text-gray-500">{{ processingAction }}</span>
-            </div>
-          </div>
         </div>
         }
       </div>
 
-      <!-- Chat input -->
       <div class="border-t border-gray-200 p-4 shrink-0">
-        <div class="flex items-center gap-2 mb-3">
+        <div class="mb-3 flex items-center gap-2">
           <input
             type="text"
             class="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             placeholder="Ask about the document..."
             [(ngModel)]="chatInput"
             (keydown.enter)="onSendMessage()"
-            [disabled]="isProcessing"
           />
-          <button
-            type="button"
-            class="rounded-xl bg-gray-100 p-2.5 text-gray-400 hover:bg-gray-200 hover:text-gray-600 transition disabled:opacity-50"
-            (click)="onSendMessage()"
-            [disabled]="isProcessing || !chatInput.trim()"
-          >
+          <button type="button" class="rounded-xl bg-gray-100 p-2.5 text-gray-400 hover:bg-gray-200 hover:text-gray-600 transition disabled:opacity-50" (click)="onSendMessage()" [disabled]="!chatInput.trim()">
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
             </svg>
           </button>
         </div>
 
-        <!-- Quick actions -->
-        <div class="flex flex-wrap gap-2">
-          <button
-            type="button"
-            class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition disabled:opacity-50"
-            (click)="onSummarize()"
-            [disabled]="isProcessing || !fileId"
-          >
-            Summarize this section
-          </button>
-          <button
-            type="button"
-            class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition disabled:opacity-50"
-            (click)="onFlashcards()"
-            [disabled]="isProcessing || !fileId"
-          >
-            Generate flashcards
-          </button>
-          <button
-            type="button"
-            class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition disabled:opacity-50"
-            (click)="onQuiz()"
-            [disabled]="isProcessing || !fileId"
-          >
-            Create a quiz
-          </button>
-        </div>
-
-        <!-- Settings row -->
-        <div class="flex items-center gap-4 mt-3 pt-3 border-t border-gray-100">
+        <div class="mt-3 flex items-center gap-4 border-t border-gray-100 pt-3">
           <div class="flex items-center gap-2">
             <label class="text-xs font-medium text-gray-400">Difficulty:</label>
-            <select
-              class="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-400"
-              [(ngModel)]="difficulty"
-            >
+            <select class="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-400" [(ngModel)]="difficulty">
               <option value="Easy">Easy</option>
               <option value="Medium">Medium</option>
               <option value="Hard">Hard</option>
@@ -227,10 +459,7 @@
           </div>
           <div class="flex items-center gap-2">
             <label class="text-xs font-medium text-gray-400">Questions:</label>
-            <select
-              class="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-400"
-              [(ngModel)]="questionCount"
-            >
+            <select class="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-400" [(ngModel)]="questionCount">
               <option [ngValue]="3">3</option>
               <option [ngValue]="5">5</option>
               <option [ngValue]="10">10</option>
@@ -242,106 +471,3 @@
     </div>
   </div>
 </section>
-
-<!-- Quiz File Picker Modal -->
-@if (showQuizModal) {
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-  <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
-    <!-- Modal Header -->
-    <div class="px-6 py-4 border-b border-gray-200">
-      <div class="flex items-center justify-between">
-        <div>
-          <h3 class="text-lg font-bold text-gray-900">Start Quiz</h3>
-          <p class="text-sm text-gray-500 mt-0.5">Select study materials to include</p>
-        </div>
-        <button
-          type="button"
-          class="text-gray-400 hover:text-gray-600 transition"
-          (click)="showQuizModal = false"
-        >
-          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- File List -->
-    <div class="px-6 py-4 max-h-64 overflow-y-auto space-y-2">
-      @for (file of quizFiles; track file.fileId) {
-      <label
-        class="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition"
-        [ngClass]="file.selected ? 'border-indigo-300 bg-indigo-50' : 'border-gray-200 bg-white hover:bg-gray-50'"
-      >
-        <input
-          type="checkbox"
-          [(ngModel)]="file.selected"
-          class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-        />
-        <div class="min-w-0 flex-1">
-          <div class="text-sm font-medium text-gray-900 truncate">{{ file.fileName }}</div>
-        </div>
-        @if (file.fileName === fileName) {
-        <span class="text-xs font-medium text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full">Current</span>
-        }
-      </label>
-      }
-
-      @if (quizFiles.length === 0) {
-      <div class="text-center py-6 text-sm text-gray-500">
-        No files found. Upload files in the roadmap first.
-      </div>
-      }
-    </div>
-
-    <!-- Settings -->
-    <div class="px-6 py-3 border-t border-gray-100 bg-gray-50 flex items-center gap-4">
-      <div class="flex items-center gap-2">
-        <label class="text-xs font-medium text-gray-500">Difficulty:</label>
-        <select
-          class="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-400"
-          [(ngModel)]="difficulty"
-        >
-          <option value="Easy">Easy</option>
-          <option value="Medium">Medium</option>
-          <option value="Hard">Hard</option>
-        </select>
-      </div>
-      <div class="flex items-center gap-2">
-        <label class="text-xs font-medium text-gray-500">Questions:</label>
-        <select
-          class="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-400"
-          [(ngModel)]="questionCount"
-        >
-          <option [ngValue]="3">3</option>
-          <option [ngValue]="5">5</option>
-          <option [ngValue]="10">10</option>
-          <option [ngValue]="15">15</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- Modal Footer -->
-    <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-      <span class="text-xs text-gray-500">{{ selectedQuizFileCount }} file(s) selected</span>
-      <div class="flex items-center gap-2">
-        <button
-          type="button"
-          class="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
-          (click)="showQuizModal = false"
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          class="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800 transition disabled:opacity-50"
-          (click)="startQuiz()"
-          [disabled]="selectedQuizFileCount === 0"
-        >
-          Start Quiz
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-}

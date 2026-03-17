@@ -74,7 +74,7 @@ export class QuizComponent implements OnInit {
     });
   }
 
-  private parseQuizContent(content: string | object): void {
+  private parseQuizContent(content: unknown): void {
     if (!content) {
       this.state = 'error';
       this.errorMessage = 'Quiz response was empty. Please try again.';
@@ -84,7 +84,7 @@ export class QuizComponent implements OnInit {
     try {
       let text: string;
       // Handle content that is already a parsed object (common with AI APIs)
-      if (typeof content === 'object') {
+      if (typeof content === 'object' && content !== null) {
         // Check if the object itself has a questions-like structure
         const obj = content as any;
         if (Array.isArray(obj)) {
@@ -96,12 +96,14 @@ export class QuizComponent implements OnInit {
           return;
         }
         text = JSON.stringify(content);
-      } else {
+      } else if (typeof content === 'string') {
         text = content;
+      } else {
+        text = String(content);
       }
 
       console.log('Quiz content to parse (first 500 chars):', text.substring(0, 500));
-      
+
       const originalText = text;
       // Try to parse as JSON array of questions
       let parsed: any;
