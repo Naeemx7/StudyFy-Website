@@ -1,12 +1,12 @@
 /**
  * AI Service
- * 
+ *
  * Handles all WorkspaceAI endpoints:
  * - POST /summary       - Generate summary from uploaded files
  * - POST /flashcards    - Generate flashcards for study
  * - POST /quiz          - Generate a quiz from file content
  * - POST /quiz-submission - Submit quiz answers and get score
- * 
+ *
  * HOW IT WORKS:
  * 1. User uploads files via StorageService (gets fileIds)
  * 2. User clicks "Summarize" / "Flashcards" / "Quiz" in Workspace
@@ -46,10 +46,10 @@ export class AiService {
 
   /**
    * GENERATE SUMMARY
-   * 
+   *
    * Sends file IDs to backend, which extracts content and
    * generates an AI summary using Gemini.
-   * 
+   *
    * ENDPOINT: POST /summary
    */
   generateSummary(spaceId: string, filesId: string[]): Observable<GeminiResponse> {
@@ -71,9 +71,9 @@ export class AiService {
 
   /**
    * GENERATE FLASHCARDS
-   * 
+   *
    * Generates flashcards from file content.
-   * 
+   *
    * ENDPOINT: POST /flashcards
    */
   generateFlashcards(
@@ -104,10 +104,10 @@ export class AiService {
 
   /**
    * GENERATE QUIZ
-   * 
+   *
    * Generates a quiz from file content. Returns a quizId
    * that's used later for quiz-submission.
-   * 
+   *
    * ENDPOINT: POST /quiz
    */
   generateQuiz(
@@ -130,8 +130,13 @@ export class AiService {
     ).pipe(
       map(response => {
         if (!response.isSuccess) {
-          throw new Error(response.message || 'Failed to generate quiz');
+          throw new Error(this.extractApiMessage(response) || 'Failed to generate quiz');
         }
+
+        if (!response.data?.operationResponse || response.data.operationResponse.responseContent == null) {
+          throw new Error(this.extractApiMessage(response) || 'Quiz generation returned no content. Please try again.');
+        }
+
         return response.data;
       }),
       catchError(this.handleError)
@@ -140,10 +145,10 @@ export class AiService {
 
   /**
    * SUBMIT QUIZ
-   * 
+   *
    * Submits quiz answers. Backend calculates score and
    * updates mastery status if score >= 80%.
-   * 
+   *
    * ENDPOINT: POST /quiz-submission
    */
   submitQuiz(spaceId: string, submission: QuizSubmissionRequest): Observable<QuizSubmissionResponse> {
@@ -179,6 +184,8 @@ export class AiService {
       message = error.error?.message || 'Invalid request';
     } else if (error.status === 401) {
       message = 'Session expired. Please log in again.';
+    } else if (error.status === 429) {
+      message = error.error?.message || 'Rate limit exceeded. Please retry in a minute.';
     } else if (error.status === 500) {
       message = 'AI service is temporarily unavailable. Please try again.';
     } else if (error.error?.message) {
@@ -187,4 +194,16 @@ export class AiService {
 
     return throwError(() => new Error(message));
   };
+
+  private extractApiMessage<T>(response: ApiResponse<T>): string {
+    if (response.message?.trim()) {
+      return response.message.trim();
+    }
+
+    if (Array.isArray(response.errors) && response.errors.length > 0) {
+      return response.errors.join(' | ');
+    }
+
+    return '';
+  }
 }

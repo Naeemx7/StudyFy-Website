@@ -17,7 +17,7 @@ export const routes: Routes = [
   { path: 'signup', component: SignupComponent },
   { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard] },
   { path: 'roadmap/:spaceId', component: RoadmapComponent, canActivate: [AuthGuard] },
-  { path: 'workspace/:spaceId/:fileName', component: WorkspaceComponent, canActivate: [AuthGuard] },
+  { path: 'workspace/:spaceId', component: WorkspaceComponent, canActivate: [AuthGuard] },
   { path: 'quiz/:spaceId', component: QuizComponent, canActivate: [AuthGuard] },
   { path: 'analytics', component: AnalyticsComponent, canActivate: [AuthGuard] },
   { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] },

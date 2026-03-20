@@ -178,7 +178,7 @@ export class RoadmapComponent implements OnInit {
 
   // ===== Navigation =====
   openWorkspace(file: RoadmapFile) {
-    this.router.navigate(['/workspace', this.spaceId, file.name]);
+    this.router.navigate(['/workspace', this.spaceId], { queryParams: { file: file.name } });
   }
 
   goBack() {

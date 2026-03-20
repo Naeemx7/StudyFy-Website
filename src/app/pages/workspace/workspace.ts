@@ -9,7 +9,7 @@ import { DifficultyLevel, GeminiResponse, QuizResponse } from '../../models/ai.m
 
 type WorkspaceTab = 'summary' | 'flashcards' | 'quiz';
 type ContentState = 'idle' | 'loading' | 'ready' | 'error';
-type QuizState = 'idle' | 'loading' | 'ready' | 'in-progress' | 'completed' | 'error';
+type QuizState = 'idle' | 'loading' | 'ready' | 'in-progress' | 'completed' | 'review' | 'error';
 
 interface ChatMessage {
   role: 'user' | 'ai';
@@ -94,7 +94,7 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
 
   ngOnInit(): void {
     this.spaceId = this.route.snapshot.paramMap.get('spaceId') || '';
-    this.fileName = this.route.snapshot.paramMap.get('fileName') || '';
+    this.fileName = this.route.snapshot.queryParamMap.get('file') || '';
 
     if (!this.spaceId || !this.fileName) {
       this.router.navigate(['/dashboard']);
@@ -232,6 +232,10 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
         const parsed = this.parseAiTextResponse(res, 'Summary');
         this.summaryTitle = parsed.title;
         this.summaryContent = parsed.content;
+        if (!this.fileTopic && this.isRecord(res.responseContent)) {
+          const topic = (res.responseContent as Record<string, unknown>)['topic'];
+          if (typeof topic === 'string') this.fileTopic = topic;
+        }
         this.summaryState = 'ready';
         this.isProcessing = false;
         this.processingAction = '';
@@ -432,13 +436,39 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
   private applyQuizResponse(res: QuizResponse): void {
     this.quizId = res.quizId;
     this.resetQuizProgress();
-    this.parseQuizContent(res.operationResponse?.responseContent);
+    console.log('Quiz API response payload:', res);
+
+    const content = res.operationResponse?.responseContent;
+    if (content !== undefined && content !== null) {
+      this.parseQuizContent(content);
+      return;
+    }
+
+    if (res.operationResponse) {
+      this.parseQuizContent(res.operationResponse);
+      return;
+    }
+
+    this.parseQuizContent(res);
   }
 
   private parseQuizContent(content: unknown): void {
-    const structured = this.extractStructuredArray(content, ['questions', 'quiz']);
+    const embeddedError = this.extractEmbeddedErrorMessage(content);
+    if (embeddedError) {
+      this.quizState = 'error';
+      this.quizError = embeddedError;
+      return;
+    }
+
+    const structured = this.findArrayByKeys(content, ['questions', 'quiz', 'items']);
     if (structured.length > 0) {
       this.applyQuizQuestions(structured);
+      return;
+    }
+
+    const deepQuestionCandidates = this.findQuizQuestionCandidates(content, 0);
+    if (deepQuestionCandidates.length > 0) {
+      this.applyQuizQuestions(deepQuestionCandidates);
       return;
     }
 
@@ -455,7 +485,7 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
     }
 
     if (this.isRecord(parsed)) {
-      const nested = this.extractStructuredArray(parsed, ['questions', 'quiz']);
+      const nested = this.findArrayByKeys(parsed, ['questions', 'quiz', 'items']);
       if (nested.length > 0) {
         this.applyQuizQuestions(nested);
         return;
@@ -463,6 +493,43 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
     }
 
     this.parseQuizTextFormat(content);
+  }
+
+  private extractEmbeddedErrorMessage(content: unknown): string {
+    if (typeof content === 'string') {
+      const parsed = this.tryParseJson(content);
+      if (parsed) {
+        return this.extractEmbeddedErrorMessage(parsed);
+      }
+      return '';
+    }
+
+    if (!this.isRecord(content)) {
+      return '';
+    }
+
+    const directMessage = this.readStringCaseInsensitive(content, ['message', 'errorMessage', 'detail', 'description']);
+    const code = this.readStringCaseInsensitive(content, ['code', 'statusCode']);
+    if (directMessage && (code === '429' || directMessage.toLowerCase().includes('quota') || directMessage.toLowerCase().includes('rate'))) {
+      return directMessage;
+    }
+
+    const errorNode = this.readPropertyCaseInsensitive(content, ['error']);
+    if (errorNode) {
+      const nestedMessage = this.extractEmbeddedErrorMessage(errorNode);
+      if (nestedMessage) {
+        return nestedMessage;
+      }
+    }
+
+    for (const value of Object.values(content)) {
+      const nestedMessage = this.extractEmbeddedErrorMessage(value);
+      if (nestedMessage) {
+        return nestedMessage;
+      }
+    }
+
+    return '';
   }
 
   private applyQuizQuestions(items: unknown[]): void {
@@ -480,17 +547,137 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
     this.quizState = 'ready';
   }
 
+  private findQuizQuestionCandidates(content: unknown, depth: number): unknown[] {
+    if (depth > 6) {
+      return [];
+    }
+
+    if (typeof content === 'string') {
+      const parsed = this.tryParseJson(content);
+      if (parsed) {
+        return this.findQuizQuestionCandidates(parsed, depth + 1);
+      }
+
+      return [];
+    }
+
+    if (Array.isArray(content)) {
+      const direct = content.filter((item) => this.looksLikeQuizQuestionRecord(item));
+      if (direct.length > 0) {
+        return direct;
+      }
+
+      for (const item of content) {
+        const nested = this.findQuizQuestionCandidates(item, depth + 1);
+        if (nested.length > 0) {
+          return nested;
+        }
+      }
+
+      return [];
+    }
+
+    if (!this.isRecord(content)) {
+      return [];
+    }
+
+    const values = Object.values(content);
+    const directValues = values.filter((item) => this.looksLikeQuizQuestionRecord(item));
+    if (directValues.length > 0) {
+      return directValues;
+    }
+
+    const keyBasedCandidates = this.readPropertyCaseInsensitive(content, ['questions', 'quiz', 'items']);
+    if (Array.isArray(keyBasedCandidates)) {
+      return keyBasedCandidates;
+    }
+
+    if (this.isRecord(keyBasedCandidates)) {
+      const mapped = Object.values(keyBasedCandidates).filter((item) => this.looksLikeQuizQuestionRecord(item));
+      if (mapped.length > 0) {
+        return mapped;
+      }
+    }
+
+    for (const value of values) {
+      const nested = this.findQuizQuestionCandidates(value, depth + 1);
+      if (nested.length > 0) {
+        return nested;
+      }
+    }
+
+    return [];
+  }
+
+  private looksLikeQuizQuestionRecord(item: unknown): boolean {
+    if (!this.isRecord(item)) {
+      return false;
+    }
+
+    const question = this.extractQuestionText(item);
+    if (!question) {
+      return false;
+    }
+
+    const options = this.extractOptionsFromQuestionRecord(item);
+
+    return options.length > 0;
+  }
+
   private mapQuizQuestion(item: unknown): QuizQuestion | null {
     if (!this.isRecord(item)) {
       return null;
     }
 
-    const question = this.readString(item, ['question', 'text', 'prompt']);
-    const rawOptions = item['options'] ?? item['choices'] ?? item['answers'];
-    const options = Array.isArray(rawOptions)
-      ? rawOptions.map((option) => String(option).trim()).filter((option) => !!option)
-      : [];
-    const correctAnswer = this.readString(item, ['correctAnswer', 'correct_answer', 'answer']);
+    const question = this.extractQuestionText(item);
+    const options = this.extractOptionsFromQuestionRecord(item);
+    const rawCorrectAnswer = this.readStringCaseInsensitive(item, [
+      'correctAnswer',
+      'correct_answer',
+      'correctOption',
+      'correct',
+      'answer',
+      'answerKey',
+      'rightAnswer',
+      'correctChoice',
+      'right_option',
+      'correct_option',
+    ]);
+    const rawOptions = this.readPropertyCaseInsensitive(item, [
+      'options',
+      'choices',
+      'answers',
+      'alternatives',
+      'selections',
+      'optionsList',
+      'choicesList',
+    ]);
+
+    let correctAnswer = this.resolveCorrectAnswer(rawCorrectAnswer, options);
+    if (!correctAnswer) {
+      correctAnswer = this.extractCorrectAnswerFromOptionNodes(rawOptions, options);
+    }
+
+    if (!correctAnswer) {
+      const correctIndex = this.readNumberCaseInsensitive(item, [
+        'correctAnswer',
+        'correct_answer',
+        'answer',
+        'answerKey',
+        'correctIndex',
+        'correctOptionIndex',
+        'answerIndex',
+        'rightAnswerIndex',
+        'correct_choice_index',
+      ]);
+
+      if (correctIndex !== null) {
+        const zeroBased = correctIndex > 0 ? correctIndex - 1 : correctIndex;
+        if (zeroBased >= 0 && zeroBased < options.length) {
+          correctAnswer = options[zeroBased];
+        }
+      }
+    }
 
     if (!question || options.length === 0) {
       return null;
@@ -503,6 +690,388 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
       userAnswer: null,
       isCorrect: null,
     };
+  }
+
+  private extractCorrectAnswerFromOptionNodes(rawOptions: unknown, options: string[]): string {
+    if (!Array.isArray(rawOptions)) {
+      return '';
+    }
+
+    for (const optionNode of rawOptions) {
+      if (!this.isRecord(optionNode)) {
+        continue;
+      }
+
+      const isCorrect = this.readBooleanCaseInsensitive(optionNode, [
+        'isCorrect',
+        'correct',
+        'isAnswer',
+        'right',
+      ]);
+
+      if (!isCorrect) {
+        continue;
+      }
+
+      const optionText = this.readStringCaseInsensitive(optionNode, [
+        'text',
+        'option',
+        'value',
+        'label',
+        'answer',
+      ]);
+
+      if (optionText) {
+        return this.resolveCorrectAnswer(optionText, options);
+      }
+    }
+
+    return '';
+  }
+
+  private readBooleanCaseInsensitive(source: Record<string, unknown>, keys: string[]): boolean {
+    for (const key of keys) {
+      const value = this.readPropertyCaseInsensitive(source, [key]);
+      if (typeof value === 'boolean') {
+        return value;
+      }
+
+      if (typeof value === 'string') {
+        const normalized = value.trim().toLowerCase();
+        if (normalized === 'true' || normalized === '1' || normalized === 'yes') {
+          return true;
+        }
+      }
+
+      if (typeof value === 'number' && value === 1) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private readNumberCaseInsensitive(source: Record<string, unknown>, keys: string[]): number | null {
+    for (const key of keys) {
+      const value = this.readPropertyCaseInsensitive(source, [key]);
+      if (typeof value === 'number' && Number.isFinite(value)) {
+        return value;
+      }
+
+      if (typeof value === 'string' && value.trim()) {
+        const parsed = Number(value.trim());
+        if (Number.isFinite(parsed)) {
+          return parsed;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  private extractQuestionText(source: Record<string, unknown>): string {
+    const direct = this.readStringCaseInsensitive(source, [
+      'question',
+      'questionText',
+      'text',
+      'prompt',
+      'stem',
+      'title',
+      'query',
+    ]);
+    if (direct) {
+      return direct;
+    }
+
+    const questionNode = this.readPropertyCaseInsensitive(source, ['question']);
+    if (this.isRecord(questionNode)) {
+      const nested = this.readStringCaseInsensitive(questionNode, ['text', 'value', 'label', 'content']);
+      if (nested) {
+        return nested;
+      }
+    }
+
+    const dynamicKey = Object.keys(source).find((key) => key.toLowerCase().includes('question'));
+    if (dynamicKey) {
+      const value = source[dynamicKey];
+      if (typeof value === 'string' && value.trim()) {
+        return value.trim();
+      }
+      if (this.isRecord(value)) {
+        const nested = this.readStringCaseInsensitive(value, ['text', 'value', 'label', 'content']);
+        if (nested) {
+          return nested;
+        }
+      }
+    }
+
+    return '';
+  }
+
+  private extractOptionsFromQuestionRecord(source: Record<string, unknown>): string[] {
+    const rawOptions = this.readPropertyCaseInsensitive(source, [
+      'options',
+      'choices',
+      'answers',
+      'alternatives',
+      'selections',
+      'optionsList',
+      'choicesList',
+    ]);
+    let options = this.extractQuizOptions(rawOptions);
+
+    if (options.length === 0) {
+      options = this.readOptionFields(source);
+    }
+
+    if (options.length === 0) {
+      const directLetterOptions = ['A', 'B', 'C', 'D']
+        .map((key) => this.readStringCaseInsensitive(source, [key]))
+        .filter((value) => !!value);
+      options = directLetterOptions;
+    }
+
+    if (options.length === 0) {
+      const combined = this.readStringCaseInsensitive(source, ['optionsText', 'choicesText', 'answersText']);
+      if (combined) {
+        options = this.extractQuizOptions(combined);
+      }
+    }
+
+    if (options.length === 0) {
+      const questionText = this.extractQuestionText(source);
+      options = Object.entries(source)
+        .filter(([key, value]) => {
+          if (typeof value !== 'string') {
+            return false;
+          }
+
+          const normalized = key.toLowerCase();
+          if (normalized.includes('question') || normalized.includes('correct')) {
+            return false;
+          }
+
+          return value.trim() && value.trim() !== questionText;
+        })
+        .map(([, value]) => (value as string).trim())
+        .slice(0, 6);
+    }
+
+    return Array.from(new Set(options.filter((option) => !!option)));
+  }
+
+  private readPropertyCaseInsensitive(source: Record<string, unknown>, keys: string[]): unknown {
+    for (const key of keys) {
+      if (key in source) {
+        return source[key];
+      }
+
+      const match = Object.keys(source).find((itemKey) => itemKey.toLowerCase() === key.toLowerCase());
+      if (match) {
+        return source[match];
+      }
+    }
+
+    return undefined;
+  }
+
+  private readStringCaseInsensitive(source: Record<string, unknown>, keys: string[]): string {
+    const direct = this.readString(source, keys);
+    if (direct) {
+      return direct;
+    }
+
+    for (const key of keys) {
+      const match = Object.keys(source).find((itemKey) => itemKey.toLowerCase() === key.toLowerCase());
+      if (!match) {
+        continue;
+      }
+
+      const value = source[match];
+      if (typeof value === 'string' && value.trim()) {
+        return value.trim();
+      }
+    }
+
+    return '';
+  }
+
+  private readOptionFields(source: Record<string, unknown>): string[] {
+    const keys = [
+      'optionA',
+      'optionB',
+      'optionC',
+      'optionD',
+      'choiceA',
+      'choiceB',
+      'choiceC',
+      'choiceD',
+      'option1',
+      'option2',
+      'option3',
+      'option4',
+      'choice1',
+      'choice2',
+      'choice3',
+      'choice4',
+    ];
+    const options = keys
+      .map((key) => this.readStringCaseInsensitive(source, [key]))
+      .filter((value) => !!value);
+
+    return options;
+  }
+
+  private extractQuizOptions(rawOptions: unknown): string[] {
+    if (Array.isArray(rawOptions)) {
+      return rawOptions
+        .map((option) => {
+          if (typeof option === 'string') {
+            return option.trim();
+          }
+
+          if (this.isRecord(option)) {
+            const letterValue = this.readLetteredOptionObject(option);
+            if (letterValue) {
+              return letterValue;
+            }
+
+            return this.readString(option, ['text', 'option', 'value', 'label']);
+          }
+
+          return String(option).trim();
+        })
+        .filter((option) => !!option);
+    }
+
+    if (this.isRecord(rawOptions)) {
+      const letterKeys = ['A', 'B', 'C', 'D'];
+      const hasLetterKeys = letterKeys.every((key) => key in rawOptions);
+      if (hasLetterKeys) {
+        return letterKeys
+          .map((key) => {
+            const value = rawOptions[key];
+            return typeof value === 'string' ? value.trim() : String(value ?? '').trim();
+          })
+          .filter((option) => !!option);
+      }
+
+      return Object.values(rawOptions)
+        .map((value) => {
+          if (typeof value === 'string') {
+            return value.trim();
+          }
+
+          if (this.isRecord(value)) {
+            const letterValue = this.readLetteredOptionObject(value);
+            if (letterValue) {
+              return letterValue;
+            }
+
+            return this.readString(value, ['text', 'option', 'value', 'label']);
+          }
+
+          return String(value ?? '').trim();
+        })
+        .filter((option) => !!option);
+    }
+
+    if (typeof rawOptions === 'string') {
+      return rawOptions
+        .split(/\n|\|/)
+        .map((part) => part.replace(/^[A-D][\).:\-]\s*/i, '').trim())
+        .filter((option) => !!option);
+    }
+
+    return [];
+  }
+
+  private readLetteredOptionObject(source: Record<string, unknown>): string {
+    for (const key of ['A', 'B', 'C', 'D']) {
+      const value = source[key];
+      if (typeof value === 'string' && value.trim()) {
+        return value.trim();
+      }
+    }
+
+    const firstKey = Object.keys(source)[0];
+    if (!firstKey) {
+      return '';
+    }
+
+    if (/^[A-D]$/i.test(firstKey)) {
+      const value = source[firstKey];
+      return typeof value === 'string' ? value.trim() : String(value ?? '').trim();
+    }
+
+    return '';
+  }
+
+  private resolveCorrectAnswer(rawCorrectAnswer: string, options: string[]): string {
+    if (!rawCorrectAnswer) {
+      return '';
+    }
+
+    const trimmed = rawCorrectAnswer.trim();
+    const matched = this.findMatchingOption(options, trimmed);
+    if (matched) {
+      return matched;
+    }
+
+    const letterMatch = trimmed.match(/^[A-D]$/i);
+    if (letterMatch) {
+      const index = 'ABCD'.indexOf(letterMatch[0].toUpperCase());
+      return index >= 0 ? options[index] || '' : '';
+    }
+
+    const prefixedLetterMatch = trimmed.match(/^([A-D])[\).:\-]/i);
+    if (prefixedLetterMatch) {
+      const index = 'ABCD'.indexOf(prefixedLetterMatch[1].toUpperCase());
+      return index >= 0 ? options[index] || '' : '';
+    }
+
+    const optionLetterMatch = trimmed.match(/(?:option|choice|answer)\s*([A-D])/i);
+    if (optionLetterMatch) {
+      const index = 'ABCD'.indexOf(optionLetterMatch[1].toUpperCase());
+      return index >= 0 ? options[index] || '' : '';
+    }
+
+    const numericIndexMatch = trimmed.match(/^\d+$/);
+    if (numericIndexMatch) {
+      const parsed = Number(trimmed);
+      const zeroBased = parsed > 0 ? parsed - 1 : parsed;
+      return zeroBased >= 0 && zeroBased < options.length ? options[zeroBased] : '';
+    }
+
+    return trimmed;
+  }
+
+  private findMatchingOption(options: string[], candidate: string): string {
+    const normalizedCandidate = this.normalizeQuizText(candidate);
+
+    const exact = options.find((option) => this.normalizeQuizText(option) === normalizedCandidate);
+    if (exact) {
+      return exact;
+    }
+
+    const partial = options.find((option) => {
+      const normalizedOption = this.normalizeQuizText(option);
+      return normalizedOption.includes(normalizedCandidate) || normalizedCandidate.includes(normalizedOption);
+    });
+    if (partial) {
+      return partial;
+    }
+
+    return '';
+  }
+
+  private normalizeQuizText(text: string): string {
+    return text
+      .toLowerCase()
+      .replace(/[“”"'`]/g, '')
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   private parseQuizTextFormat(text: string): void {
@@ -577,7 +1146,7 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
     }
 
     question.userAnswer = option;
-    question.isCorrect = option === question.correctAnswer;
+    question.isCorrect = this.isCorrectOption(question, option);
     this.totalAnswered += 1;
     if (question.isCorrect) {
       this.score += 1;
@@ -596,6 +1165,57 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
 
   retryQuiz(): void {
     this.loadQuiz(true);
+  }
+
+  reviewQuestion(index: number): void {
+    if (this.quizQuestions.length === 0) {
+      return;
+    }
+
+    const safeIndex = Math.max(0, Math.min(index, this.quizQuestions.length - 1));
+    this.currentIndex = safeIndex;
+    this.quizState = 'review';
+  }
+
+  backToResults(): void {
+    if (this.quizQuestions.length === 0) {
+      return;
+    }
+
+    this.quizState = 'completed';
+  }
+
+  previousReviewQuestion(): void {
+    if (this.currentIndex <= 0) {
+      return;
+    }
+
+    this.currentIndex -= 1;
+  }
+
+  nextReviewQuestion(): void {
+    if (this.currentIndex >= this.quizQuestions.length - 1) {
+      return;
+    }
+
+    this.currentIndex += 1;
+  }
+
+  isCorrectOption(question: QuizQuestion, option: string): boolean {
+    if (!question.correctAnswer) {
+      return false;
+    }
+
+    return this.normalizeQuizText(option) === this.normalizeQuizText(question.correctAnswer);
+  }
+
+  getDisplayCorrectAnswer(question: QuizQuestion): string {
+    if (!question.correctAnswer) {
+      return 'Correct answer was not provided by backend';
+    }
+
+    const optionMatch = question.options.find((option) => this.isCorrectOption(question, option));
+    return optionMatch || question.correctAnswer;
   }
 
   get currentQuestion(): QuizQuestion | null {
@@ -682,6 +1302,15 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
   }
 
   private findArrayByKeysRecursive(content: unknown, keys: string[], depth: number): unknown[] {
+    if (typeof content === 'string') {
+      const parsed = this.tryParseJson(content);
+      if (parsed) {
+        return this.findArrayByKeysRecursive(parsed, keys, depth + 1);
+      }
+
+      return [];
+    }
+
     if (depth > 5 || !this.isRecord(content)) {
       return [];
     }
@@ -723,6 +1352,11 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
   private extractTextContent(content: unknown): string {
     if (typeof content === 'string') {
       return content.trim();
+    }
+
+    if (this.isRecord(content)) {
+      const text = this.readString(content, ['Summary', 'summary', 'content', 'text', 'description', 'body', 'overview']);
+      if (text) return text;
     }
 
     return JSON.stringify(content, null, 2);

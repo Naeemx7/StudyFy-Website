@@ -252,7 +252,7 @@ export class QuizComponent implements OnInit {
   goBack(): void {
     const fileName = this.route.snapshot.queryParams['fileName'];
     if (fileName) {
-      this.router.navigate(['/workspace', this.spaceId, fileName]);
+      this.router.navigate(['/workspace', this.spaceId], { queryParams: { file: fileName } });
     } else {
       this.router.navigate(['/roadmap', this.spaceId]);
     }

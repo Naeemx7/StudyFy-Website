@@ -113,16 +113,36 @@
           }
 
           @if (summaryState === 'ready') {
-          <div class="space-y-6">
+          <div class="space-y-4">
             @if (fileTopic) {
-            <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-              <div class="text-xs font-bold uppercase tracking-[0.18em] text-gray-500">Source Topic</div>
-              <div class="mt-2 text-base font-semibold text-gray-900">{{ fileTopic }}</div>
+            <div class="flex items-start gap-3 rounded-xl border border-violet-100 bg-violet-50 px-4 py-3.5">
+              <div class="mt-0.5 shrink-0 rounded-lg bg-violet-100 p-1.5 text-violet-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-[10px] font-bold uppercase tracking-widest text-violet-400">Topic</p>
+                <p class="mt-0.5 text-sm font-semibold leading-snug text-violet-900">{{ fileTopic }}</p>
+              </div>
             </div>
             }
 
-            <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-              <pre class="whitespace-pre-wrap text-sm font-sans leading-7 text-gray-800">{{ summaryContent }}</pre>
+            <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+              <div class="flex items-center gap-2 border-b border-gray-100 bg-gray-50 px-5 py-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.347.346a3.51 3.51 0 01-.527.607l-1.12 1.12"/>
+                </svg>
+                <span class="text-xs font-semibold uppercase tracking-widest text-gray-500">AI Summary</span>
+                @if (summaryContent) {
+                <span class="ml-auto rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-500">
+                  {{ summaryContent.split(' ').length }} words
+                </span>
+                }
+              </div>
+              <div class="px-6 py-5">
+                <p class="text-sm leading-[1.9] text-gray-700">{{ summaryContent }}</p>
+              </div>
             </div>
           </div>
           }
@@ -279,10 +299,10 @@
                   class="w-full rounded-xl border-2 p-4 text-left text-sm transition"
                   [ngClass]="{
                     'border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300': currentQuestion.userAnswer === null,
-                    'border-indigo-600 bg-indigo-50': currentQuestion.userAnswer === option && currentQuestion.isCorrect,
+                    'border-green-600 bg-green-100': currentQuestion.userAnswer === option && currentQuestion.isCorrect,
                     'border-red-400 bg-red-50': currentQuestion.userAnswer === option && currentQuestion.isCorrect === false,
-                    'border-green-500 bg-green-50': currentQuestion.userAnswer !== null && option === currentQuestion.correctAnswer && currentQuestion.userAnswer !== option,
-                    'border-gray-200 bg-gray-50 opacity-60': currentQuestion.userAnswer !== null && option !== currentQuestion.correctAnswer && currentQuestion.userAnswer !== option
+                    'border-green-500 bg-green-50': currentQuestion.userAnswer !== null && isCorrectOption(currentQuestion, option) && currentQuestion.userAnswer !== option,
+                    'border-gray-200 bg-gray-50 opacity-60': currentQuestion.userAnswer !== null && !isCorrectOption(currentQuestion, option) && currentQuestion.userAnswer !== option
                   }"
                   [disabled]="currentQuestion.userAnswer !== null"
                   (click)="selectAnswer(option)"
@@ -292,15 +312,15 @@
                       class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold"
                       [ngClass]="{
                         'border-gray-300 text-gray-500': currentQuestion.userAnswer === null,
-                        'border-indigo-600 text-indigo-600 bg-indigo-100': currentQuestion.userAnswer === option && currentQuestion.isCorrect,
+                        'border-green-600 text-green-700 bg-green-200': currentQuestion.userAnswer === option && currentQuestion.isCorrect,
                         'border-red-400 text-red-500 bg-red-100': currentQuestion.userAnswer === option && currentQuestion.isCorrect === false,
-                        'border-green-500 text-green-600 bg-green-100': currentQuestion.userAnswer !== null && option === currentQuestion.correctAnswer && currentQuestion.userAnswer !== option,
-                        'border-gray-200 text-gray-400': currentQuestion.userAnswer !== null && option !== currentQuestion.correctAnswer && currentQuestion.userAnswer !== option
+                        'border-green-500 text-green-600 bg-green-100': currentQuestion.userAnswer !== null && isCorrectOption(currentQuestion, option) && currentQuestion.userAnswer !== option,
+                        'border-gray-200 text-gray-400': currentQuestion.userAnswer !== null && !isCorrectOption(currentQuestion, option) && currentQuestion.userAnswer !== option
                       }"
                     >
                       {{ 'ABCD'[i] }}
                     </span>
-                    <span class="font-medium" [ngClass]="currentQuestion.userAnswer !== null && option === currentQuestion.correctAnswer ? 'text-green-700' : 'text-gray-900'">
+                    <span class="font-medium" [ngClass]="currentQuestion.userAnswer !== null && isCorrectOption(currentQuestion, option) ? 'text-green-700' : 'text-gray-900'">
                       {{ option }}
                     </span>
                   </div>
@@ -334,10 +354,6 @@
               }
             </div>
 
-            <div class="mt-4 flex items-center justify-center gap-6 text-xs text-gray-500">
-              <span>✅ {{ score }} correct</span>
-              <span>❌ {{ totalAnswered - score }} incorrect</span>
-            </div>
           </div>
           }
 
@@ -370,9 +386,16 @@
                   Your answer:
                   <span class="font-semibold" [ngClass]="question.isCorrect ? 'text-green-600' : 'text-red-600'">{{ question.userAnswer }}</span>
                   @if (!question.isCorrect) {
-                  • Correct: <span class="font-semibold text-green-600">{{ question.correctAnswer }}</span>
+                  • Correct: <span class="font-semibold text-green-600">{{ getDisplayCorrectAnswer(question) }}</span>
                   }
                 </p>
+                <button
+                  type="button"
+                  class="mt-3 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition"
+                  (click)="reviewQuestion(i)"
+                >
+                  Review Question
+                </button>
               </div>
               }
             </div>
@@ -384,6 +407,104 @@
               <button type="button" class="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition" (click)="retryQuiz()">
                 Retry Quiz
               </button>
+            </div>
+          </div>
+          }
+
+          @if (quizState === 'review' && currentQuestion) {
+          <div>
+            <div class="mb-6">
+              <div class="mb-2 flex items-center justify-between">
+                <span class="text-xs font-semibold text-gray-500">Reviewing Question {{ currentIndex + 1 }} of {{ quizQuestions.length }}</span>
+                <button
+                  type="button"
+                  class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition"
+                  (click)="backToResults()"
+                >
+                  Back to Results
+                </button>
+              </div>
+              <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                <div class="h-full rounded-full bg-indigo-600 transition-all duration-300" [style.width.%]="((currentIndex + 1) / quizQuestions.length) * 100"></div>
+              </div>
+            </div>
+
+            <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+              <h3 class="text-lg font-bold leading-relaxed text-gray-900">{{ currentQuestion.question }}</h3>
+
+              <div class="mt-6 space-y-3">
+                @for (option of currentQuestion.options; track option; let i = $index) {
+                <div
+                  class="w-full rounded-xl border-2 p-4 text-left text-sm"
+                  [ngClass]="{
+                    'border-green-600 bg-green-100': currentQuestion.userAnswer === option && currentQuestion.isCorrect,
+                    'border-red-400 bg-red-50': currentQuestion.userAnswer === option && currentQuestion.isCorrect === false,
+                    'border-green-500 bg-green-50': isCorrectOption(currentQuestion, option) && currentQuestion.userAnswer !== option,
+                    'border-gray-200 bg-gray-50 opacity-75': !isCorrectOption(currentQuestion, option) && currentQuestion.userAnswer !== option
+                  }"
+                >
+                  <div class="flex items-center gap-3">
+                    <span
+                      class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold"
+                      [ngClass]="{
+                        'border-green-600 text-green-700 bg-green-200': currentQuestion.userAnswer === option && currentQuestion.isCorrect,
+                        'border-red-400 text-red-500 bg-red-100': currentQuestion.userAnswer === option && currentQuestion.isCorrect === false,
+                        'border-green-500 text-green-600 bg-green-100': isCorrectOption(currentQuestion, option) && currentQuestion.userAnswer !== option,
+                        'border-gray-200 text-gray-400': !isCorrectOption(currentQuestion, option) && currentQuestion.userAnswer !== option
+                      }"
+                    >
+                      {{ 'ABCD'[i] }}
+                    </span>
+                    <span class="font-medium" [ngClass]="isCorrectOption(currentQuestion, option) ? 'text-green-700' : currentQuestion.userAnswer === option && currentQuestion.isCorrect === false ? 'text-red-700' : 'text-gray-900'">
+                      {{ option }}
+                    </span>
+                  </div>
+                </div>
+                }
+              </div>
+
+              <p class="mt-4 text-sm text-gray-600">
+                Correct answer: <span class="font-semibold text-green-700">{{ getDisplayCorrectAnswer(currentQuestion) }}</span>
+              </p>
+
+              <div class="mt-6 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  @if (currentQuestion.isCorrect) {
+                  <span class="inline-flex items-center gap-1 text-sm font-semibold text-green-600">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Correct
+                  </span>
+                  } @else {
+                  <span class="inline-flex items-center gap-1 text-sm font-semibold text-red-600">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Incorrect
+                  </span>
+                  }
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    class="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
+                    (click)="previousReviewQuestion()"
+                    [disabled]="currentIndex === 0"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    type="button"
+                    class="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800 transition disabled:opacity-50"
+                    (click)="nextReviewQuestion()"
+                    [disabled]="currentIndex === quizQuestions.length - 1"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
           }
