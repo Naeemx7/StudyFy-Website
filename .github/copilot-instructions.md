@@ -1,4 +1,4 @@
-# AI Study Companion Frontend - Copilot Instructions
+# StudyFy AI Study Companion Frontend - Copilot Instructions
 
 ## Project Overview
 This is an **Angular 20** standalone application for an AI-powered study companion platform. The project uses Angular's modern standalone APIs, Tailwind CSS, and RxJS for reactive state management. The backend integrates with OpenAI APIs.
