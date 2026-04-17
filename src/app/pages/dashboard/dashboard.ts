@@ -153,6 +153,7 @@ export class DashboardComponent implements OnInit {
    */
   getDisplayName(userName: string | undefined): string {
     if (!userName) return 'User';
-    return userName.includes('@') ? userName.split('@')[0] : userName.split(' ')[0] || userName;
+    if (userName.includes('@')) return userName.split('@')[0];
+    return userName;
   }
 }

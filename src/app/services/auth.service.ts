@@ -136,7 +136,7 @@ export class AuthService {
    * @param target - Learning objective ("0", "1", or "2")
    * @returns Observable<User> - The authenticated user
    */
-  googleSignIn(googleToken: string, age: number, isStudent: boolean, target: string): Observable<User> {
+  googleSignIn(googleToken: string, age: number, isStudent: boolean, target: string, displayName?: string): Observable<User> {
     const body: GoogleSignInRequest = { token: googleToken, age, isStudent, target };
 
     return this.http.post<AuthResponse>(`${environment.apiUrl}/GoogleSignIn`, body)
@@ -154,7 +154,8 @@ export class AuthService {
             isStudent: response.user.isStudent ?? true,
             target: response.user.target,
             token: response.jwtToken,
-            tokenExpiration: new Date(response.jwtExpiration)
+            tokenExpiration: new Date(response.jwtExpiration),
+            googleDisplayName: displayName || undefined
           };
 
           return user;

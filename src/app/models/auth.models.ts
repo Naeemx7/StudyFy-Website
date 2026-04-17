@@ -181,8 +181,9 @@ export interface User {
   userName: string;
   email: string;
   age?: number;
-  isStudent: boolean;     // true = student, false = professional
+  isStudent: boolean;           // true = student, false = professional
   target?: string;
-  token: string;          // JWT token
-  tokenExpiration: Date;  // When token expires
+  token: string;                // JWT token
+  tokenExpiration: Date;        // When token expires
+  googleDisplayName?: string;   // Real name from Google profile (given_name)
 }

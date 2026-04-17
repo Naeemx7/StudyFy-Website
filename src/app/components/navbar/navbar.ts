@@ -57,7 +57,10 @@ export class NavbarComponent {
    */
   getDisplayName(userName: string | undefined): string {
     if (!userName) return 'User';
-    return userName.includes('@') ? userName.split('@')[0] : userName.split(' ')[0] || userName;
+    // If it's an email address, strip the domain
+    if (userName.includes('@')) return userName.split('@')[0];
+    // Otherwise show as-is (works for both full names and plain usernames)
+    return userName;
   }
 
   /**

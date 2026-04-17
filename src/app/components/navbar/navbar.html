@@ -46,7 +46,7 @@
           <div class="h-8 w-8 rounded-full bg-indigo-600 flex items-center justify-center text-sm font-medium text-white shadow-sm ring-2 ring-white">
             {{ getInitials(user.userName) }}
           </div>
-          <span class="text-sm font-medium text-gray-700 hidden md:block">{{ getDisplayName(user.userName) }}</span>
+          <span class="text-sm font-medium text-gray-700 hidden md:block">{{ getDisplayName(user.googleDisplayName || user.userName) }}</span>
           <svg class="w-4 h-4 text-gray-400 transition-transform duration-200" [class.rotate-180]="isDropdownOpen" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
 
@@ -54,7 +54,7 @@
         @if (isDropdownOpen) {
         <div class="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-gray-100 py-1 z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
           <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/50 rounded-t-xl">
-            <p class="text-sm font-semibold text-gray-900">{{ getDisplayName(user.userName) }}</p>
+            <p class="text-sm font-semibold text-gray-900">{{ getDisplayName(user.googleDisplayName || user.userName) }}</p>
             <p class="text-xs text-gray-500 truncate">{{ user.email }}</p>
           </div>
           

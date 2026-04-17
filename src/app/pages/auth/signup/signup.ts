@@ -58,6 +58,11 @@ export class SignupComponent implements OnInit {
   googleToken: string | null = null;
   showGoogleProfileForm = false;
 
+  // Decoded from Google JWT
+  private googleDisplayName = '';
+  private pendingGoogleEmail = '';
+  private readonly GOOGLE_PROFILES_KEY = 'asc_google_profiles';
+
   constructor(
     private fb: FormBuilder,
     private auth: AuthService,
@@ -158,11 +163,6 @@ export class SignupComponent implements OnInit {
     });
   }
 
-  /**
-   * Handle the Google credential response
-   * If this is a new user, we need profile info (age, target, etc.)
-   * before sending to backend
-   */
   private handleGoogleCredential(response: any): void {
     this.googleToken = response.credential;
     this.googleLoading = false;
@@ -172,9 +172,76 @@ export class SignupComponent implements OnInit {
       return;
     }
 
-    // Show the profile completion form for new Google users
-    this.showGoogleProfileForm = true;
-    this.successMessage = 'Google account verified! Complete your profile below.';
+    const payload = this.decodeGoogleJwt(this.googleToken);
+    this.googleDisplayName = payload?.['name'] || payload?.['given_name'] || '';
+    this.pendingGoogleEmail = payload?.['email'] || '';
+
+    const savedProfile = this.pendingGoogleEmail
+      ? this.getSavedGoogleProfile(this.pendingGoogleEmail)
+      : null;
+
+    if (savedProfile) {
+      const { age, isStudent, target } = savedProfile;
+      this.callGoogleBackend(age, isStudent, target);
+    } else {
+      this.showGoogleProfileForm = true;
+      this.successMessage = 'Google account verified! Complete your profile below.';
+    }
+  }
+
+  private decodeGoogleJwt(token: string): Record<string, string> | null {
+    try {
+      const base64Payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      return JSON.parse(atob(base64Payload)) as Record<string, string>;
+    } catch {
+      return null;
+    }
+  }
+
+  private getSavedGoogleProfile(email: string): { age: number; isStudent: boolean; target: string } | null {
+    try {
+      const raw = localStorage.getItem(this.GOOGLE_PROFILES_KEY);
+      if (!raw) return null;
+      const profiles = JSON.parse(raw) as Record<string, { age: number; isStudent: boolean; target: string }>;
+      return profiles[email] ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  private saveGoogleProfile(email: string, age: number, isStudent: boolean, target: string): void {
+    try {
+      const raw = localStorage.getItem(this.GOOGLE_PROFILES_KEY);
+      const profiles = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
+      profiles[email] = { age, isStudent, target };
+      localStorage.setItem(this.GOOGLE_PROFILES_KEY, JSON.stringify(profiles));
+    } catch {}
+  }
+
+  private callGoogleBackend(age: number, isStudent: boolean, target: string): void {
+    if (!this.googleToken) {
+      this.error = 'Google session expired. Please sign in with Google again.';
+      this.showGoogleProfileForm = false;
+      return;
+    }
+
+    this.loading = true;
+    this.error = '';
+
+    this.auth.googleSignIn(this.googleToken, age, isStudent, target, this.googleDisplayName).subscribe({
+      next: () => {
+        if (this.pendingGoogleEmail) {
+          this.saveGoogleProfile(this.pendingGoogleEmail, age, isStudent, target);
+        }
+        this.loading = false;
+        this.router.navigate(['/dashboard']);
+      },
+      error: (err) => {
+        this.loading = false;
+        this.showGoogleProfileForm = false;
+        this.error = err?.message || 'Google sign-in failed. Please try again.';
+      }
+    });
   }
 
   /**
@@ -190,31 +257,7 @@ export class SignupComponent implements OnInit {
       return;
     }
 
-    if (!this.googleToken) {
-      this.error = 'Google token expired. Please sign in with Google again.';
-      this.showGoogleProfileForm = false;
-      return;
-    }
-
-    this.loading = true;
-    this.error = '';
-
-    this.auth.googleSignIn(
-      this.googleToken,
-      age || 0,
-      this.selectedRole === 'student',
-      target
-    ).subscribe({
-      next: () => {
-        this.loading = false;
-        // Google sign-in auto-logs in (returns JWT), go straight to dashboard
-        this.router.navigate(['/dashboard']);
-      },
-      error: (err) => {
-        this.loading = false;
-        this.error = err?.message || 'Google sign-in failed. Please try again.';
-      }
-    });
+    this.callGoogleBackend(age || 0, this.selectedRole === 'student', target);
   }
 
   /**
