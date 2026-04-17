@@ -146,4 +146,13 @@ export class DashboardComponent implements OnInit {
       }
     });
   }
+
+  /**
+   * Get display-friendly name
+   * For Google users who sign in with email, strips the @domain part
+   */
+  getDisplayName(userName: string | undefined): string {
+    if (!userName) return 'User';
+    return userName.includes('@') ? userName.split('@')[0] : userName.split(' ')[0] || userName;
+  }
 }

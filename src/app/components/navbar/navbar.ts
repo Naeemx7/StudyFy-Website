@@ -45,10 +45,19 @@ export class NavbarComponent {
 
   /**
    * Get user initials for avatar
-   * Uses userName now instead of name
+   * Uses first char of display name
    */
   getInitials(userName: string | undefined): string {
     return userName ? userName.charAt(0).toUpperCase() : 'U';
+  }
+
+  /**
+   * Get display-friendly name
+   * For Google users who sign in with email, strips the @domain part
+   */
+  getDisplayName(userName: string | undefined): string {
+    if (!userName) return 'User';
+    return userName.includes('@') ? userName.split('@')[0] : userName.split(' ')[0] || userName;
   }
 
   /**

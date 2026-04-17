@@ -9,7 +9,7 @@
       <div class="space-y-4">
         <div>
           <h1 class="text-3xl font-bold text-gray-900 tracking-tight">
-            Welcome back, {{ (currentUser$ | async)?.userName?.split(' ')?.[0] || 'User' }}
+            Welcome back, {{ getDisplayName((currentUser$ | async)?.userName) }}
           </h1>
           <p class="text-gray-500 mt-1">Ready to create some momentum today?</p>
         </div>

@@ -122,8 +122,6 @@ export class AiService {
       numberOfQuestions: Math.max(1, Math.min(30, numberOfQuestions)),
     };
 
-    console.log('Quiz request body:', JSON.stringify(body));
-
     return this.http.post<ApiResponse<QuizResponse>>(
       `${this.getBasePath(spaceId)}/quiz`,
       body

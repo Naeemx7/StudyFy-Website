@@ -1054,12 +1054,17 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
       return exact;
     }
 
-    const partial = options.find((option) => {
-      const normalizedOption = this.normalizeQuizText(option);
-      return normalizedOption.includes(normalizedCandidate) || normalizedCandidate.includes(normalizedOption);
-    });
-    if (partial) {
-      return partial;
+    // Only attempt partial match for longer candidates (8+ chars).
+    // Short candidates like "A", "1", "yes" must not partial-match here because
+    // they can be contained in every option string, causing all options to appear correct.
+    // Short answers are handled by the letter/index detection in resolveCorrectAnswer instead.
+    if (normalizedCandidate.length >= 8) {
+      const partial = options.find((option) =>
+        this.normalizeQuizText(option).includes(normalizedCandidate)
+      );
+      if (partial) {
+        return partial;
+      }
     }
 
     return '';
