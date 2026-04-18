@@ -35,6 +35,7 @@ export interface QuizRequest {
 export interface QuizSubmissionRequest {
   quizId: string;
   quizFiles: QuizFileResult[];
+  quizTags: string[];
 }
 
 export interface QuizFileResult {

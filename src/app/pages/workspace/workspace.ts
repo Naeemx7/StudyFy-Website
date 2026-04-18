@@ -54,6 +54,7 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
   fileContent = '';
   fileTopic = '';
   fileId = '';
+  fileTags: string[] = [];
   isPdf = false;
   loadingContent = true;
   contentError = '';
@@ -112,6 +113,7 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
     this.storageService.getFileContent(this.spaceId, this.fileName).subscribe({
       next: (content) => {
         this.fileId = content.fileId;
+        this.fileTags = content.tags ?? [];
         this.extractDisplayContent(content.result);
         this.loadingContent = false;
         this.updateFileIdInStorage(this.fileName, this.fileId);
@@ -1257,6 +1259,7 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
           correctAnswersCount: this.score,
         },
       ],
+      quizTags: this.fileTags,
     }).subscribe({
       error: () => undefined,
     });

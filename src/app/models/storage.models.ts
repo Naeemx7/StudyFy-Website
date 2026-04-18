@@ -59,6 +59,7 @@ export interface FileContent {
   fileName: string;              // Original filename
   fileId: string;                // UUID assigned by backend
   result: unknown;               // Extracted text content (varies by file type)
+  tags?: string[];               // Topic tags extracted by backend AI
 }
 
 /**
