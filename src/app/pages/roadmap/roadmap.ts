@@ -1,6 +1,8 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { StorageService } from '../../services/storage.service';
 import { SpaceService } from '../../services/space.service';
 import { UploadProgress } from '../../models/storage.models';
@@ -145,22 +147,34 @@ export class RoadmapComponent implements OnInit {
     this.isUploading = true;
     this.errorMessage = '';
 
-    // Upload files via StorageService (real Azure upload)
+    // Step 1: Upload files to Azure via StorageService
     this.storageService.uploadFiles(this.spaceId, selected).subscribe({
       next: (fileNames) => {
-        // Add uploaded files to the list
-        const mapped: RoadmapFile[] = selected.map((f) => ({
-          id: f.name,
-          name: f.name,
-          size: f.size,
-          type: f.type || 'application/octet-stream',
-          uploadedAt: new Date(),
-        }));
+        // Step 2: Call GET /storage/content for each file.
+        // This is REQUIRED — the backend only saves the file to the database
+        // after this call. Without it, totalFiles stays wrong and AI features
+        // (summary, quiz, flashcards) cannot find the file.
+        const registrations = fileNames.map(name =>
+          this.storageService.getFileContent(this.spaceId, name).pipe(
+            catchError(() => of(null)) // don't fail the whole batch if one errors
+          )
+        );
 
-        this.files = [...this.files, ...mapped];
-        this.saveFilesToStorage();
-        this.isUploading = false;
-        this.storageService.clearProgress();
+        forkJoin(registrations).subscribe(results => {
+          // Build file list using fileId from backend when available
+          const mapped: RoadmapFile[] = selected.map((f, i) => ({
+            id: results[i]?.fileId ?? f.name,
+            name: f.name,
+            size: f.size,
+            type: f.type || 'application/octet-stream',
+            uploadedAt: new Date(),
+          }));
+
+          this.files = [...this.files, ...mapped];
+          this.saveFilesToStorage();
+          this.isUploading = false;
+          this.storageService.clearProgress();
+        });
       },
       error: (err) => {
         this.isUploading = false;

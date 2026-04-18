@@ -76,9 +76,9 @@ export interface Space {
   title: string;          // Mapped from name
   description: string;    // Same as backend
   
-  // Frontend-only fields (not from backend yet)
-  // These will be populated from quiz/analytics data later
-  progress: number;       // 0-100 percentage (calculated from quiz results)
+  progress: number;       // 0-100 percentage (normalised from averageScore)
+  totalFiles: number;     // Total files in this space (from spaces API)
+  totalQuizzes: number;   // Total quizzes taken in this space (from spaces API)
   lastAccessed: Date;     // When user last opened this space
 }
 
@@ -102,12 +102,17 @@ export function mapSpaceResponseToSpace(response: SpaceResponse): Space {
     console.error('Space response missing both spaceId and workspaceId:', response);
   }
   
+  // Normalise averageScore: backend may return 0-1 decimal (0.725) or 0-100 (72.5)
+  const rawScore = response.averageScore ?? 0;
+  const progress = rawScore > 1 ? Math.round(rawScore) : Math.round(rawScore * 100);
+
   return {
     id,
     title: response.name,
     description: response.description || '',
-    // Use averageScore from backend if available, otherwise 0
-    progress: response.averageScore ?? 0,
+    progress,
+    totalFiles: response.totalFiles ?? 0,
+    totalQuizzes: response.totalQuizzes ?? 0,
     lastAccessed: response.createdAt ? new Date(response.createdAt) : new Date()
   };
 }

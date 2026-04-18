@@ -1,27 +1,30 @@
 /**
  * Dashboard Component
- * 
+ *
  * The main hub after login. Shows:
  * - Welcome message with user's name
- * - Quick stats (hardcoded for now)
- * - List of user's spaces (from API)
+ * - Quick stats: totalFiles + totalQuizzes from spaces API, streak + avgScore from analytics
+ * - List of user's spaces with real progress percentages
  * - Create new space button/modal
- * 
+ *
  * DATA FLOW:
  * 1. Component initializes (ngOnInit)
- * 2. Calls spaceService.loadSpaces() to fetch from API
- * 3. Subscribes to spaces$ to display the list
- * 4. When user creates space, calls spaceService.createSpace()
+ * 2. loadSpaces() fetches spaces — each space already has totalFiles, totalQuizzes, progress
+ * 3. spaces$ subscription sums totalFiles + totalQuizzes for stat cards
+ * 4. loadAnalytics() fetches streak + avgScore (silently fails if backend 500s)
  */
 
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { NavbarComponent } from '../../components/navbar/navbar';
 import { AuthService } from '../../services/auth.service';
 import { SpaceService } from '../../services/space.service';
+import { AnalyticsService } from '../../services/analytics.service';
 import { Space } from '../../models/space.models';
+import { GlobalAnalytics } from '../../models/analytics.models';
 
 @Component({
   selector: 'app-dashboard',
@@ -30,19 +33,31 @@ import { Space } from '../../models/space.models';
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   private auth = inject(AuthService);
   private spaceService = inject(SpaceService);
+  private analyticsService = inject(AnalyticsService);
   private fb = inject(FormBuilder);
+  private spaceSub?: Subscription;
 
   // User data from auth service
   currentUser$ = this.auth.currentUser$;
-  
+
   // Spaces data from space service
   spaces$ = this.spaceService.spaces$;
   spacesLoading$ = this.spaceService.loading$;
   spacesError$ = this.spaceService.error$;
-  
+
+  // ---- Stat cards ----
+  // totalFiles + totalQuizzes come from spaces$ (spaces API returns them directly)
+  // streak + avgScore come from analytics API (silently 0/-- if backend 500s)
+  streak = 0;
+  totalFiles = 0;
+  totalQuizzes = 0;
+  /** null = no quiz data yet; number = rounded percentage (0–100) */
+  avgScore: number | null = null;
+  analyticsLoading = false;
+
   // UI State for Modal
   showCreateModal = false;
   isCreating = false;
@@ -65,8 +80,51 @@ export class DashboardComponent implements OnInit {
    * This is where we load data from APIs
    */
   ngOnInit(): void {
-    // Load spaces from backend
+    // Load spaces — the spaces API returns totalFiles, totalQuizzes, averageScore per space
     this.spaceService.loadSpaces().subscribe();
+
+    // Sum totalFiles + totalQuizzes directly from spaces$ whenever it updates
+    this.spaceSub = this.spaceService.spaces$.subscribe(spaces => {
+      this.totalFiles = spaces.reduce((sum, s) => sum + (s.totalFiles ?? 0), 0);
+      this.totalQuizzes = spaces.reduce((sum, s) => sum + (s.totalQuizzes ?? 0), 0);
+    });
+
+    // Load streak + avgScore from analytics (separate endpoint, may 500)
+    this.loadAnalytics();
+  }
+
+  ngOnDestroy(): void {
+    this.spaceSub?.unsubscribe();
+  }
+
+  /**
+   * LOAD ANALYTICS
+   * Fetches streak + avgScore from analytics endpoint.
+   * totalFiles and totalQuizzes come from spaces$ instead — no analytics needed for those.
+   * Silently fails (streak stays 0, avgScore stays --) if backend returns 500.
+   */
+  private loadAnalytics(): void {
+    this.analyticsLoading = true;
+
+    this.analyticsService.getGlobalAnalytics().subscribe({
+      next: (data: GlobalAnalytics) => {
+        this.analyticsLoading = false;
+        this.streak = data.currentStreak ?? 0;
+
+        // Average score from individual quiz records
+        if (data.quizData?.length > 0) {
+          const total = data.quizData.reduce(
+            (sum, q) => sum + AnalyticsService.normaliseScore(q.score ?? 0),
+            0
+          );
+          this.avgScore = Math.round(total / data.quizData.length);
+        }
+      },
+      error: () => {
+        // Silent fail — streak stays 0, avgScore stays --
+        this.analyticsLoading = false;
+      }
+    });
   }
 
   openCreateModal() {
