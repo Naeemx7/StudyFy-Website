@@ -25,6 +25,7 @@ import {
   FlashcardsRequest,
   QuizRequest,
   QuizSubmissionRequest,
+  TagsQuizRequest,
   ApiResponse,
   GeminiResponse,
   QuizResponse,
@@ -160,6 +161,34 @@ export class AiService {
         }
         return response.data;
       }),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * GENERATE TAGS QUIZ
+   *
+   * Generates a quiz targeting specific topic tags rather than
+   * full file content. Useful for retesting weak areas.
+   *
+   * ENDPOINT: POST /tags-quiz
+   */
+  generateTagsQuiz(
+    spaceId: string,
+    tags: string[],
+    difficulty: DifficultyLevel = 'Medium',
+    numberOfQuestions: number = 5
+  ): Observable<QuizResponse> {
+    const body: TagsQuizRequest = {
+      tags,
+      difficultyLevel: difficulty,
+      numberOfQuestions: Math.max(1, Math.min(30, numberOfQuestions)),
+    };
+
+    return this.http.post<QuizResponse>(
+      `${this.getBasePath(spaceId)}/tags-quiz`,
+      body
+    ).pipe(
       catchError(this.handleError)
     );
   }

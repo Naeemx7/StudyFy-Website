@@ -6,6 +6,7 @@
  * - POST /flashcards    - Generate flashcards from files
  * - POST /quiz          - Generate quiz from files
  * - POST /quiz-submission - Submit quiz answers
+ * - POST /tags-quiz     - Generate quiz from specific topic tags
  */
 
 // ============================================
@@ -41,6 +42,13 @@ export interface QuizTagSubmission {
   tagName: string;
   tagQuestionsCount: number;
   correctAnswersCount: number;
+}
+
+/** Request body for POST /tags-quiz */
+export interface TagsQuizRequest {
+  tags: string[];
+  difficultyLevel: DifficultyLevel;
+  numberOfQuestions: number;
 }
 
 /** Difficulty levels for quiz/flashcard generation */

@@ -83,6 +83,10 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
   score = 0;
   totalAnswered = 0;
 
+  // Tags quiz state
+  tagsQuizLoading = false;
+  tagsQuizError = '';
+
   // Chat state
   messages: ChatMessage[] = [];
   isProcessing = false;
@@ -1231,6 +1235,41 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
 
   retryQuiz(): void {
     this.loadQuiz(true);
+  }
+
+  /** Get tags that the user got wrong on the current quiz */
+  getWeakTagsFromQuiz(): string[] {
+    const weakSet = new Set<string>();
+    for (const q of this.quizQuestions) {
+      if (!q.isCorrect && q.tagName) {
+        weakSet.add(q.tagName);
+      }
+    }
+    return Array.from(weakSet);
+  }
+
+  /** Call POST /tags-quiz with the tags the user got wrong, then start a real quiz */
+  practiceWeakTags(): void {
+    const weakTags = this.getWeakTagsFromQuiz();
+    if (weakTags.length === 0 || !this.spaceId) return;
+
+    this.tagsQuizLoading = true;
+    this.tagsQuizError = '';
+
+    this.aiService.generateTagsQuiz(this.spaceId, weakTags, this.difficulty, this.questionCount).subscribe({
+      next: (res) => {
+        this.tagsQuizLoading = false;
+        console.log('Tags quiz response:', res);
+        // Tags-quiz returns same format as regular quiz — feed it into the quiz UI
+        this.applyQuizResponse(res);
+        this.quizState = 'ready';
+      },
+      error: (err) => {
+        this.tagsQuizError = err.message || 'Failed to load weak topics quiz';
+        this.tagsQuizLoading = false;
+        console.error('Tags quiz error:', err);
+      },
+    });
   }
 
   reviewQuestion(index: number): void {
