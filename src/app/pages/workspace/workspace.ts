@@ -5,7 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { map } from 'rxjs/operators';
 import { StorageService } from '../../services/storage.service';
 import { AiService } from '../../services/ai.service';
-import { DifficultyLevel, GeminiResponse, QuizResponse } from '../../models/ai.models';
+import { DifficultyLevel, GeminiResponse, QuizResponse, QuizTagSubmission } from '../../models/ai.models';
 
 type WorkspaceTab = 'summary' | 'flashcards' | 'quiz';
 type ContentState = 'idle' | 'loading' | 'ready' | 'error';
@@ -29,6 +29,7 @@ interface QuizQuestion {
   correctAnswer: string;
   userAnswer: string | null;
   isCorrect: boolean | null;
+  tagName?: string;
 }
 
 @Component({
@@ -441,6 +442,16 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
     console.log('Quiz API response payload:', res);
 
     const content = res.operationResponse?.responseContent;
+
+    // Try the known structured format first: extracts ALL questions across all tags
+    const taggedQuestions = this.extractTaggedQuestionsFromContent(content ?? res.operationResponse ?? res);
+    if (taggedQuestions.length > 0) {
+      this.quizQuestions = taggedQuestions;
+      this.quizState = 'ready';
+      return;
+    }
+
+    // Fallback to generic parser
     if (content !== undefined && content !== null) {
       this.parseQuizContent(content);
       return;
@@ -1072,6 +1083,54 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
     return '';
   }
 
+  private extractTagNamesFromQuizContent(content: unknown): string[] {
+    if (!content) return [];
+    const parsed = typeof content === 'string' ? this.tryParseJson(content) : content;
+    if (!this.isRecord(parsed)) return [];
+    // Structure: { "filename.pdf": { "tags": { "TagName1": {...}, ... } } }
+    for (const fileData of Object.values(parsed)) {
+      if (this.isRecord(fileData) && this.isRecord(fileData['tags'])) {
+        const tags = Object.keys(fileData['tags'] as Record<string, unknown>);
+        if (tags.length > 0) return tags;
+      }
+    }
+    // Flat tags object at top level
+    if (this.isRecord(parsed['tags'])) {
+      return Object.keys(parsed['tags'] as Record<string, unknown>);
+    }
+    return [];
+  }
+
+  /** Collect ALL questions across every tag in the API response, tagging each with its tagName. */
+  private extractTaggedQuestionsFromContent(content: unknown): QuizQuestion[] {
+    const parsed = typeof content === 'string' ? this.tryParseJson(content) : content;
+    if (!this.isRecord(parsed)) return [];
+
+    const all: QuizQuestion[] = [];
+
+    for (const fileData of Object.values(parsed)) {
+      if (!this.isRecord(fileData)) continue;
+      const tags = fileData['tags'];
+      if (!this.isRecord(tags)) continue;
+
+      for (const [tagName, tagData] of Object.entries(tags as Record<string, unknown>)) {
+        if (!this.isRecord(tagData)) continue;
+        const questions = tagData['questions'];
+        if (!Array.isArray(questions) || questions.length === 0) continue;
+
+        for (const q of questions) {
+          const mapped = this.mapQuizQuestion(q);
+          if (mapped) {
+            mapped.tagName = tagName;
+            all.push(mapped);
+          }
+        }
+      }
+    }
+
+    return all;
+  }
+
   private normalizeQuizText(text: string): string {
     return text
       .toLowerCase()
@@ -1213,7 +1272,11 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
       return false;
     }
 
-    return this.normalizeQuizText(option) === this.normalizeQuizText(question.correctAnswer);
+    // correctAnswer is already the full option text (resolved by resolveCorrectAnswer).
+    // Use exact comparison — normalizeQuizText strips [], (), {} etc. which makes
+    // C++ syntax options that only differ by brackets all normalize to the same string.
+    return option.trim() === question.correctAnswer.trim() ||
+      option.trim().toLowerCase() === question.correctAnswer.trim().toLowerCase();
   }
 
   getDisplayCorrectAnswer(question: QuizQuestion): string {
@@ -1250,18 +1313,30 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
       return;
     }
 
+    // Build per-tag stats from the tagName stored on each question
+    const tagMap = new Map<string, { total: number; correct: number }>();
+    for (const q of this.quizQuestions) {
+      const key = q.tagName ?? (this.fileTags[0] ?? 'General');
+      const entry = tagMap.get(key) ?? { total: 0, correct: 0 };
+      entry.total++;
+      if (q.isCorrect) entry.correct++;
+      tagMap.set(key, entry);
+    }
+
+    const quizTags: QuizTagSubmission[] = Array.from(tagMap.entries()).map(([tagName, stats]) => ({
+      tagName,
+      tagQuestionsCount: stats.total,
+      correctAnswersCount: stats.correct,
+    }));
+
+    console.log('Submitting quiz payload:', { quizId: this.quizId, quizTags });
+
     this.aiService.submitQuiz(this.spaceId, {
       quizId: this.quizId,
-      quizFiles: [
-        {
-          fileId: this.fileId,
-          fileQuestionsCount: this.quizQuestions.length,
-          correctAnswersCount: this.score,
-        },
-      ],
-      quizTags: this.fileTags,
+      quizTags,
     }).subscribe({
-      error: () => undefined,
+      next: (result) => console.log('Quiz submission result:', result),
+      error: (err) => console.error('Quiz submission error:', err),
     });
   }
 

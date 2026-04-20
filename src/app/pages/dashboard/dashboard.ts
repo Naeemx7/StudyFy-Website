@@ -111,13 +111,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.analyticsLoading = false;
         this.streak = data.currentStreak ?? 0;
 
-        // Average score from individual quiz records
-        if (data.quizData?.length > 0) {
-          const total = data.quizData.reduce(
-            (sum, q) => sum + AnalyticsService.normaliseScore(q.score ?? 0),
-            0
-          );
-          this.avgScore = Math.round(total / data.quizData.length);
+        // Use backend's pre-calculated averageScore from spaceDetails (weighted by totalQuizzes)
+        if (data.spaceDetails?.length > 0) {
+          const totalQuizzes = data.spaceDetails.reduce((sum, s) => sum + (s.totalQuizzes ?? 0), 0);
+          if (totalQuizzes > 0) {
+            const weightedSum = data.spaceDetails.reduce(
+              (sum, s) => sum + (s.averageScore ?? 0) * (s.totalQuizzes ?? 0),
+              0
+            );
+            this.avgScore = Math.round(weightedSum / totalQuizzes);
+          }
         }
       },
       error: () => {

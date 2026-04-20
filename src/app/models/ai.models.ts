@@ -34,13 +34,12 @@ export interface QuizRequest {
 /** Request body for POST /quiz-submission */
 export interface QuizSubmissionRequest {
   quizId: string;
-  quizFiles: QuizFileResult[];
-  quizTags: string[];
+  quizTags: QuizTagSubmission[];
 }
 
-export interface QuizFileResult {
-  fileId: string;
-  fileQuestionsCount: number;
+export interface QuizTagSubmission {
+  tagName: string;
+  tagQuestionsCount: number;
   correctAnswersCount: number;
 }
 

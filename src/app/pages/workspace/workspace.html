@@ -293,7 +293,7 @@
               <h3 class="text-lg font-bold leading-relaxed text-gray-900">{{ currentQuestion.question }}</h3>
 
               <div class="mt-6 space-y-3">
-                @for (option of currentQuestion.options; track option; let i = $index) {
+                @for (option of currentQuestion.options; track $index; let i = $index) {
                 <button
                   type="button"
                   class="w-full rounded-xl border-2 p-4 text-left text-sm transition"
@@ -433,7 +433,7 @@
               <h3 class="text-lg font-bold leading-relaxed text-gray-900">{{ currentQuestion.question }}</h3>
 
               <div class="mt-6 space-y-3">
-                @for (option of currentQuestion.options; track option; let i = $index) {
+                @for (option of currentQuestion.options; track $index; let i = $index) {
                 <div
                   class="w-full rounded-xl border-2 p-4 text-left text-sm"
                   [ngClass]="{

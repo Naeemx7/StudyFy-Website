@@ -10,11 +10,12 @@
  * Uses currentUser$ from AuthService to display user info.
  */
 
-import { Component, inject, ElementRef, HostListener } from '@angular/core';
+import { Component, inject, ElementRef, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { SpaceService } from '../../services/space.service';
+import { AnalyticsService } from '../../services/analytics.service';
 
 @Component({
   selector: 'app-navbar',
@@ -22,14 +23,23 @@ import { SpaceService } from '../../services/space.service';
   imports: [CommonModule, RouterLink, RouterLinkActive],
   templateUrl: './navbar.html'
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit {
   private elementRef = inject(ElementRef);
   private auth = inject(AuthService);
   private spaceService = inject(SpaceService);
+  private analyticsService = inject(AnalyticsService);
   private router = inject(Router);
   
   currentUser$ = this.auth.currentUser$;
   isDropdownOpen = false;
+  streak = 0;
+
+  ngOnInit(): void {
+    this.analyticsService.getGlobalAnalytics().subscribe({
+      next: (data) => { this.streak = data.currentStreak ?? 0; },
+      error: () => { /* silent fail — streak stays 0 */ },
+    });
+  }
 
   toggleDropdown() {
     this.isDropdownOpen = !this.isDropdownOpen;

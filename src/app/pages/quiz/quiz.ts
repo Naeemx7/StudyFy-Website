@@ -233,11 +233,11 @@ export class QuizComponent implements OnInit {
     // Submit quiz results to backend
     this.aiService.submitQuiz(this.spaceId, {
       quizId: this.quizId,
-      quizFiles: this.fileIds.map(fid => ({
-        fileId: fid,
-        fileQuestionsCount: this.questions.length,
+      quizTags: [{
+        tagName: 'General',
+        tagQuestionsCount: this.questions.length,
         correctAnswersCount: this.score,
-      })),
+      }],
     }).subscribe({ error: () => {} }); // fire and forget
   }
 
