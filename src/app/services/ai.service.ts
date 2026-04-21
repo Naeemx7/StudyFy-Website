@@ -185,10 +185,11 @@ export class AiService {
       numberOfQuestions: Math.max(1, Math.min(30, numberOfQuestions)),
     };
 
-    return this.http.post<QuizResponse>(
+    return this.http.post<ApiResponse<QuizResponse>>(
       `${this.getBasePath(spaceId)}/tags-quiz`,
       body
     ).pipe(
+      map(res => res.data),
       catchError(this.handleError)
     );
   }

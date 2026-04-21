@@ -1,22 +1,18 @@
 import { AfterViewChecked, Component, ElementRef, OnInit, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 import { map } from 'rxjs/operators';
 import { StorageService } from '../../services/storage.service';
 import { AiService } from '../../services/ai.service';
+import { ChatService } from '../../services/chat.service';
 import { DifficultyLevel, GeminiResponse, QuizResponse, QuizTagSubmission } from '../../models/ai.models';
+import { ChatMessage, ChatSessionListItem } from '../../models/chat.models';
 
 type WorkspaceTab = 'summary' | 'flashcards' | 'quiz';
 type ContentState = 'idle' | 'loading' | 'ready' | 'error';
 type QuizState = 'idle' | 'loading' | 'ready' | 'in-progress' | 'completed' | 'review' | 'error';
-
-interface ChatMessage {
-  role: 'user' | 'ai';
-  content: string;
-  title?: string;
-  timestamp: Date;
-}
 
 interface Flashcard {
   front: string;
@@ -44,8 +40,10 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
 
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private sanitizer = inject(DomSanitizer);
   private storageService = inject(StorageService);
   private aiService = inject(AiService);
+  private chatService = inject(ChatService);
 
   // Route params
   spaceId = '';
@@ -89,8 +87,16 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
 
   // Chat state
   messages: ChatMessage[] = [];
+  chatSessions: ChatSessionListItem[] = [];
+  currentSessionId = '';
+  chatLoading = false;
+  chatError = '';
+  showSessionsList = false;
   isProcessing = false;
   processingAction = '';
+
+  // Quiz practice mode (tags-quiz) — skip submission to avoid backend tag-not-found errors
+  isTagsQuiz = false;
 
   // Settings
   difficulty: DifficultyLevel = 'Medium';
@@ -210,14 +216,114 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
 
   onSendMessage(): void {
     const text = this.chatInput.trim();
-    if (!text) return;
+    if (!text || this.chatLoading) return;
 
     this.chatInput = '';
-    this.addMessage('user', text);
-    this.addMessage(
-      'ai',
-      'Use the Summary, Flashcards, and Quiz Mode tabs on the left to generate study content. The assistant panel stays focused on conversation.'
-    );
+    this.chatError = '';
+
+    // If no session yet, create one first
+    if (!this.currentSessionId) {
+      if (!this.fileId || !this.spaceId) return;
+      this.chatLoading = true;
+      this.chatService.createSession(this.spaceId, [this.fileId], this.fileName).subscribe({
+        next: (session) => {
+          this.currentSessionId = session.id;
+          this.messages = session.messages || [];
+          console.log('Chat session created:', session.id);
+          // Now send the actual message
+          this.sendChatMessage(text);
+        },
+        error: (err) => {
+          this.chatLoading = false;
+          this.chatError = err.message || 'Failed to create chat session';
+          console.error('Create session error:', err);
+        },
+      });
+      return;
+    }
+
+    this.sendChatMessage(text);
+  }
+
+  private sendChatMessage(text: string): void {
+    this.chatLoading = true;
+    this.chatService.sendMessage(this.spaceId, this.currentSessionId, text).subscribe({
+      next: (res) => {
+        if (!res) {
+          this.chatLoading = false;
+          this.chatError = 'AI could not generate a response. The model may be at capacity — try again later.';
+          console.warn('sendMessage returned null data — AI backend may be overloaded');
+          return;
+        }
+        this.messages.push(res.userMessage);
+        this.messages.push(res.assistantMessage);
+        this.chatLoading = false;
+        this.shouldScroll = true;
+        console.log('Chat response:', res);
+      },
+      error: (err) => {
+        this.chatLoading = false;
+        this.chatError = err.message || 'Failed to send message';
+        console.error('Send message error:', err);
+      },
+    });
+  }
+
+  loadChatSessions(): void {
+    if (!this.spaceId) return;
+    this.chatService.listSessions(this.spaceId).subscribe({
+      next: (sessions) => {
+        this.chatSessions = sessions;
+        this.showSessionsList = true;
+        console.log('Chat sessions:', sessions);
+      },
+      error: (err) => {
+        console.error('List sessions error:', err);
+      },
+    });
+  }
+
+  openSession(sessionId: string): void {
+    if (!this.spaceId) return;
+    this.chatLoading = true;
+    this.showSessionsList = false;
+    this.chatService.getSession(this.spaceId, sessionId).subscribe({
+      next: (session) => {
+        this.currentSessionId = session.id;
+        this.messages = session.messages || [];
+        this.chatLoading = false;
+        this.shouldScroll = true;
+        console.log('Opened session:', session.id, 'messages:', session.messages.length);
+      },
+      error: (err) => {
+        this.chatLoading = false;
+        this.chatError = err.message || 'Failed to load session';
+      },
+    });
+  }
+
+  deleteSession(sessionId: string): void {
+    if (!this.spaceId) return;
+    this.chatService.deleteSession(this.spaceId, sessionId).subscribe({
+      next: () => {
+        this.chatSessions = this.chatSessions.filter(s => s.id !== sessionId);
+        if (this.currentSessionId === sessionId) {
+          this.currentSessionId = '';
+          this.messages = [];
+        }
+        console.log('Deleted session:', sessionId);
+      },
+      error: (err) => {
+        console.error('Delete session error:', err);
+      },
+    });
+  }
+
+  startNewChat(): void {
+    this.currentSessionId = '';
+    this.messages = [];
+    this.chatError = '';
+    this.showSessionsList = false;
   }
 
   private loadSummary(force = false): void {
@@ -1191,6 +1297,7 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
     this.currentIndex = 0;
     this.score = 0;
     this.totalAnswered = 0;
+    this.isTagsQuiz = false;
   }
 
   startQuiz(): void {
@@ -1260,8 +1367,14 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
       next: (res) => {
         this.tagsQuizLoading = false;
         console.log('Tags quiz response:', res);
-        // Tags-quiz returns same format as regular quiz — feed it into the quiz UI
+        if (!res) {
+          this.tagsQuizError = 'The AI could not generate a practice quiz for these topics right now. Please try again later.';
+          return;
+        }
+        // applyQuizResponse calls resetQuizProgress which clears isTagsQuiz,
+        // so we must set the flag AFTER the call, not before.
         this.applyQuizResponse(res);
+        this.isTagsQuiz = true;
         this.quizState = 'ready';
       },
       error: (err) => {
@@ -1348,7 +1461,8 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
   }
 
   private submitQuizResults(): void {
-    if (!this.quizId || !this.fileId) {
+    // Tags-quiz (practice mode) — backend rejects submission for dynamically-tagged quizzes
+    if (this.isTagsQuiz || !this.quizId || !this.fileId) {
       return;
     }
 
@@ -1499,14 +1613,36 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
   }
 
-  private addMessage(role: 'user' | 'ai', content: string, title?: string): void {
-    this.messages.push({ role, content, title, timestamp: new Date() });
-    this.shouldScroll = true;
-  }
-
   // ===== Navigation =====
 
   goBack(): void {
     this.router.navigate(['/roadmap', this.spaceId]);
+  }
+
+  /** Convert basic markdown (bold, bullets, inline code) to safe HTML for chat messages */
+  renderMarkdown(text: string): SafeHtml {
+    let html = text
+      // Escape HTML entities first
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      // Bold: **text**
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      // Inline code: `text`
+      .replace(/`([^`]+)`/g, '<code class="bg-gray-200 text-gray-800 rounded px-1 text-xs font-mono">$1</code>')
+      // Bullet points: lines starting with * or -
+      .replace(/^[\*\-]\s+(.+)$/gm, '<li class="ml-4 list-disc">$1</li>')
+      // Wrap consecutive <li> in <ul>
+      .replace(/(<li[\s\S]*?<\/li>)(\s*<li)/g, '$1$2')
+      // Line breaks
+      .replace(/\n/g, '<br>');
+
+    // Wrap sequences of li elements in a ul
+    html = html.replace(/(<li[^>]*>[\s\S]*?<\/li>(<br>)*)+/g, (match) => {
+      const cleaned = match.replace(/<br>/g, '');
+      return `<ul class="my-1 space-y-0.5">${cleaned}</ul>`;
+    });
+
+    return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 }

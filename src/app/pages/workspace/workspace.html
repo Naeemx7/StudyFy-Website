@@ -532,54 +532,109 @@
 
     <div class="w-[45%] flex flex-col bg-white">
       <div class="border-b border-gray-200 px-5 py-4 shrink-0">
-        <div class="flex items-center gap-2">
-          <svg class="h-5 w-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-          </svg>
-          <h2 class="text-sm font-bold text-gray-900">AI Assistant</h2>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <svg class="h-5 w-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+            </svg>
+            <h2 class="text-sm font-bold text-gray-900">AI Assistant</h2>
+          </div>
+          <div class="flex items-center gap-1">
+            <button type="button" class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition" title="Chat History" (click)="loadChatSessions()">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+            <button type="button" class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition" title="New Chat" (click)="startNewChat()">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+            </button>
+          </div>
         </div>
         <p class="mt-0.5 ml-7 text-xs text-gray-500">Ask questions about this document</p>
       </div>
 
+      <!-- Sessions List -->
+      @if (showSessionsList) {
+      <div class="flex-1 overflow-y-auto p-4 space-y-2">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-semibold text-gray-900">Chat History</h3>
+          <button type="button" class="text-xs text-indigo-600 hover:text-indigo-800 transition" (click)="showSessionsList = false">Back to Chat</button>
+        </div>
+        @if (chatSessions.length === 0) {
+        <p class="text-sm text-gray-400 text-center py-8">No previous conversations</p>
+        }
+        @for (session of chatSessions; track session.id) {
+        <div class="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 p-3 hover:bg-gray-100 transition cursor-pointer" (click)="openSession(session.id)">
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-gray-900 truncate">{{ session.title || 'Untitled' }}</p>
+            <p class="text-xs text-gray-400">{{ session.messageCount }} messages</p>
+          </div>
+          <button type="button" class="shrink-0 rounded-lg p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 transition" (click)="deleteSession(session.id); $event.stopPropagation()" title="Delete">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+            </svg>
+          </button>
+        </div>
+        }
+      </div>
+      } @else {
+
       <div #chatContainer class="flex-1 overflow-y-auto p-5 space-y-4">
         @if (messages.length === 0) {
         <div class="flex justify-start">
-          <div class="max-w-[90%] rounded-2xl rounded-bl-md border border-indigo-100 bg-indigo-50 px-4 py-3">
-            <p class="text-sm leading-relaxed text-indigo-900">
-              Hello! I'm your AI study companion for <strong>{{ fileName }}</strong>. Use the tabs on the left to open the summary, flashcards, and quiz directly in the workspace.
+          <div class="max-w-[90%] rounded-2xl rounded-bl-md bg-gray-100 px-4 py-3">
+            <p class="text-sm leading-relaxed text-gray-800">
+              Hello! I'm your AI study companion for <strong>{{ fileName }}</strong>. Ask me anything about this document — I'll help you understand it better.
             </p>
           </div>
         </div>
         }
 
         @for (msg of messages; track $index) {
-        <div class="flex" [ngClass]="msg.role === 'user' ? 'justify-end' : 'justify-start'">
-          @if (msg.role === 'user') {
+        <div class="flex" [ngClass]="msg.role.toLowerCase() === 'user' ? 'justify-end' : 'justify-start'">
+          @if (msg.role.toLowerCase() === 'user') {
           <div class="max-w-[80%] rounded-2xl rounded-br-md bg-indigo-600 px-4 py-2.5 text-sm text-white">{{ msg.content }}</div>
-          }
-
-          @if (msg.role === 'ai') {
-          <div class="max-w-[90%] rounded-2xl rounded-bl-md border border-gray-200 bg-gray-50 px-4 py-3">
-            @if (msg.title) {
-            <div class="mb-2 text-sm font-bold text-gray-900">{{ msg.title }}</div>
-            }
-            <div class="whitespace-pre-wrap text-sm leading-relaxed text-gray-700">{{ msg.content }}</div>
+          } @else {
+          <div class="max-w-[90%] rounded-2xl rounded-bl-md bg-gray-100 px-4 py-3">
+            <div class="text-sm leading-relaxed text-gray-800" [innerHTML]="renderMarkdown(msg.content)"></div>
           </div>
           }
+        </div>
+        }
+
+        @if (chatLoading) {
+        <div class="flex justify-start">
+          <div class="rounded-2xl rounded-bl-md border border-gray-200 bg-gray-50 px-4 py-3">
+            <div class="flex items-center gap-2 text-sm text-gray-400">
+              <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Thinking...
+            </div>
+          </div>
         </div>
         }
       </div>
 
       <div class="border-t border-gray-200 p-4 shrink-0">
-        <div class="mb-3 flex items-center gap-2">
+        @if (chatError) {
+        <div class="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
+          {{ chatError }}
+        </div>
+        }
+        <div class="flex items-center gap-2">
           <input
             type="text"
             class="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             placeholder="Ask about the document..."
             [(ngModel)]="chatInput"
             (keydown.enter)="onSendMessage()"
+            [disabled]="chatLoading"
           />
-          <button type="button" class="rounded-xl bg-gray-100 p-2.5 text-gray-400 hover:bg-gray-200 hover:text-gray-600 transition disabled:opacity-50" (click)="onSendMessage()" [disabled]="!chatInput.trim()">
+          <button type="button" class="rounded-xl bg-gray-100 p-2.5 text-gray-400 hover:bg-gray-200 hover:text-gray-600 transition disabled:opacity-50" (click)="onSendMessage()" [disabled]="!chatInput.trim() || chatLoading">
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
             </svg>
@@ -606,6 +661,7 @@
           </div>
         </div>
       </div>
+      }
     </div>
   </div>
 </section>
