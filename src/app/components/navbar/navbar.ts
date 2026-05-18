@@ -1,12 +1,12 @@
 /**
  * Navbar Component
- * 
+ *
  * The top navigation bar shown on all protected pages.
  * Shows:
  * - App logo and name
  * - Navigation links (Dashboard, Analytics)
  * - User profile dropdown with logout
- * 
+ *
  * Uses currentUser$ from AuthService to display user info.
  */
 
@@ -29,7 +29,7 @@ export class NavbarComponent implements OnInit {
   private spaceService = inject(SpaceService);
   private analyticsService = inject(AnalyticsService);
   private router = inject(Router);
-  
+
   currentUser$ = this.auth.currentUser$;
   isDropdownOpen = false;
   streak = 0;

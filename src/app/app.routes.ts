@@ -9,6 +9,7 @@ import { QuizComponent } from './pages/quiz/quiz';
 import { AnalyticsComponent } from './pages/analytics/analytics';
 import { ProfileComponent } from './pages/profile/profile';
 import { SettingsComponent } from './pages/settings/settings';
+import { CommunitiesComponent } from './pages/communities/communities';
 import { AuthGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -20,6 +21,7 @@ export const routes: Routes = [
   { path: 'workspace/:spaceId', component: WorkspaceComponent, canActivate: [AuthGuard] },
   { path: 'quiz/:spaceId', component: QuizComponent, canActivate: [AuthGuard] },
   { path: 'analytics', component: AnalyticsComponent, canActivate: [AuthGuard] },
+  { path: 'communities', component: CommunitiesComponent, canActivate: [AuthGuard] },
   { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] },
   { path: 'settings', component: SettingsComponent, canActivate: [AuthGuard] },
 ];
