@@ -81,15 +81,74 @@
             </p>
           </div>
 
-          <button
-            type="button"
-            class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
-            (click)="regenerateActiveTab()"
-            [disabled]="isProcessing || !fileId"
-          >
-            {{ isProcessing ? processingAction : 'Regenerate' }}
-          </button>
+          <div class="flex items-center gap-2">
+            <!-- Share button -->
+            @if (activeTab === 'summary' && summaryState === 'ready') {
+              <button
+                type="button"
+                class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100 transition disabled:opacity-50"
+                (click)="shareSummary()"
+                [disabled]="shareLoading"
+                title="Share this summary"
+              >
+                <svg class="inline h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.769-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
+                </svg>
+                {{ shareLoading ? 'Creating link...' : 'Share' }}
+              </button>
+            }
+            @if (activeTab === 'flashcards' && flashcardsState === 'ready') {
+              <button
+                type="button"
+                class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100 transition disabled:opacity-50"
+                (click)="shareFlashcards()"
+                [disabled]="shareLoading"
+                title="Share these flashcards"
+              >
+                <svg class="inline h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.769-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
+                </svg>
+                {{ shareLoading ? 'Creating link...' : 'Share' }}
+              </button>
+            }
+            @if (activeTab === 'quiz' && quizState === 'completed') {
+              <button
+                type="button"
+                class="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm font-semibold text-green-700 hover:bg-green-100 transition disabled:opacity-50"
+                (click)="shareQuizResults()"
+                [disabled]="shareLoading"
+                title="Share quiz results"
+              >
+                <svg class="inline h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.769-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
+                </svg>
+                {{ shareLoading ? 'Creating link...' : 'Share' }}
+              </button>
+            }
+
+            <!-- Regenerate button -->
+            <button
+              type="button"
+              class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
+              (click)="regenerateActiveTab()"
+              [disabled]="isProcessing || !fileId"
+            >
+              {{ isProcessing ? processingAction : 'Regenerate' }}
+            </button>
+          </div>
         </div>
+
+        <!-- Share notifications -->
+        @if (shareSuccess) {
+          <div class="mb-3 rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-700">
+            {{ shareSuccess }}
+          </div>
+        }
+        @if (shareError) {
+          <div class="mb-3 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700">
+            {{ shareError }}
+          </div>
+        }
       </div>
 
       <div class="flex-1 overflow-y-auto p-6">

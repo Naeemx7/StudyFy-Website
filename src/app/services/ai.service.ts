@@ -6,6 +6,9 @@
  * - POST /flashcards    - Generate flashcards for study
  * - POST /quiz          - Generate a quiz from file content
  * - POST /quiz-submission - Submit quiz answers and get score
+ * - POST /tags-quiz     - Generate quiz from topic tags
+ * - GET /storage/auto-summarize - Auto-summarize a single file
+ * - POST /share         - Create shareable link for content
  *
  * HOW IT WORKS:
  * 1. User uploads files via StorageService (gets fileIds)
@@ -26,6 +29,8 @@ import {
   QuizRequest,
   QuizSubmissionRequest,
   TagsQuizRequest,
+  ShareRequest,
+  ShareResponse,
   ApiResponse,
   GeminiResponse,
   QuizResponse,
@@ -123,11 +128,14 @@ export class AiService {
       numberOfQuestions: Math.max(1, Math.min(30, numberOfQuestions)),
     };
 
+    console.log('📝 Generating quiz with:', { spaceId, filesId, difficulty, numberOfQuestions, body });
+
     return this.http.post<ApiResponse<QuizResponse>>(
       `${this.getBasePath(spaceId)}/quiz`,
       body
     ).pipe(
       map(response => {
+        console.log('✅ Quiz response:', response);
         if (!response.isSuccess) {
           throw new Error(this.extractApiMessage(response) || 'Failed to generate quiz');
         }
@@ -138,7 +146,10 @@ export class AiService {
 
         return response.data;
       }),
-      catchError(this.handleError)
+      catchError(err => {
+        console.error('❌ Quiz generation error:', err);
+        return this.handleError(err);
+      })
     );
   }
 
@@ -195,6 +206,61 @@ export class AiService {
   }
 
   /**
+   * AUTO-SUMMARIZE SINGLE FILE
+   *
+   * Automatically summarize a single file on load without AI processing.
+   * This is a quick summary generation using the file's extracted text.
+   *
+   * ENDPOINT: GET /storage/auto-summarize
+   */
+  autoSummarizeFile(spaceId: string, fileName: string): Observable<GeminiResponse> {
+    return this.http.get<ApiResponse<GeminiResponse>>(
+      `${this.getBasePath(spaceId)}/storage/auto-summarize`,
+      { params: { fileName } }
+    ).pipe(
+      map(response => {
+        if (!response.isSuccess) {
+          throw new Error(response.message || 'Failed to auto-summarize file');
+        }
+        return response.data;
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * SHARE CONTENT
+   *
+   * Creates a shareable public link for quiz results, summaries, or flashcards.
+   * The shared content can be viewed by anyone with the link (no auth needed).
+   *
+   * ENDPOINT: POST /share
+   */
+  shareContent(spaceId: string, cacheKey: string, title: string, contentType: string, fallbackJson?: string): Observable<ShareResponse> {
+    const body: ShareRequest = {
+      cacheKey,
+      title,
+      contentType,
+      fallbackJson
+    };
+
+    console.log('🔗 Sharing content:', { cacheKey, title, contentType });
+
+    return this.http.post<ApiResponse<ShareResponse>>(
+      `${this.getBasePath(spaceId)}/share`,
+      body
+    ).pipe(
+      map(response => {
+        if (!response.isSuccess) {
+          throw new Error(response.message || 'Failed to share content');
+        }
+        return response.data;
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
    * Error handler
    */
   private handleError = (error: HttpErrorResponse | Error): Observable<never> => {
@@ -208,8 +274,16 @@ export class AiService {
     if (error.status === 0) {
       message = 'Cannot connect to server';
     } else if (error.status === 400) {
-      console.error('400 error details:', error.error);
-      message = error.error?.message || 'Invalid request';
+      console.error('❌ 400 error details:', { error: error.error, message: error.error?.message, errors: error.error?.errors });
+      
+      // Provide more specific error messages
+      if (error.error?.errors?.length > 0) {
+        message = error.error.errors.join(' | ');
+      } else if (error.error?.message) {
+        message = error.error.message;
+      } else {
+        message = 'Invalid request - please check your input';
+      }
     } else if (error.status === 401) {
       message = 'Session expired. Please log in again.';
     } else if (error.status === 429) {
@@ -222,6 +296,31 @@ export class AiService {
 
     return throwError(() => new Error(message));
   };
+
+  /**
+   * GET SHARED CONTENT
+   *
+   * Retrieves shared content by ID (public endpoint, no auth required).
+   * Allows anyone with the link to view shared summaries, flashcards, or quiz results.
+   *
+   * ENDPOINT: GET /shared/{id}
+   */
+  getSharedContent(id: string): Observable<any> {
+    console.log('📂 Fetching shared content:', id);
+
+    return this.http.get<ApiResponse<any>>(
+      `${environment.apiUrl}/shared/${id}`
+    ).pipe(
+      map(response => {
+        console.log('✅ Shared content received:', response);
+        if (!response.isSuccess) {
+          throw new Error(response.message || 'Failed to load shared content');
+        }
+        return response.data;
+      }),
+      catchError(this.handleError)
+    );
+  }
 
   private extractApiMessage<T>(response: ApiResponse<T>): string {
     if (response.message?.trim()) {

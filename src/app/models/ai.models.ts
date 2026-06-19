@@ -85,3 +85,21 @@ export interface QuizSubmissionResponse {
   isSuccess: boolean;
   message: string;
 }
+
+// ============================================
+// SHARE DTOs
+// ============================================
+
+/** Request body for POST /share */
+export interface ShareRequest {
+  cacheKey: string;           // Unique key for the content
+  title: string;              // Title of the shared item
+  contentType: string;        // Type: 'summary' | 'flashcards' | 'quiz-results'
+  fallbackJson?: string;      // Optional JSON fallback if cache expires
+}
+
+/** Response from POST /share (ShareItemResponseDto) */
+export interface ShareResponse {
+  sharedUrl: string;     // URL to share with others
+  sharedItemId: string;  // UUID of the shared item
+}

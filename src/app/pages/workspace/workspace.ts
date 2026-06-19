@@ -98,6 +98,14 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
   // Quiz practice mode (tags-quiz) — skip submission to avoid backend tag-not-found errors
   isTagsQuiz = false;
 
+  // Share state
+  shareLoading = false;
+  shareError = '';
+  shareSuccess = '';
+  shareUrl = '';
+  shareModal = { show: false, type: '', title: '' };
+  copiedToClipboard = false;
+
   // Settings
   difficulty: DifficultyLevel = 'Medium';
   questionCount = 5;
@@ -399,6 +407,7 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
 
   private loadQuiz(force = false): void {
     if (!this.fileId || this.isProcessing) {
+      console.warn('⚠️ Quiz generation skipped:', { fileId: this.fileId, isProcessing: this.isProcessing });
       return;
     }
 
@@ -415,13 +424,17 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
       this.resetQuizProgress();
     }
 
+    console.log('🧪 Starting quiz generation:', { spaceId: this.spaceId, fileId: this.fileId, difficulty: this.difficulty, questionCount: this.questionCount });
+
     this.aiService.generateQuiz(this.spaceId, [this.fileId], this.difficulty, this.questionCount).subscribe({
       next: (res) => {
+        console.log('✅ Quiz generated successfully');
         this.applyQuizResponse(res);
         this.isProcessing = false;
         this.processingAction = '';
       },
       error: (err: Error) => {
+        console.error('❌ Quiz generation failed:', err.message);
         this.quizState = 'error';
         this.quizError = err.message || 'Failed to generate quiz';
         this.isProcessing = false;
@@ -1458,6 +1471,156 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
     }
 
     return Math.round((this.score / this.quizQuestions.length) * 100);
+  }
+
+  // ─── SHARE FUNCTIONALITY ────────────────────────────
+
+  /**
+   * Share the current summary
+   * Creates a shareable link that anyone can view without authentication
+   */
+  shareSummary(): void {
+    if (!this.spaceId || !this.summaryTitle || !this.summaryContent) {
+      this.shareError = 'Cannot share summary - content not ready';
+      return;
+    }
+
+    this.shareLoading = true;
+    this.shareError = '';
+    this.shareSuccess = '';
+
+    // Generate a cache key for the summary
+    const cacheKey = `summary_${this.fileId}_${Date.now()}`;
+    const fallbackJson = JSON.stringify({
+      title: this.summaryTitle,
+      content: this.summaryContent,
+      fileName: this.fileName,
+      generatedAt: new Date().toISOString()
+    });
+
+    this.aiService.shareContent(this.spaceId, cacheKey, `Summary: ${this.summaryTitle}`, 'summary', fallbackJson).subscribe({
+      next: (res) => {
+        this.shareUrl = res.sharedUrl;
+        this.shareSuccess = 'Summary link created! Copied to clipboard.';
+        this.copyToClipboard(res.sharedUrl);
+        this.shareLoading = false;
+        this.openShareModal('summary', this.summaryTitle);
+        setTimeout(() => this.shareSuccess = '', 3000);
+      },
+      error: (err) => {
+        this.shareError = err.message || 'Failed to create share link';
+        this.shareLoading = false;
+      }
+    });
+  }
+
+  /**
+   * Share the current flashcards
+   */
+  shareFlashcards(): void {
+    if (!this.spaceId || this.flashcards.length === 0) {
+      this.shareError = 'Cannot share flashcards - none generated yet';
+      return;
+    }
+
+    this.shareLoading = true;
+    this.shareError = '';
+    this.shareSuccess = '';
+
+    const cacheKey = `flashcards_${this.fileId}_${Date.now()}`;
+    const fallbackJson = JSON.stringify({
+      title: this.flashcardsTitle,
+      cards: this.flashcards,
+      fileName: this.fileName,
+      generatedAt: new Date().toISOString()
+    });
+
+    this.aiService.shareContent(this.spaceId, cacheKey, `Flashcards: ${this.flashcardsTitle}`, 'flashcards', fallbackJson).subscribe({
+      next: (res) => {
+        this.shareUrl = res.sharedUrl;
+        this.shareSuccess = 'Flashcards link created! Copied to clipboard.';
+        this.copyToClipboard(res.sharedUrl);
+        this.shareLoading = false;
+        this.openShareModal('flashcards', this.flashcardsTitle);
+        setTimeout(() => this.shareSuccess = '', 3000);
+      },
+      error: (err) => {
+        this.shareError = err.message || 'Failed to create share link';
+        this.shareLoading = false;
+      }
+    });
+  }
+
+  /**
+   * Share the quiz results
+   */
+  shareQuizResults(): void {
+    if (!this.spaceId || this.quizQuestions.length === 0) {
+      this.shareError = 'Cannot share quiz - no quiz completed yet';
+      return;
+    }
+
+    this.shareLoading = true;
+    this.shareError = '';
+    this.shareSuccess = '';
+
+    const cacheKey = `quiz_${this.quizId}_${Date.now()}`;
+    const fallbackJson = JSON.stringify({
+      score: this.score,
+      total: this.quizQuestions.length,
+      percent: this.scorePercent,
+      questions: this.quizQuestions.map(q => ({
+        question: q.question,
+        userAnswer: q.userAnswer,
+        correctAnswer: q.correctAnswer,
+        isCorrect: q.isCorrect
+      })),
+      fileName: this.fileName,
+      generatedAt: new Date().toISOString()
+    });
+
+    this.aiService.shareContent(this.spaceId, cacheKey, `Quiz Results: ${this.scorePercent}% on ${this.fileName}`, 'quiz-results', fallbackJson).subscribe({
+      next: (res) => {
+        this.shareUrl = res.sharedUrl;
+        this.shareSuccess = 'Quiz results link created! Copied to clipboard.';
+        this.copyToClipboard(res.sharedUrl);
+        this.shareLoading = false;
+        this.openShareModal('quiz', 'Quiz Results');
+        setTimeout(() => this.shareSuccess = '', 3000);
+      },
+      error: (err) => {
+        this.shareError = err.message || 'Failed to create share link';
+        this.shareLoading = false;
+      }
+    });
+  }
+
+  /**
+   * Open share modal
+   */
+  openShareModal(type: string, title: string): void {
+    this.shareModal = { show: true, type, title };
+  }
+
+  /**
+   * Close share modal
+   */
+  closeShareModal(): void {
+    this.shareModal = { show: false, type: '', title: '' };
+  }
+
+  /**
+   * Copy text to clipboard
+   */
+  copyToClipboard(text: string): void {
+    navigator.clipboard.writeText(text).then(() => {
+      this.copiedToClipboard = true;
+      setTimeout(() => {
+        this.copiedToClipboard = false;
+      }, 2000);
+    }).catch(() => {
+      console.error('Failed to copy to clipboard');
+    });
   }
 
   private submitQuizResults(): void {

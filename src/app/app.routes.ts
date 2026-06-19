@@ -10,12 +10,14 @@ import { AnalyticsComponent } from './pages/analytics/analytics';
 import { ProfileComponent } from './pages/profile/profile';
 import { SettingsComponent } from './pages/settings/settings';
 import { CommunitiesComponent } from './pages/communities/communities';
+import { SharedContentComponent } from './pages/shared-content/shared-content';
 import { AuthGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   { path: '', component: LandingComponent },
   { path: 'login', component: LoginComponent },
   { path: 'signup', component: SignupComponent },
+  { path: 'shared/:id', component: SharedContentComponent }, // Public route - no auth required
   { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard] },
   { path: 'roadmap/:spaceId', component: RoadmapComponent, canActivate: [AuthGuard] },
   { path: 'workspace/:spaceId', component: WorkspaceComponent, canActivate: [AuthGuard] },
