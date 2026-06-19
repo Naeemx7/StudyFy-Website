@@ -1500,9 +1500,10 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
 
     this.aiService.shareContent(this.spaceId, cacheKey, `Summary: ${this.summaryTitle}`, 'summary', fallbackJson).subscribe({
       next: (res) => {
-        this.shareUrl = res.sharedUrl;
+        const frontendUrl = `${window.location.origin}/shared/${res.sharedItemId}`;
+        this.shareUrl = frontendUrl;
         this.shareSuccess = 'Summary link created! Copied to clipboard.';
-        this.copyToClipboard(res.sharedUrl);
+        this.copyToClipboard(frontendUrl);
         this.shareLoading = false;
         this.openShareModal('summary', this.summaryTitle);
         setTimeout(() => this.shareSuccess = '', 3000);
@@ -1537,9 +1538,10 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
 
     this.aiService.shareContent(this.spaceId, cacheKey, `Flashcards: ${this.flashcardsTitle}`, 'flashcards', fallbackJson).subscribe({
       next: (res) => {
-        this.shareUrl = res.sharedUrl;
+        const frontendUrl = `${window.location.origin}/shared/${res.sharedItemId}`;
+        this.shareUrl = frontendUrl;
         this.shareSuccess = 'Flashcards link created! Copied to clipboard.';
-        this.copyToClipboard(res.sharedUrl);
+        this.copyToClipboard(frontendUrl);
         this.shareLoading = false;
         this.openShareModal('flashcards', this.flashcardsTitle);
         setTimeout(() => this.shareSuccess = '', 3000);
@@ -1581,9 +1583,10 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
 
     this.aiService.shareContent(this.spaceId, cacheKey, `Quiz Results: ${this.scorePercent}% on ${this.fileName}`, 'quiz-results', fallbackJson).subscribe({
       next: (res) => {
-        this.shareUrl = res.sharedUrl;
+        const frontendUrl = `${window.location.origin}/shared/${res.sharedItemId}`;
+        this.shareUrl = frontendUrl;
         this.shareSuccess = 'Quiz results link created! Copied to clipboard.';
-        this.copyToClipboard(res.sharedUrl);
+        this.copyToClipboard(frontendUrl);
         this.shareLoading = false;
         this.openShareModal('quiz', 'Quiz Results');
         setTimeout(() => this.shareSuccess = '', 3000);

@@ -73,10 +73,14 @@ export class SharedContentComponent implements OnInit {
     console.log('📂 Loading shared content:', id);
 
     this.aiService.getSharedContent(id).subscribe({
-      next: (content) => {
-        console.log('✅ Shared content loaded:', content);
-        this.content = content;
-        this.processContent(content);
+      next: (raw) => {
+        console.log('✅ Shared content loaded:', raw);
+
+        // The backend returns { responseTitle, responseContent } format.
+        // Map it to the SharedContent interface the component expects.
+        const mapped = this.mapApiResponse(id, raw);
+        this.content = mapped;
+        this.processContent(mapped);
         this.loading = false;
       },
       error: (err) => {
@@ -85,6 +89,46 @@ export class SharedContentComponent implements OnInit {
         this.loading = false;
       },
     });
+  }
+
+  /**
+   * Maps the backend API response to the SharedContent interface.
+   *
+   * Backend returns: { responseTitle: "summary", responseContent: { title, content, fileName, generatedAt, ... } }
+   * Component needs: { id, title, contentType, content, createdAt }
+   */
+  private mapApiResponse(id: string, raw: unknown): SharedContent {
+    // If it already matches our interface (has contentType), use as-is
+    if (this.isRecord(raw) && typeof raw['contentType'] === 'string') {
+      return raw as unknown as SharedContent;
+    }
+
+    if (!this.isRecord(raw)) {
+      return { id, title: 'Shared Content', contentType: 'summary', content: raw, createdAt: '' };
+    }
+
+    const responseTitle = (raw['responseTitle'] as string) || '';
+    const responseContent = raw['responseContent'] ?? raw['content'] ?? raw;
+
+    // Determine content type from responseTitle
+    let contentType: 'summary' | 'flashcards' | 'quiz-results' = 'summary';
+    const titleLower = responseTitle.toLowerCase();
+    if (titleLower.includes('flashcard')) {
+      contentType = 'flashcards';
+    } else if (titleLower.includes('quiz')) {
+      contentType = 'quiz-results';
+    }
+
+    // Extract title and createdAt from responseContent if available
+    let title = responseTitle || 'Shared Content';
+    let createdAt = '';
+
+    if (this.isRecord(responseContent)) {
+      title = (responseContent['title'] as string) || title;
+      createdAt = (responseContent['generatedAt'] as string) || (responseContent['createdAt'] as string) || '';
+    }
+
+    return { id, title, contentType, content: responseContent, createdAt };
   }
 
   private processContent(content: SharedContent): void {
