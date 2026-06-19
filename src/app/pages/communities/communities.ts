@@ -1,10 +1,19 @@
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CommunityService } from '../../services/community.service';
+import { StorageService } from '../../services/storage.service';
 import { NavbarComponent } from '../../components/navbar/navbar';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { Community, LeaderboardEntry, CreateCommunityRequest } from '../../models/community.models';
+import {
+  Community,
+  LeaderboardEntry,
+  CreateCommunityRequest,
+  Post,
+  Reply,
+  CommunityFile,
+} from '../../models/community.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-communities',
@@ -16,6 +25,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 export class CommunitiesComponent implements OnInit {
   private fb = inject(FormBuilder);
   private communityService = inject(CommunityService);
+  private storageService = inject(StorageService);
   private destroyRef = inject(DestroyRef);
 
   communities$ = this.communityService.communities$;
@@ -24,6 +34,9 @@ export class CommunitiesComponent implements OnInit {
   activeCommunityId: string | null = null;
   communitiesCache: Community[] = [];
 
+  // Tab management
+  activeTab: 'overview' | 'posts' | 'files' | 'settings' = 'overview';
+
   // Toast messages for endpoint feedback
   toast: { type: 'success' | 'error'; message: string; visible: boolean } = {
     type: 'success',
@@ -31,7 +44,7 @@ export class CommunitiesComponent implements OnInit {
     visible: false
   };
 
-  // Endpoint testing state
+  // Endpoint loading states
   detailLoadingId: string | null = null;
   leaderboardLoadingId: string | null = null;
   createLoading = false;
@@ -39,17 +52,47 @@ export class CommunitiesComponent implements OnInit {
   leaveLoadingId: string | null = null;
   deleteLoadingId: string | null = null;
 
-  // Selected detail + leaderboard state for testing
+  // Selected detail + leaderboard state
   selectedDetail: Community | null = null;
   leaderboard: LeaderboardEntry[] = [];
   leaderboardMeta: { currentPage: number; totalPages: number; totalCount: number } | null = null;
 
+  // Posts State
+  posts: Post[] = [];
+  postsLoading = false;
+  selectedPost: Post | null = null;
+  postDetailLoading = false;
+  createPostLoading = false;
+  createReplyLoading = false;
+  selectedPostPhoto: File | null = null;
+
+  // Files/Storage State
+  files: CommunityFile[] = [];
+  filesLoading = false;
+  uploadingFile = false;
+  uploadProgress = 0;
+
+  // Settings/Photo State
+  photoUploading = false;
+
+  // Forms
   createForm = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(3)]],
     description: ['']
   });
 
-  joinForm = this.fb.group({ joinCode: ['', [Validators.required]] });
+  joinForm = this.fb.group({
+    joinCode: ['', [Validators.required]]
+  });
+
+  postForm = this.fb.group({
+    title: ['', [Validators.required, Validators.minLength(3)]],
+    content: ['', [Validators.required, Validators.minLength(5)]]
+  });
+
+  replyForm = this.fb.group({
+    content: ['', [Validators.required, Validators.minLength(1)]]
+  });
 
   ngOnInit(): void {
     this.communityService.communities$
@@ -87,6 +130,24 @@ export class CommunitiesComponent implements OnInit {
     );
   }
 
+  // ─── TABS ──────────────────────────────────────────
+
+  switchTab(tab: 'overview' | 'posts' | 'files' | 'settings') {
+    this.activeTab = tab;
+    const communityId = this.activeCommunityId;
+    if (!communityId) return;
+
+    if (tab === 'overview') {
+      this.viewLeaderboard(communityId);
+    } else if (tab === 'posts') {
+      this.loadPosts(communityId);
+    } else if (tab === 'files') {
+      this.loadFiles(communityId);
+    }
+  }
+
+  // ─── CREATE / JOIN / LEAVE ─────────────────────────
+
   create() {
     if (this.createForm.invalid) return;
     this.createLoading = true;
@@ -101,7 +162,7 @@ export class CommunitiesComponent implements OnInit {
         if (res.isSuccess && res.data) {
           this.createForm.reset({ name: '', description: '' });
           this.showToast('success', 'Community created successfully!');
-          this.clearSelected(); // Reset any selected community
+          this.clearSelected();
         } else {
           this.showToast('error', res.message || 'Failed to create community');
         }
@@ -122,9 +183,7 @@ export class CommunitiesComponent implements OnInit {
         this.joinLoading = false;
         if (res.isSuccess) {
           this.joinForm.reset({ joinCode: '' });
-          // Show success in green
           this.showToast('success', 'Joined community successfully!');
-          // Immediately refresh the list to show the newly joined community
           this.load();
         } else {
           this.showToast('error', res.message || 'Failed to join community');
@@ -138,10 +197,15 @@ export class CommunitiesComponent implements OnInit {
   }
 
   leave(id: string) {
+    if (!confirm('Are you sure you want to leave this community?')) return;
     this.leaveLoadingId = id;
     this.communityService.leaveCommunity(id).subscribe({
       next: () => {
         this.leaveLoadingId = null;
+        if (this.activeCommunityId === id) {
+          this.clearSelected();
+        }
+        this.load();
         this.showToast('success', 'Left community successfully!');
       },
       error: (err) => {
@@ -152,6 +216,7 @@ export class CommunitiesComponent implements OnInit {
   }
 
   delete(id: string) {
+    if (!confirm('Are you sure you want to delete this community? This action is permanent!')) return;
     this.deleteLoadingId = id;
     this.communityService.deleteCommunity(id).subscribe({
       next: () => {
@@ -186,16 +251,29 @@ export class CommunitiesComponent implements OnInit {
     });
   }
 
+  // ─── DETAILS & LEADERBOARD ─────────────────────────
+
   viewDetail(id: string) {
     this.detailLoadingId = id;
     this.activeCommunityId = id;
     this.selectedDetail = null;
+    this.activeTab = 'overview';
+    this.selectedPost = null;
+    this.posts = [];
+    this.files = [];
+    this.leaderboard = [];
+
     this.communityService.getCommunityDetail(id).subscribe({
       next: res => {
         this.detailLoadingId = null;
         this.selectedDetail = res.data;
         this.activeCommunityId = res.data?.id ?? id;
-        this.showToast('success', 'Community detail loaded!');
+        this.showToast('success', 'Community details loaded!');
+        
+        // Prefetch basic lists
+        this.viewLeaderboard(this.activeCommunityId);
+        this.loadPosts(this.activeCommunityId);
+        this.loadFiles(this.activeCommunityId);
       },
       error: (err) => {
         this.detailLoadingId = null;
@@ -206,7 +284,6 @@ export class CommunitiesComponent implements OnInit {
 
   viewLeaderboard(id: string, page = 1) {
     this.leaderboardLoadingId = id;
-    this.activeCommunityId = id;
     this.leaderboard = [];
     this.leaderboardMeta = null;
     this.communityService.getLeaderboard(id, page, 10).subscribe({
@@ -218,7 +295,6 @@ export class CommunitiesComponent implements OnInit {
           totalPages: res.data?.totalPages ?? 1,
           totalCount: res.data?.totalCount ?? this.leaderboard.length
         };
-        this.showToast('success', `Leaderboard loaded (${this.leaderboard.length} entries)!`);
       },
       error: (err) => {
         this.leaderboardLoadingId = null;
@@ -232,6 +308,10 @@ export class CommunitiesComponent implements OnInit {
     this.selectedDetail = null;
     this.leaderboard = [];
     this.leaderboardMeta = null;
+    this.posts = [];
+    this.selectedPost = null;
+    this.files = [];
+    this.activeTab = 'overview';
   }
 
   copyJoinCode(code?: string) {
@@ -245,6 +325,313 @@ export class CommunitiesComponent implements OnInit {
       .catch(() => this.showToast('error', 'Unable to copy join code.'));
   }
 
+  // ─── POSTS & DISCUSSIONS ───────────────────────────
+
+  loadPosts(communityId: string) {
+    this.postsLoading = true;
+    this.communityService.listPosts(communityId).subscribe({
+      next: (res) => {
+        this.postsLoading = false;
+        if (res.isSuccess) {
+          this.posts = res.data || [];
+        }
+      },
+      error: () => {
+        this.postsLoading = false;
+      }
+    });
+  }
+
+  viewPost(post: Post) {
+    this.postDetailLoading = true;
+    this.selectedPost = post;
+    this.communityService.getPost(this.activeCommunityId!, post.id).subscribe({
+      next: (res) => {
+        this.postDetailLoading = false;
+        if (res.isSuccess && res.data) {
+          this.selectedPost = res.data;
+        }
+      },
+      error: (err) => {
+        this.postDetailLoading = false;
+        this.showToast('error', `Failed to load post: ${err.message}`);
+      }
+    });
+  }
+
+  onPostPhotoSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.selectedPostPhoto = input.files[0];
+    }
+  }
+
+  removePostPhoto() {
+    this.selectedPostPhoto = null;
+  }
+
+  createPost() {
+    if (this.postForm.invalid || !this.activeCommunityId) return;
+
+    this.createPostLoading = true;
+    const { title, content } = this.postForm.value;
+
+    this.communityService.createPost(
+      this.activeCommunityId,
+      title || '',
+      content || '',
+      this.selectedPostPhoto || undefined
+    ).subscribe({
+      next: (res) => {
+        this.createPostLoading = false;
+        if (res.isSuccess) {
+          this.showToast('success', 'Post created successfully!');
+          this.postForm.reset();
+          this.selectedPostPhoto = null;
+          this.loadPosts(this.activeCommunityId!);
+        } else {
+          this.showToast('error', res.message || 'Failed to create post');
+        }
+      },
+      error: (err) => {
+        this.createPostLoading = false;
+        this.showToast('error', `Failed to create post: ${err.message}`);
+      }
+    });
+  }
+
+  closePostDetail() {
+    this.selectedPost = null;
+  }
+
+  // ─── REPLIES ───────────────────────────────────────
+
+  createReply() {
+    if (this.replyForm.invalid || !this.activeCommunityId || !this.selectedPost) return;
+
+    this.createReplyLoading = true;
+    const { content } = this.replyForm.value;
+
+    this.communityService.createReply(
+      this.activeCommunityId,
+      this.selectedPost.id,
+      { content: content || '' }
+    ).subscribe({
+      next: (res) => {
+        this.createReplyLoading = false;
+        if (res.isSuccess && res.data) {
+          this.showToast('success', 'Reply posted!');
+          this.replyForm.reset();
+          
+          if (!this.selectedPost!.replies) {
+            this.selectedPost!.replies = [];
+          }
+          this.selectedPost!.replies.push(res.data);
+          this.selectedPost!.replyCount = (this.selectedPost!.replyCount || 0) + 1;
+          
+          const idx = this.posts.findIndex(p => p.id === this.selectedPost!.id);
+          if (idx !== -1) {
+            this.posts[idx].replyCount = this.selectedPost!.replyCount;
+          }
+        } else {
+          this.showToast('error', res.message || 'Failed to post reply');
+        }
+      },
+      error: (err) => {
+        this.createReplyLoading = false;
+        this.showToast('error', `Failed to post reply: ${err.message}`);
+      }
+    });
+  }
+
+  // ─── SHARED FILES (STORAGE) ─────────────────────────
+
+  loadFiles(communityId: string) {
+    this.filesLoading = true;
+    this.communityService.listCommunityFiles(communityId).subscribe({
+      next: (res: any) => {
+        this.filesLoading = false;
+        if (res.isSuccess) {
+          const data = res.data;
+          if (Array.isArray(data)) {
+            this.files = data;
+          } else if (data && typeof data === 'object') {
+            this.files = [{
+              id: data.fileId || data.id,
+              fileName: data.fileName,
+              contentType: data.contentType,
+              size: data.size,
+              uploadedAt: data.uploadedAt
+            }];
+          } else {
+            this.files = [];
+          }
+        } else {
+          this.files = [];
+        }
+      },
+      error: () => {
+        this.filesLoading = false;
+        this.files = [];
+      }
+    });
+  }
+
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    
+    const file = input.files[0];
+    const communityId = this.activeCommunityId;
+    if (!communityId) return;
+
+    this.uploadingFile = true;
+    this.uploadProgress = 15;
+
+    // Step 1: Get SAS URL
+    this.communityService.getCommunityStorageSas(communityId, { fileNames: [file.name] }).subscribe({
+      next: (res: any) => {
+        this.uploadProgress = 45;
+        const writeSasUri = res.data?.writeSasUris?.[file.name];
+        if (!writeSasUri) {
+          this.uploadingFile = false;
+          this.showToast('error', 'Failed to get upload authorization');
+          return;
+        }
+
+        // Step 2: Upload directly to Azure
+        this.storageService.uploadToAzure(file, writeSasUri).subscribe({
+          next: () => {
+            this.uploadProgress = 80;
+            
+            // Step 3: Call GET content to complete/register the file
+            this.communityService.listCommunityFiles(communityId, file.name).subscribe({
+              next: () => {
+                this.uploadProgress = 100;
+                this.uploadingFile = false;
+                this.showToast('success', `${file.name} uploaded successfully!`);
+                this.loadFiles(communityId);
+                input.value = '';
+              },
+              error: () => {
+                this.uploadProgress = 100;
+                this.uploadingFile = false;
+                this.loadFiles(communityId);
+                input.value = '';
+              }
+            });
+          },
+          error: (err) => {
+            this.uploadingFile = false;
+            this.showToast('error', `Upload failed: ${err.message || 'Azure upload error'}`);
+          }
+        });
+      },
+      error: (err) => {
+        this.uploadingFile = false;
+        this.showToast('error', `Failed to obtain upload token: ${err.message || 'API error'}`);
+      }
+    });
+  }
+
+  downloadFile(file: CommunityFile) {
+    if (!this.activeCommunityId) return;
+
+    this.communityService.downloadCommunityFile(this.activeCommunityId, file.id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = file.fileName;
+        link.click();
+        window.URL.revokeObjectURL(url);
+        this.showToast('success', 'File downloaded successfully!');
+      },
+      error: (err) => {
+        this.showToast('error', `Download failed: ${err.message || 'Error downloading file'}`);
+      }
+    });
+  }
+
+  deleteFile(fileId: string) {
+    if (!this.activeCommunityId) return;
+
+    if (!confirm('Are you sure you want to delete this file?')) return;
+
+    this.communityService.deleteCommunityFile(this.activeCommunityId, fileId).subscribe({
+      next: (res) => {
+        if (res.isSuccess) {
+          this.showToast('success', 'File deleted successfully!');
+          this.loadFiles(this.activeCommunityId!);
+        } else {
+          this.showToast('error', res.message || 'Failed to delete file');
+        }
+      },
+      error: (err) => {
+        this.showToast('error', `Delete failed: ${err.message}`);
+      }
+    });
+  }
+
+  // ─── PHOTO UPLOADS (COMMUNITY PHOTO) ────────────────
+
+  onPhotoSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    
+    const file = input.files[0];
+    const communityId = this.activeCommunityId;
+    if (!communityId) return;
+
+    this.photoUploading = true;
+    this.communityService.uploadCommunityPhoto(communityId, file).subscribe({
+      next: (res) => {
+        this.photoUploading = false;
+        if (res.isSuccess) {
+          this.showToast('success', 'Community photo updated!');
+          if (this.selectedDetail) {
+            this.selectedDetail.photoUrl = res.data;
+          }
+          this.load();
+        } else {
+          this.showToast('error', res.message || 'Failed to upload photo');
+        }
+      },
+      error: (err) => {
+        this.photoUploading = false;
+        this.showToast('error', `Photo upload failed: ${err.message}`);
+      }
+    });
+  }
+
+  deletePhoto() {
+    const communityId = this.activeCommunityId;
+    if (!communityId) return;
+
+    this.photoUploading = true;
+    this.communityService.deleteCommunityPhoto(communityId).subscribe({
+      next: (res) => {
+        this.photoUploading = false;
+        if (res.isSuccess) {
+          this.showToast('success', 'Community photo deleted!');
+          if (this.selectedDetail) {
+            this.selectedDetail.photoUrl = undefined;
+            this.selectedDetail.photoId = undefined;
+          }
+          this.load();
+        } else {
+          this.showToast('error', res.message || 'Failed to delete photo');
+        }
+      },
+      error: (err) => {
+        this.photoUploading = false;
+        this.showToast('error', `Photo deletion failed: ${err.message}`);
+      }
+    });
+  }
+
+  // ─── HELPERS ───────────────────────────────────────
+
   formatDate(value?: string): string {
     if (!value) return 'Unknown date';
     const parsed = new Date(value);
@@ -257,10 +644,34 @@ export class CommunitiesComponent implements OnInit {
         });
   }
 
+  formatSize(bytes?: number): string {
+    if (!bytes && bytes !== 0) return 'Unknown size';
+    if (bytes < 1024) return `${bytes} B`;
+    const kb = bytes / 1024;
+    if (kb < 1024) return `${kb.toFixed(1)} KB`;
+    const mb = kb / 1024;
+    return `${mb.toFixed(1)} MB`;
+  }
+
   showToast(type: 'success' | 'error', message: string) {
     this.toast = { type, message, visible: true };
     setTimeout(() => {
       this.toast.visible = false;
     }, 3000);
   }
+
+  resolvePhotoUrl(url?: string): string | undefined {
+    if (!url) return undefined;
+    // Rewrite absolute backend URLs to go through proxy
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url.replace('http://graduation-test.runasp.net', environment.apiUrl);
+    }
+    // Ensure it goes through the proxy path /api
+    if (url.startsWith(environment.apiUrl)) {
+      return url;
+    }
+    const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+    return `${environment.apiUrl}${cleanUrl}`;
+  }
 }
+
