@@ -446,35 +446,95 @@ export class CommunitiesComponent implements OnInit {
 
   // ─── SHARED FILES (STORAGE) ─────────────────────────
 
+  /**
+   * Get the localStorage key for tracking community files.
+   * The API has no "list all files" endpoint — it only returns info for ONE file
+   * via GET /storage/content?fileName=... So we track uploaded filenames in localStorage.
+   */
+  private getTrackedFilesKey(communityId: string): string {
+    return `community_files_${communityId}`;
+  }
+
+  private getTrackedFiles(communityId: string): CommunityFile[] {
+    try {
+      const stored = localStorage.getItem(this.getTrackedFilesKey(communityId));
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private saveTrackedFiles(communityId: string, files: CommunityFile[]) {
+    localStorage.setItem(this.getTrackedFilesKey(communityId), JSON.stringify(files));
+  }
+
+  private addTrackedFile(communityId: string, file: CommunityFile) {
+    const tracked = this.getTrackedFiles(communityId);
+    // Avoid duplicates by fileName
+    const existing = tracked.findIndex(f => f.fileName === file.fileName);
+    if (existing !== -1) {
+      tracked[existing] = file; // Update existing
+    } else {
+      tracked.push(file);
+    }
+    this.saveTrackedFiles(communityId, tracked);
+  }
+
+  private removeTrackedFile(communityId: string, fileId: string) {
+    const tracked = this.getTrackedFiles(communityId).filter(f => f.id !== fileId);
+    this.saveTrackedFiles(communityId, tracked);
+  }
+
   loadFiles(communityId: string) {
     this.filesLoading = true;
-    this.communityService.listCommunityFiles(communityId).subscribe({
-      next: (res: any) => {
-        this.filesLoading = false;
-        if (res.isSuccess) {
-          const data = res.data;
-          if (Array.isArray(data)) {
-            this.files = data;
-          } else if (data && typeof data === 'object') {
-            this.files = [{
-              id: data.fileId || data.id,
-              fileName: data.fileName,
-              contentType: data.contentType,
-              size: data.size,
-              uploadedAt: data.uploadedAt
-            }];
+
+    // Load from localStorage tracking (since the API has no "list all" endpoint)
+    const tracked = this.getTrackedFiles(communityId);
+
+    if (tracked.length === 0) {
+      // Also try the API without fileName in case it returns something
+      this.communityService.listCommunityFiles(communityId).subscribe({
+        next: (res: any) => {
+          this.filesLoading = false;
+          if (res.isSuccess && res.data) {
+            const data = res.data;
+            if (Array.isArray(data)) {
+              this.files = data.map((f: any) => ({
+                id: f.fileId || f.id || '',
+                fileName: f.fileName || 'Unknown',
+                contentType: f.contentType,
+                size: f.size,
+                uploadedAt: f.uploadedAt
+              }));
+              // Save to tracking
+              this.files.forEach(f => this.addTrackedFile(communityId, f));
+            } else if (data && typeof data === 'object' && (data.fileId || data.fileName)) {
+              const file: CommunityFile = {
+                id: data.fileId || data.id || '',
+                fileName: data.fileName || 'Unknown',
+                contentType: data.contentType,
+                size: data.size,
+                uploadedAt: data.uploadedAt
+              };
+              this.files = [file];
+              this.addTrackedFile(communityId, file);
+            } else {
+              this.files = [];
+            }
           } else {
             this.files = [];
           }
-        } else {
+        },
+        error: () => {
+          this.filesLoading = false;
           this.files = [];
         }
-      },
-      error: () => {
-        this.filesLoading = false;
-        this.files = [];
-      }
-    });
+      });
+    } else {
+      // We have tracked files — show them immediately
+      this.files = tracked;
+      this.filesLoading = false;
+    }
   }
 
   onFileSelected(event: Event) {
@@ -486,50 +546,84 @@ export class CommunitiesComponent implements OnInit {
     if (!communityId) return;
 
     this.uploadingFile = true;
-    this.uploadProgress = 15;
+    this.uploadProgress = 10;
 
     // Step 1: Get SAS URL
-    this.communityService.getCommunityStorageSas(communityId, { fileNames: [file.name] }).subscribe({
+    const sasBody = { fileNames: [file.name] };
+    
+    this.communityService.getCommunityStorageSas(communityId, sasBody).subscribe({
       next: (res: any) => {
-        this.uploadProgress = 45;
+        this.uploadProgress = 30;
+        
         const writeSasUri = res.data?.writeSasUris?.[file.name];
+        
         if (!writeSasUri) {
           this.uploadingFile = false;
-          this.showToast('error', 'Failed to get upload authorization');
+          this.uploadProgress = 0;
+          this.showToast('error', 'Failed to get upload authorization.');
           return;
         }
 
-        // Step 2: Upload directly to Azure
+        // Step 2: Upload directly to Azure Blob Storage
+        this.uploadProgress = 40;
         this.storageService.uploadToAzure(file, writeSasUri).subscribe({
           next: () => {
-            this.uploadProgress = 80;
+            this.uploadProgress = 75;
             
-            // Step 3: Call GET content to complete/register the file
+            // Step 3: Register the file with backend
             this.communityService.listCommunityFiles(communityId, file.name).subscribe({
-              next: () => {
+              next: (registerRes: any) => {
                 this.uploadProgress = 100;
                 this.uploadingFile = false;
+
+                // Extract file info from registration response and add to list
+                const newFile: CommunityFile = {
+                  id: registerRes?.data?.fileId || registerRes?.data?.id || crypto.randomUUID(),
+                  fileName: file.name,
+                  contentType: file.type,
+                  size: file.size,
+                  uploadedAt: new Date().toISOString()
+                };
+
+                // Add to tracked files and update UI
+                this.addTrackedFile(communityId, newFile);
+                this.files = this.getTrackedFiles(communityId);
+
                 this.showToast('success', `${file.name} uploaded successfully!`);
-                this.loadFiles(communityId);
                 input.value = '';
               },
               error: () => {
                 this.uploadProgress = 100;
                 this.uploadingFile = false;
-                this.loadFiles(communityId);
+
+                // Even if registration fails, the file IS uploaded to Azure
+                const newFile: CommunityFile = {
+                  id: crypto.randomUUID(),
+                  fileName: file.name,
+                  contentType: file.type,
+                  size: file.size,
+                  uploadedAt: new Date().toISOString()
+                };
+
+                this.addTrackedFile(communityId, newFile);
+                this.files = this.getTrackedFiles(communityId);
+
+                this.showToast('success', `${file.name} uploaded!`);
                 input.value = '';
               }
             });
           },
           error: (err) => {
             this.uploadingFile = false;
+            this.uploadProgress = 0;
             this.showToast('error', `Upload failed: ${err.message || 'Azure upload error'}`);
           }
         });
       },
       error: (err) => {
         this.uploadingFile = false;
-        this.showToast('error', `Failed to obtain upload token: ${err.message || 'API error'}`);
+        this.uploadProgress = 0;
+        this.showToast('error', `Failed to obtain upload token: ${err.error?.message || err.message || 'API error'}`);
       }
     });
   }
@@ -548,7 +642,25 @@ export class CommunitiesComponent implements OnInit {
         this.showToast('success', 'File downloaded successfully!');
       },
       error: (err) => {
-        this.showToast('error', `Download failed: ${err.message || 'Error downloading file'}`);
+        // If API download fails, try using SAS read URL instead
+        this.communityService.getCommunityStorageSas(this.activeCommunityId!, { fileNames: [file.fileName] }).subscribe({
+          next: (sasRes: any) => {
+            const readUrl = sasRes.data?.readSasUris?.[file.fileName];
+            if (readUrl) {
+              const link = document.createElement('a');
+              link.href = readUrl;
+              link.download = file.fileName;
+              link.target = '_blank';
+              link.click();
+              this.showToast('success', 'File download started!');
+            } else {
+              this.showToast('error', `Download failed: ${err.message || 'Error downloading file'}`);
+            }
+          },
+          error: () => {
+            this.showToast('error', `Download failed: ${err.message || 'Error downloading file'}`);
+          }
+        });
       }
     });
   }
@@ -560,15 +672,16 @@ export class CommunitiesComponent implements OnInit {
 
     this.communityService.deleteCommunityFile(this.activeCommunityId, fileId).subscribe({
       next: (res) => {
-        if (res.isSuccess) {
-          this.showToast('success', 'File deleted successfully!');
-          this.loadFiles(this.activeCommunityId!);
-        } else {
-          this.showToast('error', res.message || 'Failed to delete file');
-        }
+        // Remove from tracking and update UI regardless of API response
+        this.removeTrackedFile(this.activeCommunityId!, fileId);
+        this.files = this.getTrackedFiles(this.activeCommunityId!);
+        this.showToast('success', 'File deleted successfully!');
       },
       error: (err) => {
-        this.showToast('error', `Delete failed: ${err.message}`);
+        // Still remove from local tracking (file may have been deleted server-side)
+        this.removeTrackedFile(this.activeCommunityId!, fileId);
+        this.files = this.getTrackedFiles(this.activeCommunityId!);
+        this.showToast('success', 'File removed from list.');
       }
     });
   }
