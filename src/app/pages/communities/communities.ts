@@ -2,6 +2,7 @@ import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CommunityService } from '../../services/community.service';
 import { StorageService } from '../../services/storage.service';
+import { AuthService } from '../../services/auth.service';
 import { NavbarComponent } from '../../components/navbar/navbar';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import {
@@ -26,6 +27,7 @@ export class CommunitiesComponent implements OnInit {
   private fb = inject(FormBuilder);
   private communityService = inject(CommunityService);
   private storageService = inject(StorageService);
+  private authService = inject(AuthService);
   private destroyRef = inject(DestroyRef);
 
   communities$ = this.communityService.communities$;
@@ -67,7 +69,7 @@ export class CommunitiesComponent implements OnInit {
   selectedPostPhoto: File | null = null;
 
   // Files/Storage State
-  files: CommunityFile[] = [];
+  files: (CommunityFile & { postId?: string; authorUserId?: string })[] = [];
   filesLoading = false;
   uploadingFile = false;
   uploadProgress = 0;
@@ -480,9 +482,66 @@ export class CommunitiesComponent implements OnInit {
     this.saveTrackedFiles(communityId, tracked);
   }
 
-  private removeTrackedFile(communityId: string, fileId: string) {
-    const tracked = this.getTrackedFiles(communityId).filter(f => f.id !== fileId);
+  private removeTrackedFile(communityId: string, fileId: string, fileName?: string) {
+    const tracked = this.getTrackedFiles(communityId).filter(f => 
+      f.id !== fileId && (!fileName || f.fileName !== fileName)
+    );
     this.saveTrackedFiles(communityId, tracked);
+  }
+
+  isSharedFilePost(post: Post | null): boolean {
+    if (!post) return false;
+    return (post.title || '').startsWith('[Shared File]');
+  }
+
+  parseFilePostContent(content: string): any {
+    try {
+      return JSON.parse(content);
+    } catch {
+      return null;
+    }
+  }
+
+  downloadFileFromPost(post: Post) {
+    const meta = this.parseFilePostContent(post.content);
+    if (!meta) return;
+    
+    const file: CommunityFile & { authorUserId?: string } = {
+      id: meta.fileId,
+      fileName: meta.fileName,
+      contentType: meta.contentType,
+      size: meta.size,
+      uploadedAt: meta.uploadedAt,
+      authorUserId: post.authorUserId
+    };
+    this.downloadFile(file);
+  }
+
+  private createPostForFile(communityId: string, newFile: CommunityFile, readSasUri?: string) {
+    const fileMetadata: any = {
+      fileId: newFile.id,
+      fileName: newFile.fileName,
+      size: newFile.size,
+      uploadedAt: newFile.uploadedAt || new Date().toISOString(),
+      contentType: newFile.contentType || 'application/octet-stream',
+      isCommunityFile: true
+    };
+    // Store a SAS read base URL (without the SAS token, which expires)
+    // We'll request a fresh SAS token at download time
+
+    this.communityService.createPost(
+      communityId,
+      `[Shared File] ${newFile.fileName}`,
+      JSON.stringify(fileMetadata)
+    ).subscribe({
+      next: () => {
+        this.loadFiles(communityId);
+        this.loadPosts(communityId);
+      },
+      error: (err) => {
+        console.error('Failed to create file post metadata:', err);
+      }
+    });
   }
 
   loadFiles(communityId: string) {
@@ -491,50 +550,50 @@ export class CommunitiesComponent implements OnInit {
     // Load from localStorage tracking (since the API has no "list all" endpoint)
     const tracked = this.getTrackedFiles(communityId);
 
-    if (tracked.length === 0) {
-      // Also try the API without fileName in case it returns something
-      this.communityService.listCommunityFiles(communityId).subscribe({
-        next: (res: any) => {
-          this.filesLoading = false;
-          if (res.isSuccess && res.data) {
-            const data = res.data;
-            if (Array.isArray(data)) {
-              this.files = data.map((f: any) => ({
-                id: f.fileId || f.id || '',
-                fileName: f.fileName || 'Unknown',
-                contentType: f.contentType,
-                size: f.size,
-                uploadedAt: f.uploadedAt
-              }));
-              // Save to tracking
-              this.files.forEach(f => this.addTrackedFile(communityId, f));
-            } else if (data && typeof data === 'object' && (data.fileId || data.fileName)) {
-              const file: CommunityFile = {
-                id: data.fileId || data.id || '',
-                fileName: data.fileName || 'Unknown',
-                contentType: data.contentType,
-                size: data.size,
-                uploadedAt: data.uploadedAt
-              };
-              this.files = [file];
-              this.addTrackedFile(communityId, file);
-            } else {
-              this.files = [];
+    this.communityService.listPosts(communityId).subscribe({
+      next: (res) => {
+        this.filesLoading = false;
+        if (res.isSuccess && res.data) {
+          const filePosts = (res.data || []).filter(p => this.isSharedFilePost(p));
+          
+          const postFiles = filePosts
+            .filter(p => {
+              // Check if any reply is "[File Deleted]"
+              const isDeleted = p.replies && p.replies.some(r => r.content === '[File Deleted]');
+              return !isDeleted;
+            })
+            .map(p => {
+              const meta = this.parseFilePostContent(p.content);
+              return {
+                id: meta?.fileId || p.id,
+                fileName: meta?.fileName || p.title.replace('[Shared File] ', ''),
+                contentType: meta?.contentType || 'application/octet-stream',
+                size: meta?.size || 0,
+                uploadedAt: meta?.uploadedAt || p.createdAt,
+                postId: p.id,
+                authorUserId: p.authorUserId
+              } as CommunityFile & { postId?: string; authorUserId?: string };
+            });
+
+          // Merge with localStorage tracking files (avoid duplicates by fileName)
+          const merged = [...postFiles];
+          tracked.forEach(localFile => {
+            if (!merged.some(f => f.fileName === localFile.fileName)) {
+              merged.push(localFile);
             }
-          } else {
-            this.files = [];
-          }
-        },
-        error: () => {
-          this.filesLoading = false;
-          this.files = [];
+          });
+
+          this.files = merged;
+          this.saveTrackedFiles(communityId, this.files);
+        } else {
+          this.files = tracked;
         }
-      });
-    } else {
-      // We have tracked files — show them immediately
-      this.files = tracked;
-      this.filesLoading = false;
-    }
+      },
+      error: () => {
+        this.filesLoading = false;
+        this.files = tracked;
+      }
+    });
   }
 
   onFileSelected(event: Event) {
@@ -575,19 +634,31 @@ export class CommunitiesComponent implements OnInit {
               next: (registerRes: any) => {
                 this.uploadProgress = 100;
                 this.uploadingFile = false;
+                console.log('[UP] listCommunityFiles response:', registerRes);
 
-                // Extract file info from registration response and add to list
-                const newFile: CommunityFile = {
-                  id: registerRes?.data?.fileId || registerRes?.data?.id || crypto.randomUUID(),
+                let resolvedId = file.name;
+                const rdata = registerRes?.data;
+                if (rdata) {
+                  if (Array.isArray(rdata)) {
+                    const matched = rdata.find(f => f.fileName === file.name);
+                    resolvedId = matched?.id || matched?.fileId || rdata[0]?.id || rdata[0]?.fileId || file.name;
+                  } else {
+                    resolvedId = rdata.fileId || rdata.id || file.name;
+                  }
+                }
+                console.log('[UP] Resolved file ID:', resolvedId);
+
+                const newFile: CommunityFile & { authorUserId?: string } = {
+                  id: resolvedId,
                   fileName: file.name,
                   contentType: file.type,
                   size: file.size,
-                  uploadedAt: new Date().toISOString()
+                  uploadedAt: new Date().toISOString(),
+                  authorUserId: this.authService.getCurrentUserId() || undefined
                 };
 
-                // Add to tracked files and update UI
                 this.addTrackedFile(communityId, newFile);
-                this.files = this.getTrackedFiles(communityId);
+                this.createPostForFile(communityId, newFile);
 
                 this.showToast('success', `${file.name} uploaded successfully!`);
                 input.value = '';
@@ -596,18 +667,18 @@ export class CommunitiesComponent implements OnInit {
                 this.uploadProgress = 100;
                 this.uploadingFile = false;
 
-                // Even if registration fails, the file IS uploaded to Azure
-                const newFile: CommunityFile = {
-                  id: crypto.randomUUID(),
+                 // Registration failed but file IS in Azure — use fileName as id
+                const newFile: CommunityFile & { authorUserId?: string } = {
+                  id: file.name,
                   fileName: file.name,
                   contentType: file.type,
                   size: file.size,
-                  uploadedAt: new Date().toISOString()
+                  uploadedAt: new Date().toISOString(),
+                  authorUserId: this.authService.getCurrentUserId() || undefined
                 };
 
                 this.addTrackedFile(communityId, newFile);
-                this.files = this.getTrackedFiles(communityId);
-
+                this.createPostForFile(communityId, newFile);
                 this.showToast('success', `${file.name} uploaded!`);
                 input.value = '';
               }
@@ -628,62 +699,332 @@ export class CommunitiesComponent implements OnInit {
     });
   }
 
-  downloadFile(file: CommunityFile) {
+  downloadFile(file: CommunityFile & { authorUserId?: string }) {
     if (!this.activeCommunityId) return;
+    const communityId = this.activeCommunityId;
+    const fileName = file.fileName;
+    
+    // Fallback: If authorUserId is missing, default to the current user's ID
+    let authorUserId = file.authorUserId;
+    if (!authorUserId) {
+      authorUserId = this.authService.getCurrentUserId() || undefined;
+    }
 
-    this.communityService.downloadCommunityFile(this.activeCommunityId, file.id).subscribe({
-      next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = file.fileName;
-        link.click();
-        window.URL.revokeObjectURL(url);
-        this.showToast('success', 'File downloaded successfully!');
-      },
-      error: (err) => {
-        // If API download fails, try using SAS read URL instead
-        this.communityService.getCommunityStorageSas(this.activeCommunityId!, { fileNames: [file.fileName] }).subscribe({
-          next: (sasRes: any) => {
-            const readUrl = sasRes.data?.readSasUris?.[file.fileName];
-            if (readUrl) {
-              const link = document.createElement('a');
-              link.href = readUrl;
-              link.download = file.fileName;
-              link.target = '_blank';
-              link.click();
-              this.showToast('success', 'File download started!');
-            } else {
-              this.showToast('error', `Download failed: ${err.message || 'Error downloading file'}`);
+    console.log('[DL] Starting download for:', fileName, '| id:', file.id, '| authorUserId:', authorUserId);
+
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(file.id);
+
+    if (isUuid) {
+      // PRIMARY: Download directly using the uploader's namespace
+      const downloadUserId = authorUserId || this.authService.getCurrentUserId() || '';
+      console.log('[DL] ID is a valid UUID. Attempting uploader-scoped download:', downloadUserId);
+      
+      this.communityService.downloadCommunityFileAsUser(downloadUserId, communityId, file.id).subscribe({
+        next: (blob) => this.triggerBlobDownload(blob, fileName),
+        error: (err) => {
+          console.warn('[DL] Uploader-scoped download failed, trying current user scope...', err);
+          
+          // Fallback 1: Try current user namespace
+          this.communityService.downloadCommunityFile(communityId, file.id).subscribe({
+            next: (blob) => this.triggerBlobDownload(blob, fileName),
+            error: (err2) => {
+              console.warn('[DL] Direct API downloads failed. Trying SAS fallback...', err2);
+              this.fallbackDownload(communityId, file, authorUserId);
             }
-          },
-          error: () => {
-            this.showToast('error', `Download failed: ${err.message || 'Error downloading file'}`);
+          });
+        }
+      });
+    } else {
+      console.log('[DL] ID is not a UUID (likely legacy filename). Using SAS fallbacks...');
+      this.fallbackDownload(communityId, file, authorUserId);
+    }
+  }
+
+  private fallbackDownload(communityId: string, file: CommunityFile, authorUserId?: string) {
+    const fileName = file.fileName;
+
+    if (authorUserId) {
+      // PRIMARY: Try SAS with author's userId (creator can get SAS tokens)
+      this.communityService.getCommunityStorageSasAsUser(authorUserId, communityId, { fileNames: [fileName] }).subscribe({
+        next: (sasRes: any) => {
+          console.log('[DL] Fallback SAS response:', sasRes);
+          const readUrl = this.extractReadUrl(sasRes, fileName);
+          if (readUrl) {
+            this.downloadFromSasUrl(readUrl, fileName);
+          } else {
+            // SAS returned OK but no read URL → resolve fileId via author's scope
+            this.resolveAndDownload(authorUserId, communityId, file);
           }
-        });
+        },
+        error: (err) => {
+          console.warn('[DL] Fallback SAS failed, trying fileId resolution...', err);
+          this.resolveAndDownload(authorUserId, communityId, file);
+        }
+      });
+    } else {
+      // No author info → try current user's endpoints
+      this.downloadViaApi(communityId, file);
+    }
+  }
+
+  /** Resolve real fileId using author's userId, then download */
+  private resolveAndDownload(authorUserId: string, communityId: string, file: CommunityFile) {
+    console.log('[DL] Resolving fileId via author:', authorUserId);
+    this.communityService.listCommunityFilesAsUser(authorUserId, communityId, file.fileName).subscribe({
+      next: (res: any) => {
+        console.log('[DL] listCommunityFilesAsUser response:', res);
+        let realFileId = null;
+        const rdata = res?.data;
+        if (rdata) {
+          if (Array.isArray(rdata)) {
+            const matched = rdata.find(f => f.fileName === file.fileName);
+            realFileId = matched?.id || matched?.fileId || rdata[0]?.id || rdata[0]?.fileId || null;
+          } else {
+            realFileId = rdata.fileId || rdata.id || null;
+          }
+        }
+        console.log('[DL] Resolved fileId from author scope:', realFileId);
+        if (realFileId) {
+          // Download using author's userId + resolved fileId
+          this.communityService.downloadCommunityFileAsUser(authorUserId, communityId, realFileId).subscribe({
+            next: (blob) => this.triggerBlobDownload(blob, file.fileName),
+            error: (err) => {
+              console.error('[DL] Download (author) failed:', err?.status);
+              // Last resort: try with current user's userId
+              this.downloadByFileId(communityId, realFileId, file.fileName);
+            }
+          });
+        } else {
+          // No fileId from author scope either → try stored id with current user
+          this.downloadByFileId(communityId, file.id, file.fileName);
+        }
+      },
+      error: () => {
+        // Can't resolve via author → fall back to current user
+        this.downloadViaApi(communityId, file);
       }
     });
   }
 
-  deleteFile(fileId: string) {
+  /** Extract read URL from SAS response, trying exact match then fuzzy match */
+  private extractReadUrl(sasRes: any, fileName: string): string | null {
+    const data = sasRes?.data;
+    if (!data) return null;
+
+    console.log('[DL] Extracting URL from SAS response data:', JSON.stringify(data));
+
+    // Helper to search an object recursively for a URL matching fileName
+    const findUrl = (obj: any): string | null => {
+      if (!obj) return null;
+      if (typeof obj === 'string') {
+        if (obj.startsWith('http') && (obj.toLowerCase().includes(fileName.toLowerCase()) || obj.includes('sig='))) {
+          return obj;
+        }
+        return null;
+      }
+      if (typeof obj === 'object') {
+        // Try exact match on keys first
+        if (obj[fileName]) return obj[fileName];
+        for (const k of Object.keys(obj)) {
+          if (k.toLowerCase() === fileName.toLowerCase() && typeof obj[k] === 'string') {
+            return obj[k];
+          }
+        }
+        // Recursively check values
+        for (const val of Object.values(obj)) {
+          const found = findUrl(val);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    // First try standard paths (including writeSasUris fallback)
+    const standardUris = data.readSasUris || data.writeSasUris || data.readUris || data.writeUris;
+    if (standardUris && typeof standardUris === 'object') {
+      const keys = Object.keys(standardUris);
+      if (standardUris[fileName]) return standardUris[fileName];
+      const ciKey = keys.find(k => k.toLowerCase() === fileName.toLowerCase());
+      if (ciKey) return standardUris[ciKey];
+      const suffixKey = keys.find(k => k.endsWith(fileName) || k.endsWith('/' + fileName));
+      if (suffixKey) return standardUris[suffixKey];
+      if (keys.length === 1) return standardUris[keys[0]];
+    }
+
+    // Fall back to recursive search
+    const found = findUrl(data);
+    if (found) {
+      console.log('[DL] Found matched SAS URL via recursive search:', found);
+      return found;
+    }
+
+    return null;
+  }
+
+  /** Download a file from a SAS URL by fetching the blob */
+  private downloadFromSasUrl(sasUrl: string, fileName: string) {
+    fetch(sasUrl)
+      .then(response => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.blob();
+      })
+      .then(blob => this.triggerBlobDownload(blob, fileName))
+      .catch(err => {
+        console.error('[DL] SAS blob fetch failed:', err);
+        this.showToast('error', 'Download failed: Could not retrieve file.');
+      });
+  }
+
+  /** Trigger a browser file download from a Blob */
+  private triggerBlobDownload(blob: Blob, fileName: string) {
+    // Slice the first 1KB of the blob to check if it looks like a JSON response wrapper
+    const slice = blob.slice(0, 1024);
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = (reader.result as string || '').trim();
+      if (text.startsWith('{')) {
+        // It looks like JSON! Read the entire blob as text and try to parse it.
+        const fullReader = new FileReader();
+        fullReader.onload = () => {
+          try {
+            const res = JSON.parse(fullReader.result as string);
+            console.log('[DL] Download response parsed as JSON:', res);
+
+            if (res && typeof res === 'object' && typeof res.isSuccess === 'boolean') {
+              if (res.isSuccess === false) {
+                console.error('[DL] Download returned isSuccess: false:', res.message);
+                this.showToast('error', res.message || 'Download failed: File not found.');
+                return;
+              }
+
+              const data = res?.data;
+              let downloadUrl = null;
+              if (data) {
+                if (typeof data === 'string') {
+                  downloadUrl = data;
+                } else if (typeof data === 'object') {
+                  downloadUrl = data.url || data.downloadUrl || data.readSasUri || data[fileName] || data[fileName.toLowerCase()] || Object.values(data)[0];
+                }
+              }
+
+              if (typeof downloadUrl === 'string' && downloadUrl.startsWith('http')) {
+                console.log('[DL] Found redirect URL inside JSON:', downloadUrl);
+                this.downloadFromSasUrl(downloadUrl, fileName);
+                return;
+              }
+            }
+          } catch (e) {
+            console.warn('[DL] Slice started with { but full text is not valid JSON:', e);
+          }
+          // Fallback if parsing failed or doesn't match API wrapper: download original blob directly
+          this.triggerBlobDownloadDirect(blob, fileName);
+        };
+        fullReader.readAsText(blob);
+      } else {
+        // Not JSON, download the blob directly
+        this.triggerBlobDownloadDirect(blob, fileName);
+      }
+    };
+    reader.readAsText(slice);
+  }
+
+  private triggerBlobDownloadDirect(blob: Blob, fileName: string) {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    window.URL.revokeObjectURL(url);
+    this.showToast('success', 'File downloaded successfully!');
+  }
+
+  /** Fallback: try to download via the backend API using current user */
+  private downloadViaApi(communityId: string, file: CommunityFile) {
+    console.log('[DL] listCommunityFiles (current user) query for:', file.fileName);
+    this.communityService.listCommunityFiles(communityId, file.fileName).subscribe({
+      next: (res: any) => {
+        console.log('[DL] listCommunityFiles (current user) response:', res);
+        let realFileId = null;
+        const rdata = res?.data;
+        if (rdata) {
+          if (Array.isArray(rdata)) {
+            const matched = rdata.find(f => f.fileName === file.fileName);
+            realFileId = matched?.id || matched?.fileId || rdata[0]?.id || rdata[0]?.fileId || null;
+          } else {
+            realFileId = rdata.fileId || rdata.id || null;
+          }
+        }
+        console.log('[DL] Resolved fileId from current user scope:', realFileId);
+        if (realFileId) {
+          this.downloadByFileId(communityId, realFileId, file.fileName);
+        } else {
+          this.downloadByFileId(communityId, file.id, file.fileName);
+        }
+      },
+      error: () => {
+        this.downloadByFileId(communityId, file.id, file.fileName);
+      }
+    });
+  }
+
+  /** Download using the /files/{fileId}/download endpoint with current user */
+  private downloadByFileId(communityId: string, fileId: string, fileName: string) {
+    this.communityService.downloadCommunityFile(communityId, fileId).subscribe({
+      next: (blob) => this.triggerBlobDownload(blob, fileName),
+      error: (err) => {
+        console.error('[DL] API download failed:', err?.status, err?.error);
+        if (err?.error instanceof Blob) {
+          const reader = new FileReader();
+          reader.onload = () => {
+            console.error('[DL] API download error body:', reader.result);
+          };
+          reader.readAsText(err.error);
+        }
+        this.showToast('error', 'Download failed: File could not be retrieved from server.');
+      }
+    });
+  }
+
+
+  deleteFile(file: any) {
     if (!this.activeCommunityId) return;
 
     if (!confirm('Are you sure you want to delete this file?')) return;
 
-    this.communityService.deleteCommunityFile(this.activeCommunityId, fileId).subscribe({
-      next: (res) => {
-        // Remove from tracking and update UI regardless of API response
-        this.removeTrackedFile(this.activeCommunityId!, fileId);
-        this.files = this.getTrackedFiles(this.activeCommunityId!);
-        this.showToast('success', 'File deleted successfully!');
+    this.communityService.deleteCommunityFile(this.activeCommunityId, file.id).subscribe({
+      next: () => {
+        this.completeDeletion(file);
       },
-      error: (err) => {
-        // Still remove from local tracking (file may have been deleted server-side)
-        this.removeTrackedFile(this.activeCommunityId!, fileId);
-        this.files = this.getTrackedFiles(this.activeCommunityId!);
-        this.showToast('success', 'File removed from list.');
+      error: () => {
+        // Still try to delete if error (file might not exist in backend storage anymore)
+        this.completeDeletion(file);
       }
     });
+  }
+
+  private completeDeletion(file: any) {
+    const communityId = this.activeCommunityId!;
+    
+    // Always remove from local tracking storage so it does not get re-merged
+    this.removeTrackedFile(communityId, file.id, file.fileName);
+    
+    // Optimistically update the local files array so it disappears from UI immediately
+    this.files = this.files.filter(f => f.id !== file.id && f.fileName !== file.fileName);
+
+    if (file.postId) {
+      this.communityService.createReply(communityId, file.postId, { content: '[File Deleted]' }).subscribe({
+        next: () => {
+          this.loadFiles(communityId);
+          this.showToast('success', 'File deleted successfully!');
+        },
+        error: () => {
+          this.loadFiles(communityId);
+          this.showToast('success', 'File deleted.');
+        }
+      });
+    } else {
+      this.showToast('success', 'File deleted.');
+    }
   }
 
   // ─── PHOTO UPLOADS (COMMUNITY PHOTO) ────────────────

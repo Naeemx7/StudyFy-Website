@@ -227,14 +227,16 @@
             </div>
 
             <div class="flex items-center gap-2">
-              @if (selectedDetail?.isAdmin) {
-                <button (click)="delete(selectedDetail!.id)" [disabled]="deleteLoadingId === selectedDetail!.id" class="px-4 py-2 border border-red-200 text-red-700 hover:bg-red-50 text-sm font-medium rounded-xl transition-colors disabled:opacity-50">
-                  Delete Community
-                </button>
-              } @else {
-                <button (click)="leave(selectedDetail!.id)" [disabled]="leaveLoadingId === selectedDetail!.id" class="px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 text-sm font-medium rounded-xl transition-colors disabled:opacity-50">
-                  Leave Community
-                </button>
+              @if (selectedDetail) {
+                @if (selectedDetail.isAdmin) {
+                  <button (click)="delete(selectedDetail.id)" [disabled]="deleteLoadingId === selectedDetail.id" class="px-4 py-2 border border-red-200 text-red-700 hover:bg-red-50 text-sm font-medium rounded-xl transition-colors disabled:opacity-50">
+                    Delete Community
+                  </button>
+                } @else {
+                  <button (click)="leave(selectedDetail.id)" [disabled]="leaveLoadingId === selectedDetail.id" class="px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 text-sm font-medium rounded-xl transition-colors disabled:opacity-50">
+                    Leave Community
+                  </button>
+                }
               }
             </div>
           </div>
@@ -393,7 +395,22 @@
 
                               <div class="space-y-1">
                                 <h4 class="font-bold text-gray-900 text-base">{{ post.title }}</h4>
-                                <p class="text-sm text-gray-600 line-clamp-3 leading-relaxed">{{ post.content }}</p>
+                                @if (isSharedFilePost(post)) {
+                                  <div class="flex items-center justify-between p-3.5 bg-indigo-50/40 hover:bg-indigo-50/70 border border-indigo-100 rounded-2xl max-w-lg mt-2 transition-all">
+                                    <div class="flex items-center gap-3">
+                                      <span class="text-2xl">📁</span>
+                                      <div class="text-left">
+                                        <p class="text-sm font-bold text-indigo-950 truncate max-w-[200px] md:max-w-xs">{{ parseFilePostContent(post.content)?.fileName }}</p>
+                                        <p class="text-xs text-indigo-500 font-medium">{{ formatSize(parseFilePostContent(post.content)?.size) }}</p>
+                                      </div>
+                                    </div>
+                                    <button (click)="$event.stopPropagation(); downloadFileFromPost(post)" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl transition-colors shadow-sm shrink-0">
+                                      Download
+                                    </button>
+                                  </div>
+                                } @else {
+                                  <p class="text-sm text-gray-600 line-clamp-3 leading-relaxed">{{ post.content }}</p>
+                                }
                               </div>
 
                               @if (post.photoUrl) {
@@ -485,7 +502,22 @@
 
                   <div class="space-y-3 pt-2">
                     <h2 class="text-xl font-extrabold text-gray-900">{{ selectedPost.title }}</h2>
-                    <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{{ selectedPost.content }}</p>
+                    @if (isSharedFilePost(selectedPost)) {
+                      <div class="flex items-center justify-between p-4 bg-indigo-50/40 border border-indigo-100 rounded-2xl max-w-lg mt-2">
+                        <div class="flex items-center gap-3">
+                          <span class="text-3xl">📁</span>
+                          <div class="text-left">
+                            <p class="text-base font-bold text-indigo-950 truncate max-w-[200px] md:max-w-xs">{{ parseFilePostContent(selectedPost.content)?.fileName }}</p>
+                            <p class="text-sm text-indigo-500 font-medium">{{ formatSize(parseFilePostContent(selectedPost.content)?.size) }}</p>
+                          </div>
+                        </div>
+                        <button (click)="downloadFileFromPost(selectedPost)" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl transition-colors shadow-sm shrink-0">
+                          Download File
+                        </button>
+                      </div>
+                    } @else {
+                      <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{{ selectedPost.content }}</p>
+                    }
                   </div>
 
                   @if (selectedPost.photoUrl) {
@@ -603,7 +635,7 @@
                                   <button (click)="downloadFile(file)" class="px-2.5 py-1.5 border border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-medium text-xs rounded-lg transition-colors">
                                     Download
                                   </button>
-                                  <button (click)="deleteFile(file.id)" class="px-2.5 py-1.5 border border-red-100 text-red-600 hover:bg-red-50 font-medium text-xs rounded-lg transition-colors">
+                                  <button (click)="deleteFile(file)" class="px-2.5 py-1.5 border border-red-100 text-red-600 hover:bg-red-50 font-medium text-xs rounded-lg transition-colors">
                                     Delete
                                   </button>
                                 </td>

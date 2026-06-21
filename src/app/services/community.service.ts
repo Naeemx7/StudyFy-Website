@@ -206,6 +206,15 @@ export class CommunityService {
     return this.http.get<ApiResponse<CommunityFile[]>>(url);
   }
 
+  /** Same as listCommunityFiles but using a specific user's ID (for cross-user file resolution) */
+  listCommunityFilesAsUser(userId: string, communityId: string, fileName?: string): Observable<ApiResponse<CommunityFile[]>> {
+    let url = `${environment.apiUrl}/users/${userId}/communities/${communityId}/storage/content`;
+    if (fileName) {
+      url += `?fileName=${encodeURIComponent(fileName)}`;
+    }
+    return this.http.get<ApiResponse<CommunityFile[]>>(url);
+  }
+
   /** DELETE /users/{userId}/communities/{communityId}/files/{fileId} — delete a file */
   deleteCommunityFile(communityId: string, fileId: string): Observable<ApiResponse<string>> {
     const url = `${this.userPath()}/communities/${communityId}/files/${fileId}`;
@@ -216,5 +225,17 @@ export class CommunityService {
   downloadCommunityFile(communityId: string, fileId: string): Observable<Blob> {
     const url = `${this.userPath()}/communities/${communityId}/files/${fileId}/download`;
     return this.http.get(url, { responseType: 'blob' });
+  }
+
+  /** Same as downloadCommunityFile but using a specific user's ID (for cross-user downloads) */
+  downloadCommunityFileAsUser(userId: string, communityId: string, fileId: string): Observable<Blob> {
+    const url = `${environment.apiUrl}/users/${userId}/communities/${communityId}/files/${fileId}/download`;
+    return this.http.get(url, { responseType: 'blob' });
+  }
+
+  /** Same as getCommunityStorageSas but using a specific user's ID */
+  getCommunityStorageSasAsUser(userId: string, communityId: string, body: unknown): Observable<ApiResponse<unknown>> {
+    const url = `${environment.apiUrl}/users/${userId}/communities/${communityId}/storage/sas`;
+    return this.http.post<ApiResponse<unknown>>(url, body);
   }
 }
