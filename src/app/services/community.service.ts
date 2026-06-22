@@ -127,6 +127,7 @@ export class CommunityService {
   uploadCommunityPhoto(communityId: string, file: File): Observable<ApiResponse<string>> {
     const url = `${environment.apiUrl}/communities/${communityId}/photo`;
     const formData = new FormData();
+    // The backend expects the parameter name to be 'file'.
     formData.append('file', file);
     return this.http.post<ApiResponse<string>>(url, formData);
   }

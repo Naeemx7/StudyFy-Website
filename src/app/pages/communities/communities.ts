@@ -268,8 +268,20 @@ export class CommunitiesComponent implements OnInit {
     this.communityService.getCommunityDetail(id).subscribe({
       next: res => {
         this.detailLoadingId = null;
-        this.selectedDetail = res.data;
-        this.activeCommunityId = res.data?.id ?? id;
+
+        // The detail endpoint GET /communities/{communityId} is not user-scoped
+        // so it does NOT return isAdmin. Merge it from the list cache so that
+        // admin-only controls (photo upload, Settings tab) display correctly.
+        const detail = res.data;
+        if (detail) {
+          const cached = this.communitiesCache.find(c => c.id === detail.id);
+          if (cached?.isAdmin !== undefined) {
+            detail.isAdmin = cached.isAdmin;
+          }
+        }
+
+        this.selectedDetail = detail;
+        this.activeCommunityId = detail?.id ?? id;
         this.showToast('success', 'Community details loaded!');
         
         // Prefetch basic lists
@@ -1037,23 +1049,41 @@ export class CommunitiesComponent implements OnInit {
     const communityId = this.activeCommunityId;
     if (!communityId) return;
 
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      this.showToast('error', 'Photo must be under 5MB.');
+      input.value = '';
+      return;
+    }
+
     this.photoUploading = true;
     this.communityService.uploadCommunityPhoto(communityId, file).subscribe({
       next: (res) => {
         this.photoUploading = false;
+        input.value = ''; // Reset so same file can be re-selected
         if (res.isSuccess) {
           this.showToast('success', 'Community photo updated!');
-          if (this.selectedDetail) {
-            this.selectedDetail.photoUrl = res.data;
+          // Update local state immediately so photo renders without a full reload
+          const photoUrl = typeof res.data === 'string' ? res.data : (res as any)?.data?.photoUrl || (res as any)?.data?.url;
+          if (this.selectedDetail && photoUrl) {
+            this.selectedDetail = { ...this.selectedDetail, photoUrl };
           }
-          this.load();
+          // Re-fetch community detail to get the authoritative photoUrl from backend
+          this.viewDetail(communityId);
         } else {
           this.showToast('error', res.message || 'Failed to upload photo');
         }
       },
       error: (err) => {
         this.photoUploading = false;
-        this.showToast('error', `Photo upload failed: ${err.message}`);
+        input.value = '';
+        // Log full error body to help diagnose field name / format issues
+        const errBody = err?.error;
+        console.error('[Photo Upload] 400 error body:', errBody);
+        const msg = errBody?.message || errBody?.title || errBody?.errors
+          ? JSON.stringify(errBody?.errors || errBody?.message || errBody?.title)
+          : err?.message || 'Unknown error';
+        this.showToast('error', `Photo upload failed: ${msg}`);
       }
     });
   }
