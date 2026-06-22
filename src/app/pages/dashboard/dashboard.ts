@@ -18,10 +18,12 @@ import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
-import { Subscription } from 'rxjs';
+import { combineLatest, Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { NavbarComponent } from '../../components/navbar/navbar';
 import { AuthService } from '../../services/auth.service';
 import { SpaceService } from '../../services/space.service';
+import { CommunityService } from '../../services/community.service';
 import { AnalyticsService } from '../../services/analytics.service';
 import { Space } from '../../models/space.models';
 import { GlobalAnalytics } from '../../models/analytics.models';
@@ -36,6 +38,7 @@ import { GlobalAnalytics } from '../../models/analytics.models';
 export class DashboardComponent implements OnInit, OnDestroy {
   private auth = inject(AuthService);
   private spaceService = inject(SpaceService);
+  private communityService = inject(CommunityService);
   private analyticsService = inject(AnalyticsService);
   private fb = inject(FormBuilder);
   private spaceSub?: Subscription;
@@ -43,8 +46,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // User data from auth service
   currentUser$ = this.auth.currentUser$;
 
-  // Spaces data from space service
-  spaces$ = this.spaceService.spaces$;
+  // Spaces filtered to exclude entries that are actually community workspaces.
+  // The backend auto-creates a space named "<communityName> Workspace" for every
+  // community. We detect these by matching the space title against known community
+  // names (both exact match and the "<name> Workspace" pattern the backend uses).
+  spaces$ = combineLatest([
+    this.spaceService.spaces$,
+    this.communityService.communities$
+  ]).pipe(
+    map(([spaces, communities]) => {
+      const communityNames = new Set((communities ?? []).map(c => c.name?.trim().toLowerCase()));
+      return spaces.filter(s => {
+        const title = (s.title ?? '').trim().toLowerCase();
+        // Match "<communityName> Workspace" pattern (backend auto-naming)
+        const baseName = title.endsWith(' workspace') ? title.slice(0, -' workspace'.length).trim() : title;
+        return !communityNames.has(baseName) && !communityNames.has(title);
+      });
+    })
+  );
   spacesLoading$ = this.spaceService.loading$;
   spacesError$ = this.spaceService.error$;
 
@@ -83,8 +102,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Load spaces — the spaces API returns totalFiles, totalQuizzes, averageScore per space
     this.spaceService.loadSpaces().subscribe();
 
-    // Sum totalFiles + totalQuizzes directly from spaces$ whenever it updates
-    this.spaceSub = this.spaceService.spaces$.subscribe(spaces => {
+    // Load communities so we can filter their IDs out of the spaces list
+    this.communityService.listCommunities().subscribe();
+
+    // Sum totalFiles + totalQuizzes from spaces that are NOT communities
+    this.spaceSub = this.spaces$.subscribe(spaces => {
       this.totalFiles = spaces.reduce((sum, s) => sum + (s.totalFiles ?? 0), 0);
       this.totalQuizzes = spaces.reduce((sum, s) => sum + (s.totalQuizzes ?? 0), 0);
     });
