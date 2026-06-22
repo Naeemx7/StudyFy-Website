@@ -37,7 +37,7 @@ export class CommunitiesComponent implements OnInit {
   communitiesCache: Community[] = [];
 
   // Tab management
-  activeTab: 'overview' | 'posts' | 'files' | 'settings' = 'overview';
+  activeTab: 'overview' | 'posts' | 'files' = 'overview';
 
   // Toast messages for endpoint feedback
   toast: { type: 'success' | 'error'; message: string; visible: boolean } = {
@@ -134,7 +134,7 @@ export class CommunitiesComponent implements OnInit {
 
   // ─── TABS ──────────────────────────────────────────
 
-  switchTab(tab: 'overview' | 'posts' | 'files' | 'settings') {
+  switchTab(tab: 'overview' | 'posts' | 'files') {
     this.activeTab = tab;
     const communityId = this.activeCommunityId;
     if (!communityId) return;
