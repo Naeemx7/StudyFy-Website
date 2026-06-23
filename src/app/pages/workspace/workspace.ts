@@ -255,7 +255,7 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
 
   private sendChatMessage(text: string): void {
     this.chatLoading = true;
-    this.chatService.sendMessage(this.spaceId, this.currentSessionId, text).subscribe({
+    this.chatService.sendMessage(this.spaceId, this.currentSessionId, text, this.fileId ? [this.fileId] : undefined).subscribe({
       next: (res) => {
         if (!res) {
           this.chatLoading = false;

@@ -63,7 +63,12 @@ export class ChatService {
       `${this.getBasePath(spaceId)}/sessions`,
       body
     ).pipe(
-      map(res => res.data),
+      map(res => {
+        if (!res.isSuccess) {
+          throw new Error(res.message || 'Failed to create chat session');
+        }
+        return res.data;
+      }),
       catchError(this.handleError)
     );
   }
@@ -78,26 +83,37 @@ export class ChatService {
     return this.http.get<ApiResponse<ChatSessionListItem[]>>(
       `${this.getBasePath(spaceId)}/sessions`
     ).pipe(
-      map(res => res.data ?? []),
+      map(res => {
+        if (!res.isSuccess) {
+          throw new Error(res.message || 'Failed to list chat sessions');
+        }
+        return res.data ?? [];
+      }),
       catchError(this.handleError)
     );
   }
 
-  // ─── 3. SEND MESSAGE ──────────────────────────────────
-
   /**
    * POST /chat/sessions/{sessionId}/messages
-   * Body: { message: string }
+   * Body: { message: string, filesId?: string[] }
    * Returns: SendMessageResponseDto { sessionId, userMessage, assistantMessage }
    */
-  sendMessage(spaceId: string, sessionId: string, message: string): Observable<SendMessageResponse> {
+  sendMessage(spaceId: string, sessionId: string, message: string, filesId?: string[]): Observable<SendMessageResponse> {
     const body: SendMessageRequest = { message };
+    if (filesId && filesId.length > 0) {
+      body.filesId = filesId;
+    }
 
     return this.http.post<ApiResponse<SendMessageResponse>>(
       `${this.getBasePath(spaceId)}/sessions/${sessionId}/messages`,
       body
     ).pipe(
-      map(res => res.data),
+      map(res => {
+        if (!res.isSuccess) {
+          throw new Error(res.message || 'Failed to send message');
+        }
+        return res.data;
+      }),
       catchError(this.handleError)
     );
   }
@@ -112,7 +128,12 @@ export class ChatService {
     return this.http.get<ApiResponse<ChatSessionDetail>>(
       `${this.getBasePath(spaceId)}/sessions/${sessionId}`
     ).pipe(
-      map(res => res.data),
+      map(res => {
+        if (!res.isSuccess) {
+          throw new Error(res.message || 'Failed to load chat session');
+        }
+        return res.data;
+      }),
       catchError(this.handleError)
     );
   }
@@ -133,7 +154,11 @@ export class ChatService {
 
   // ─── ERROR HANDLER ─────────────────────────────────────
 
-  private handleError = (error: HttpErrorResponse): Observable<never> => {
+  private handleError = (error: HttpErrorResponse | Error): Observable<never> => {
+    if (!(error instanceof HttpErrorResponse)) {
+      return throwError(() => error);
+    }
+
     let message = 'An error occurred';
 
     if (error.status === 0) {

@@ -3,6 +3,11 @@ import { CommonModule } from '@angular/common';
 import { CommunityService } from '../../services/community.service';
 import { StorageService } from '../../services/storage.service';
 import { AuthService } from '../../services/auth.service';
+import { AiService } from '../../services/ai.service';
+import { SpaceService } from '../../services/space.service';
+import { ChatService } from '../../services/chat.service';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 import { NavbarComponent } from '../../components/navbar/navbar';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import {
@@ -14,7 +19,7 @@ import {
   CommunityFile,
 } from '../../models/community.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { environment } from '../../../environments/environment';
+
 
 @Component({
   selector: 'app-communities',
@@ -28,7 +33,14 @@ export class CommunitiesComponent implements OnInit {
   private communityService = inject(CommunityService);
   private storageService = inject(StorageService);
   private authService = inject(AuthService);
+  private aiService = inject(AiService);
+  private spaceService = inject(SpaceService);
+  private chatService = inject(ChatService);
+  private http = inject(HttpClient);
   private destroyRef = inject(DestroyRef);
+
+  // AI reply state
+  aiReplyLoading = false;
 
   communities$ = this.communityService.communities$;
   loading = false;
@@ -73,6 +85,7 @@ export class CommunitiesComponent implements OnInit {
   filesLoading = false;
   uploadingFile = false;
   uploadProgress = 0;
+  uploadStatusText = 'Uploading file...';
 
   // Settings/Photo State
   photoUploading = false;
@@ -423,26 +436,35 @@ export class CommunitiesComponent implements OnInit {
   createReply() {
     if (this.replyForm.invalid || !this.activeCommunityId || !this.selectedPost) return;
 
-    this.createReplyLoading = true;
     const { content } = this.replyForm.value;
+    const replyText = (content || '').trim();
+
+    // ── @ai mention: ask the AI model ──────────────────
+    if (replyText.toLowerCase().startsWith('@ai')) {
+      this.handleAiReply(replyText);
+      return;
+    }
+
+    // ── Normal reply ───────────────────────────────────
+    this.createReplyLoading = true;
 
     this.communityService.createReply(
       this.activeCommunityId,
       this.selectedPost.id,
-      { content: content || '' }
+      { content: replyText }
     ).subscribe({
       next: (res) => {
         this.createReplyLoading = false;
         if (res.isSuccess && res.data) {
           this.showToast('success', 'Reply posted!');
           this.replyForm.reset();
-          
+
           if (!this.selectedPost!.replies) {
             this.selectedPost!.replies = [];
           }
           this.selectedPost!.replies.push(res.data);
           this.selectedPost!.replyCount = (this.selectedPost!.replyCount || 0) + 1;
-          
+
           const idx = this.posts.findIndex(p => p.id === this.selectedPost!.id);
           if (idx !== -1) {
             this.posts[idx].replyCount = this.selectedPost!.replyCount;
@@ -454,6 +476,229 @@ export class CommunitiesComponent implements OnInit {
       error: (err) => {
         this.createReplyLoading = false;
         this.showToast('error', `Failed to post reply: ${err.message}`);
+      }
+    });
+  }
+
+  /**
+   * Handle @ai mention in a reply.
+   *
+   * Flow:
+   *  1. Post the user's @ai message as a visible reply.
+   *  2. Extract the fileName from the shared-file post metadata.
+   *  3. Call community storage/content to get the real fileId UUID.
+   *  4. Use workspace auto-summarize with that fileId and fileName.
+   *  5. Post the AI answer as a follow-up reply.
+   */
+  private handleAiReply(userText: string) {
+    if (!this.activeCommunityId || !this.selectedPost) return;
+
+    const communityId = this.activeCommunityId;
+    const post = this.selectedPost;
+    this.aiReplyLoading = true;
+    this.createReplyLoading = true;
+    this.replyForm.reset();
+
+    // Step 1: Post the user's @ai message as a visible reply
+    this.communityService.createReply(communityId, post.id, { content: userText }).subscribe({
+      next: (res) => {
+        if (res.isSuccess && res.data) {
+          if (!post.replies) post.replies = [];
+          post.replies.push(res.data);
+          post.replyCount = (post.replyCount || 0) + 1;
+        }
+
+        // Step 2: Get fileName from the post metadata
+        const meta = this.isSharedFilePost(post) ? this.parseFilePostContent(post.content) : null;
+        const fileName: string | null = meta?.fileName || null;
+
+        if (!fileName) {
+          this.postAiError(communityId, post,
+            'Please use @ai on a Shared File post so I can read the document and answer your question.');
+          return;
+        }
+
+        // Step 3: Resolve the real fileId UUID from community storage/content
+        this.callCommunityAi(communityId, post, fileName, userText);
+      },
+      error: () => {
+        this.createReplyLoading = false;
+        this.aiReplyLoading = false;
+        this.showToast('error', 'Failed to post @ai reply.');
+      }
+    });
+  }
+
+  /**
+   * Main AI dispatch for community files.
+   *
+   * Steps:
+   *  A. Resolve the real fileId UUID via community storage/content endpoint.
+   *  B. Fetch the user's workspaces (needed for the AI API routing).
+   *  C. Try GET /users/{userId}/spaces/{workspaceId}/storage/auto-summarize?fileName=...
+   *     This endpoint takes a fileName and generates an AI summary.
+   *  D. If that fails, fall back to POST /spaces/{workspaceId}/summary with fileId.
+   *  E. Post AI answer as a reply.
+   */
+  private callCommunityAi(communityId: string, post: Post, fileName: string, userText: string) {
+    const userId = this.authService.getCurrentUserId();
+    if (!userId) {
+      this.postAiError(communityId, post, 'You must be logged in to use @ai.');
+      return;
+    }
+
+    const meta = this.isSharedFilePost(post) ? this.parseFilePostContent(post.content) : null;
+    const metaFileId = meta?.fileId;
+    const isUuid = (id: string | null) =>
+      id ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) : false;
+
+    if (isUuid(metaFileId)) {
+      console.log('[AI] Found valid UUID in post metadata:', metaFileId);
+      this.resolveWorkspaceAndCallAi(communityId, post, metaFileId, fileName, userId, userText);
+    } else {
+      console.log('[AI] File ID in metadata not a UUID. Resolving from storage content endpoint for fileName:', fileName);
+      // Step A: Resolve real fileId UUID from community storage content endpoint
+      const contentUrl = `${environment.apiUrl}/users/${userId}/communities/${communityId}/storage/content?fileName=${encodeURIComponent(fileName)}`;
+      this.http.get<any>(contentUrl).subscribe({
+        next: (contentRes) => {
+          const fileId: string = contentRes?.data?.fileId || '';
+          this.resolveWorkspaceAndCallAi(communityId, post, fileId, fileName, userId, userText);
+        },
+        error: () => {
+          // content endpoint failed — proceed without fileId (AI will fail or handle)
+          this.resolveWorkspaceAndCallAi(communityId, post, '', fileName, userId, userText);
+        }
+      });
+    }
+  }
+
+  /**
+   * Get the first workspace ID then call the AI.
+   */
+  private resolveWorkspaceAndCallAi(
+    communityId: string, post: Post, fileId: string, fileName: string, userId: string, userText: string
+  ) {
+    // Try cached spaces first
+    const cachedSpaces = (this.spaceService as any)['spacesSubject']?.value;
+    if (cachedSpaces && cachedSpaces.length > 0) {
+      const workspaceId: string = cachedSpaces[0].id;
+      this.askAiQuestion(communityId, post, fileId, fileName, userId, workspaceId, userText);
+      return;
+    }
+
+    // Fetch from API properly using spaceService to map and populate caches
+    this.spaceService.loadSpaces().subscribe({
+      next: (spaces) => {
+        if (spaces && spaces.length > 0) {
+          const workspaceId: string = spaces[0].id;
+          this.askAiQuestion(communityId, post, fileId, fileName, userId, workspaceId, userText);
+        } else {
+          this.postAiError(communityId, post,
+            'You need at least one study space in your Dashboard to use the @ai feature.');
+        }
+      },
+      error: () => {
+        this.postAiError(communityId, post, 'Could not reach the AI service. Please try again.');
+      }
+    });
+  }
+
+  /**
+   * Use chat sessions to answer custom questions about the community file.
+   */
+  private askAiQuestion(
+    communityId: string, post: Post, fileId: string,
+    fileName: string, userId: string, workspaceId: string, userText: string
+  ) {
+    if (!fileId) {
+      this.postAiError(communityId, post,
+        'The AI could not access this community file. Make sure the file was uploaded correctly.');
+      return;
+    }
+
+    const userQuestion = userText.replace(/^@ai\s*/i, '').trim();
+    const query = userQuestion || 'Summarize this file and give me a recap of its contents.';
+
+    // 1. Create a chat session with the file
+    const sessionTitle = `Community AI - ${fileName}`;
+    this.chatService.createSession(workspaceId, [fileId], sessionTitle).subscribe({
+      next: (session) => {
+        // 2. Send the message (question)
+        this.chatService.sendMessage(workspaceId, session.id, query, [fileId]).subscribe({
+          next: (chatRes) => {
+            console.log('[AI] sendMessage success. Response:', chatRes);
+            const replyText = chatRes?.assistantMessage?.content;
+            if (replyText) {
+              this.postAiReplyText(communityId, post, `🤖 **AI Response**\n\n${replyText}`);
+            } else {
+              this.postAiError(communityId, post, 'AI did not return an answer. Please try again.');
+            }
+            // 3. Clean up the temporary chat session so it doesn't clutter the user's sidebar
+            this.chatService.deleteSession(workspaceId, session.id).subscribe({
+              error: (delErr) => console.warn('Could not clean up temporary chat session:', delErr)
+            });
+          },
+          error: (err) => {
+            console.error('[AI] sendMessage failed:', err);
+            const msg = err?.error?.message || err?.message || 'AI failed to process this request.';
+            this.postAiError(communityId, post, msg);
+            // Clean up the session on error too
+            this.chatService.deleteSession(workspaceId, session.id).subscribe();
+          }
+        });
+      },
+      error: (err) => {
+        console.error('[AI] createSession failed:', err);
+        const msg = err?.error?.message || err?.message || 'Failed to initialize AI session.';
+        this.postAiError(communityId, post, msg);
+      }
+    });
+  }
+
+  private extractAiText(data: any): string {
+    if (typeof data === 'string') return data;
+    const content = data?.responseContent ?? data?.content ?? data;
+    if (typeof content === 'string') return content;
+    if (content && typeof content === 'object') {
+      return content.cleanContent || content.text || JSON.stringify(content, null, 2);
+    }
+    return JSON.stringify(data, null, 2);
+  }
+
+  private postAiReplyText(communityId: string, post: Post, text: string) {
+    this.communityService.createReply(communityId, post.id, { content: text }).subscribe({
+      next: (res) => {
+        this.createReplyLoading = false;
+        this.aiReplyLoading = false;
+        if (res.isSuccess && res.data) {
+          if (!post.replies) post.replies = [];
+          post.replies.push(res.data);
+          post.replyCount = (post.replyCount || 0) + 1;
+          this.showToast('success', 'AI replied!');
+        }
+      },
+      error: () => {
+        this.createReplyLoading = false;
+        this.aiReplyLoading = false;
+        this.showToast('error', 'AI answered but could not post the reply.');
+      }
+    });
+  }
+
+  private postAiError(communityId: string, post: Post, errorMsg: string) {
+    this.communityService.createReply(communityId, post.id, { content: `🤖 ${errorMsg}` }).subscribe({
+      next: (res) => {
+        this.createReplyLoading = false;
+        this.aiReplyLoading = false;
+        if (res.isSuccess && res.data) {
+          if (!post.replies) post.replies = [];
+          post.replies.push(res.data);
+          post.replyCount = (post.replyCount || 0) + 1;
+        }
+      },
+      error: () => {
+        this.createReplyLoading = false;
+        this.aiReplyLoading = false;
       }
     });
   }
@@ -618,6 +863,7 @@ export class CommunitiesComponent implements OnInit {
 
     this.uploadingFile = true;
     this.uploadProgress = 10;
+    this.uploadStatusText = 'Obtaining upload token...';
 
     // Step 1: Get SAS URL
     const sasBody = { fileNames: [file.name] };
@@ -625,9 +871,10 @@ export class CommunitiesComponent implements OnInit {
     this.communityService.getCommunityStorageSas(communityId, sasBody).subscribe({
       next: (res: any) => {
         this.uploadProgress = 30;
-        
+        this.uploadStatusText = 'Uploading file to storage...';
+
         const writeSasUri = res.data?.writeSasUris?.[file.name];
-        
+
         if (!writeSasUri) {
           this.uploadingFile = false;
           this.uploadProgress = 0;
@@ -636,23 +883,25 @@ export class CommunitiesComponent implements OnInit {
         }
 
         // Step 2: Upload directly to Azure Blob Storage
-        this.uploadProgress = 40;
+        this.uploadProgress = 50;
         this.storageService.uploadToAzure(file, writeSasUri).subscribe({
           next: () => {
-            this.uploadProgress = 75;
-            
-            // Step 3: Register the file with backend
+            this.uploadProgress = 70;
+            this.uploadStatusText = 'Registering file and extracting text...';
+
+            // Step 3: Register the file with backend and retrieve real DB UUID
             this.communityService.listCommunityFiles(communityId, file.name).subscribe({
               next: (registerRes: any) => {
                 this.uploadProgress = 100;
                 this.uploadingFile = false;
+                this.uploadStatusText = 'Upload complete!';
                 console.log('[UP] listCommunityFiles response:', registerRes);
 
                 let resolvedId = file.name;
                 const rdata = registerRes?.data;
                 if (rdata) {
                   if (Array.isArray(rdata)) {
-                    const matched = rdata.find(f => f.fileName === file.name);
+                    const matched = rdata.find((f: any) => f.fileName === file.name);
                     resolvedId = matched?.id || matched?.fileId || rdata[0]?.id || rdata[0]?.fileId || file.name;
                   } else {
                     resolvedId = rdata.fileId || rdata.id || file.name;
@@ -671,15 +920,15 @@ export class CommunitiesComponent implements OnInit {
 
                 this.addTrackedFile(communityId, newFile);
                 this.createPostForFile(communityId, newFile);
-
                 this.showToast('success', `${file.name} uploaded successfully!`);
                 input.value = '';
               },
-              error: () => {
+              error: (err) => {
+                console.warn('[UP] File registration failed but file is in Azure. Using fallback.', err);
                 this.uploadProgress = 100;
                 this.uploadingFile = false;
+                this.uploadStatusText = 'Upload complete (text extraction skipped)!';
 
-                 // Registration failed but file IS in Azure — use fileName as id
                 const newFile: CommunityFile & { authorUserId?: string } = {
                   id: file.name,
                   fileName: file.name,
@@ -691,7 +940,7 @@ export class CommunitiesComponent implements OnInit {
 
                 this.addTrackedFile(communityId, newFile);
                 this.createPostForFile(communityId, newFile);
-                this.showToast('success', `${file.name} uploaded!`);
+                this.showToast('success', `${file.name} uploaded successfully!`);
                 input.value = '';
               }
             });

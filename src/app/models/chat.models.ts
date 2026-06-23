@@ -22,6 +22,7 @@ export interface CreateChatSessionRequest {
 /** Request body for POST /chat/sessions/{id}/messages */
 export interface SendMessageRequest {
   message: string;
+  filesId?: string[];
 }
 
 // ============================================
