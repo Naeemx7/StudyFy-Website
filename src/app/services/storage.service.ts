@@ -29,19 +29,9 @@ import {
   SasData,
   FileContentResponse,
   FileContent,
-  SpaceFile,
   UploadProgress
 } from '../models/storage.models';
 
-/**
- * Generic API response wrapper
- */
-interface ApiResponse<T> {
-  isSuccess: boolean;
-  message: string;
-  errors?: string[];
-  data: T;
-}
 
 @Injectable({
   providedIn: 'root'
@@ -159,7 +149,7 @@ export class StorageService {
     return this.getSasUrls(spaceId, fileNames).pipe(
       switchMap(sasData => {
         // Step 2: Upload each file to Azure
-        const uploads = files.map((file, index) => {
+        const uploads = files.map((file) => {
           const sasUrl = sasData.writeSasUris[file.name];
           
           if (!sasUrl) {

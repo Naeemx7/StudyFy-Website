@@ -23,10 +23,11 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
-import { tap, map, catchError } from 'rxjs/operators';
+import { tap, map, catchError, switchMap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import {
   User,
+  UserResponse,
   LoginRequest,
   RegisterRequest,
   AuthResponse,
@@ -86,7 +87,9 @@ export class AuthService {
             isStudent: response.user.isStudent ?? true,
             target: response.user.target,
             token: response.jwtToken,
-            tokenExpiration: new Date(response.jwtExpiration)
+            tokenExpiration: new Date(response.jwtExpiration),
+            photoId: response.user.photoId,
+            photoUrl: response.user.photoUrl
           };
 
           return user;
@@ -155,7 +158,9 @@ export class AuthService {
             target: response.user.target,
             token: response.jwtToken,
             tokenExpiration: new Date(response.jwtExpiration),
-            googleDisplayName: displayName || undefined
+            googleDisplayName: displayName || undefined,
+            photoId: response.user.photoId,
+            photoUrl: response.user.photoUrl
           };
 
           return user;
@@ -437,6 +442,85 @@ export class AuthService {
    * Angular's HttpParams encodes + as %2B, but ASP.NET expects it decoded.
    * We must build the URL manually without double-encoding.
    */
+  /**
+   * UPLOAD PROFILE PHOTO
+   *
+   * POST /users/{userId}/profile/photo
+   * Sends the file as multipart form data. On success, updates the stored user's photoUrl.
+   */
+  uploadProfilePhoto(file: File): Observable<GeneralResponse & { data?: string }> {
+    const userId = this.getCurrentUserId();
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<GeneralResponse & { data?: string }>(
+      `${environment.apiUrl}/users/${userId}/profile/photo`, formData
+    ).pipe(
+      switchMap(res => {
+        if (res.isSuccess) {
+          // Fetch the profile to get the authoritative photoUrl (res.data may be a photo ID, not a URL)
+          return this.http.get<GeneralResponse & { data?: UserResponse }>(
+            `${environment.apiUrl}/users/${userId}/profile`
+          ).pipe(
+            tap(profile => {
+              if (profile.isSuccess && profile.data) {
+                this.patchStoredUser({ photoUrl: profile.data.photoUrl, photoId: profile.data.photoId });
+              }
+            }),
+            map(() => res)
+          );
+        }
+        return [res];
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * DELETE PROFILE PHOTO
+   *
+   * DELETE /users/{userId}/profile/photo
+   * On success, clears photoUrl and photoId from the stored user.
+   */
+  deleteProfilePhoto(): Observable<GeneralResponse> {
+    const userId = this.getCurrentUserId();
+    return this.http.delete<GeneralResponse>(
+      `${environment.apiUrl}/users/${userId}/profile/photo`
+    ).pipe(
+      tap(res => {
+        if (res.isSuccess) {
+          this.patchStoredUser({ photoUrl: undefined, photoId: undefined });
+        }
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * FETCH PROFILE PHOTO AS BLOB URL
+   *
+   * GET /users/{userId}/profile/photo  (returns binary image)
+   * Uses HttpClient so the auth interceptor adds the Bearer token.
+   * Converts the response to a local blob URL that <img> can display.
+   */
+  fetchProfilePhoto(): Observable<string> {
+    const userId = this.getCurrentUserId();
+    return this.http.get(
+      `${environment.apiUrl}/users/${userId}/profile/photo`,
+      { responseType: 'blob' }
+    ).pipe(
+      map(blob => URL.createObjectURL(blob))
+    );
+  }
+
+  /** Merge a partial update into the stored user and notify subscribers. */
+  private patchStoredUser(patch: Partial<User>): void {
+    const user = this.currentUserSubject.value;
+    if (!user) return;
+    const updated = { ...user, ...patch };
+    this.currentUserSubject.next(updated);
+    localStorage.setItem(this.USER_KEY, JSON.stringify(updated));
+  }
+
   resetPassword(email: string, newPassword: string, confirmPassword: string, token?: string): Observable<GeneralResponse> {
     const body: ResetPasswordRequest = { email, newPassword, confirmPassword };
 

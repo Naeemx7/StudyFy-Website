@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { CommunityService } from '../../services/community.service';
 import { StorageService } from '../../services/storage.service';
 import { AuthService } from '../../services/auth.service';
-import { AiService } from '../../services/ai.service';
 import { SpaceService } from '../../services/space.service';
 import { ChatService } from '../../services/chat.service';
 import { HttpClient } from '@angular/common/http';
@@ -15,7 +14,6 @@ import {
   LeaderboardEntry,
   CreateCommunityRequest,
   Post,
-  Reply,
   CommunityFile,
 } from '../../models/community.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -33,7 +31,6 @@ export class CommunitiesComponent implements OnInit {
   private communityService = inject(CommunityService);
   private storageService = inject(StorageService);
   private authService = inject(AuthService);
-  private aiService = inject(AiService);
   private spaceService = inject(SpaceService);
   private chatService = inject(ChatService);
   private http = inject(HttpClient);

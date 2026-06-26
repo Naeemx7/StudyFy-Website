@@ -151,6 +151,8 @@ export interface UserResponse {
   age?: number;           // User's age (if provided during registration)
   isStudent?: boolean;    // true = student, false = professional
   target?: string;        // Learning goal
+  photoId?: string;       // Cloudinary/storage photo ID
+  photoUrl?: string;      // Public URL of profile photo
 }
 
 /**
@@ -186,4 +188,6 @@ export interface User {
   token: string;                // JWT token
   tokenExpiration: Date;        // When token expires
   googleDisplayName?: string;   // Real name from Google profile (given_name)
+  photoId?: string;             // Cloudinary/storage photo ID
+  photoUrl?: string;            // Public URL of profile photo
 }

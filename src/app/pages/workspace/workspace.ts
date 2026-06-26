@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
-import { map } from 'rxjs/operators';
 import { StorageService } from '../../services/storage.service';
 import { AiService } from '../../services/ai.service';
 import { ChatService } from '../../services/chat.service';
@@ -1209,24 +1208,6 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
     }
 
     return '';
-  }
-
-  private extractTagNamesFromQuizContent(content: unknown): string[] {
-    if (!content) return [];
-    const parsed = typeof content === 'string' ? this.tryParseJson(content) : content;
-    if (!this.isRecord(parsed)) return [];
-    // Structure: { "filename.pdf": { "tags": { "TagName1": {...}, ... } } }
-    for (const fileData of Object.values(parsed)) {
-      if (this.isRecord(fileData) && this.isRecord(fileData['tags'])) {
-        const tags = Object.keys(fileData['tags'] as Record<string, unknown>);
-        if (tags.length > 0) return tags;
-      }
-    }
-    // Flat tags object at top level
-    if (this.isRecord(parsed['tags'])) {
-      return Object.keys(parsed['tags'] as Record<string, unknown>);
-    }
-    return [];
   }
 
   /** Collect ALL questions across every tag in the API response, tagging each with its tagName. */

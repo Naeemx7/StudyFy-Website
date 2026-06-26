@@ -48,9 +48,14 @@
       @if (currentUser$ | async; as user) {
       <div class="relative ml-2">
         <button (click)="toggleDropdown(); $event.stopPropagation()" class="flex items-center gap-2 hover:bg-gray-100 rounded-full p-1 pr-3 transition-colors">
-          <div class="h-8 w-8 rounded-full bg-indigo-600 flex items-center justify-center text-sm font-medium text-white shadow-sm ring-2 ring-white">
-            {{ getInitials(user.userName) }}
-          </div>
+          @if (navPhotoUrl) {
+            <img [src]="navPhotoUrl" alt="Profile"
+                 class="h-8 w-8 rounded-full object-cover shadow-sm ring-2 ring-white" />
+          } @else {
+            <div class="h-8 w-8 rounded-full bg-indigo-600 flex items-center justify-center text-sm font-medium text-white shadow-sm ring-2 ring-white">
+              {{ getInitials(user.userName) }}
+            </div>
+          }
           <span class="text-sm font-medium text-gray-700 hidden md:block">{{ getDisplayName(user.googleDisplayName || user.userName) }}</span>
           <svg class="w-4 h-4 text-gray-400 transition-transform duration-200" [class.rotate-180]="isDropdownOpen" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>

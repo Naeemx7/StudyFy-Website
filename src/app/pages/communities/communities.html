@@ -207,10 +207,10 @@
                   <div class="w-20 h-20 rounded-2xl bg-indigo-100 flex items-center justify-center text-indigo-600 font-extrabold text-2xl overflow-hidden border border-gray-200 shadow-inner">
                     @if (photoUploading) {
                       <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
-                    } @else if (selectedDetail?.photoUrl) {
-                      <img [src]="resolvePhotoUrl(selectedDetail?.photoUrl)" alt="{{ selectedDetail?.name }}" class="w-full h-full object-cover" />
+                    } @else if (selectedDetail!.photoUrl) {
+                      <img [src]="resolvePhotoUrl(selectedDetail!.photoUrl)" alt="{{ selectedDetail!.name }}" class="w-full h-full object-cover" />
                     } @else {
-                      {{ selectedDetail?.name?.substring(0, 2)?.toUpperCase() }}
+                      {{ selectedDetail!.name.substring(0, 2).toUpperCase() }}
                     }
                   </div>
                   <!-- Camera overlay on hover -->
@@ -225,7 +225,7 @@
               } @else {
                 <div class="w-20 h-20 rounded-2xl bg-indigo-100 flex items-center justify-center text-indigo-600 font-extrabold text-2xl overflow-hidden border border-gray-200 shrink-0 shadow-inner">
                   @if (selectedDetail?.photoUrl) {
-                    <img [src]="resolvePhotoUrl(selectedDetail?.photoUrl)" alt="{{ selectedDetail?.name }}" class="w-full h-full object-cover" />
+                    <img [src]="resolvePhotoUrl(selectedDetail!.photoUrl)" alt="{{ selectedDetail!.name }}" class="w-full h-full object-cover" />
                   } @else {
                     {{ selectedDetail?.name?.substring(0, 2)?.toUpperCase() }}
                   }
