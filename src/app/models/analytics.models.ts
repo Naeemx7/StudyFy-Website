@@ -60,6 +60,7 @@ export interface GlobalAnalytics {
   currentStreak: number;
   longestStreak: number;
   totalXp: number;
+  userBadges: string[];
   spaceDetails: AnalyticsSpaceDetail[];
   quizData: AnalyticsQuizEntry[];
 }

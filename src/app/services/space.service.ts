@@ -22,6 +22,7 @@ import { BehaviorSubject, Observable, throwError, of } from 'rxjs';
 import { tap, map, catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
+import { BadgeService } from './badge.service';
 import { 
   Space, 
   SpaceResponse, 
@@ -45,6 +46,7 @@ interface ApiResponse<T> {
 export class SpaceService {
   private http = inject(HttpClient);
   private auth = inject(AuthService);
+  private badgeService = inject(BadgeService);
 
   // BehaviorSubject holds the current list of spaces
   // Components subscribe to spaces$ to get updates
@@ -148,8 +150,8 @@ export class SpaceService {
         // Add to local state (optimistic update)
         tap(newSpace => {
           const currentSpaces = this.spacesSubject.value;
-          // Add new space at the beginning of the list
           this.spacesSubject.next([newSpace, ...currentSpaces]);
+          this.badgeService.trackAction('WORKSPACE_CREATED');
         }),
         catchError(this.handleError)
       );

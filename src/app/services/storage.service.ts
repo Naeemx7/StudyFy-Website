@@ -22,6 +22,7 @@ import { Observable, throwError, forkJoin, of, BehaviorSubject } from 'rxjs';
 import { map, catchError, switchMap, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
+import { BadgeService } from './badge.service';
 import {
   GetSasRequest,
   SasResponse,
@@ -48,6 +49,7 @@ interface ApiResponse<T> {
 export class StorageService {
   private http = inject(HttpClient);
   private auth = inject(AuthService);
+  private badgeService = inject(BadgeService);
 
   // Track upload progress for UI
   private uploadProgressSubject = new BehaviorSubject<UploadProgress[]>([]);
@@ -179,7 +181,8 @@ export class StorageService {
 
         // Wait for all uploads to complete
         return forkJoin(uploads).pipe(
-          map(() => fileNames) // Return the filenames on success
+          tap(() => this.badgeService.trackAction('FILE_UPLOADED', files.length)),
+          map(() => fileNames)
         );
       }),
       catchError(error => {

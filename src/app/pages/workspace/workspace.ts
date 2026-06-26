@@ -7,6 +7,7 @@ import { map } from 'rxjs/operators';
 import { StorageService } from '../../services/storage.service';
 import { AiService } from '../../services/ai.service';
 import { ChatService } from '../../services/chat.service';
+import { BadgeService } from '../../services/badge.service';
 import { DifficultyLevel, GeminiResponse, QuizResponse, QuizTagSubmission } from '../../models/ai.models';
 import { ChatMessage, ChatSessionListItem } from '../../models/chat.models';
 
@@ -44,6 +45,7 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
   private storageService = inject(StorageService);
   private aiService = inject(AiService);
   private chatService = inject(ChatService);
+  private badgeService = inject(BadgeService);
 
   // Route params
   spaceId = '';
@@ -265,6 +267,7 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
         }
         this.messages.push(res.userMessage);
         this.messages.push(res.assistantMessage);
+        this.badgeService.trackAction('CHAT_MESSAGE_SENT');
         this.chatLoading = false;
         this.shouldScroll = true;
         console.log('Chat response:', res);
@@ -358,6 +361,7 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
           if (typeof topic === 'string') this.fileTopic = topic;
         }
         this.summaryState = 'ready';
+        this.badgeService.trackAction('SUMMARY_GENERATED');
         this.isProcessing = false;
         this.processingAction = '';
       },
@@ -393,6 +397,7 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
         this.flashcardShowsBack = false;
         this.flashcardsRawContent = this.flashcards.length === 0 ? parsed.content : '';
         this.flashcardsState = 'ready';
+        this.badgeService.trackAction('FLASHCARDS_GENERATED');
         this.isProcessing = false;
         this.processingAction = '';
       },
@@ -1350,6 +1355,13 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
     }
 
     this.quizState = 'completed';
+    this.badgeService.trackAction('QUIZ_COMPLETED');
+    if (this.scorePercent === 100) {
+      this.badgeService.trackAction('QUIZ_PERFECT_SCORE');
+    }
+    if (this.scorePercent >= 80) {
+      this.badgeService.trackAction('MASTERY_ACHIEVED');
+    }
     this.submitQuizResults();
   }
 
