@@ -205,10 +205,25 @@ export class SpaceService {
   }
 
   /**
+   * Load spaces for any userId — used when we need the file uploader's workspace
+   * to create an AI chat session against the correct namespace.
+   */
+  loadSpacesForUser(userId: string): Observable<Space[]> {
+    return this.http.get<ApiResponse<SpaceResponse[]>>(`${environment.apiUrl}/users/${userId}/spaces`)
+      .pipe(
+        map(response => {
+          if (!response.isSuccess || !Array.isArray(response.data)) return [];
+          return response.data.map(mapSpaceResponseToSpace);
+        }),
+        catchError(() => of([]))
+      );
+  }
+
+  /**
    * GET SINGLE SPACE
-   * 
+   *
    * Fetches a single space from the backend by ID.
-   * 
+   *
    * ENDPOINT: GET /users/{userId}/spaces/{workspaceId}
    */
   getSpace(spaceId: string): Observable<Space> {

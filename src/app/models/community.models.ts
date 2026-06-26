@@ -17,6 +17,10 @@
  * - GET    /communities/{communityId}/posts/{postId}                — Get post detail
  * - GET    /communities/{communityId}/posts/{postId}/photo          — Get post photo
  * - POST   /communities/{communityId}/posts/{postId}/replies        — Reply to post
+ * - DELETE /communities/{communityId}/posts/{postId}                — Delete post
+ * - DELETE /communities/{communityId}/posts/{postId}/replies/{id}   — Delete reply
+ * - GET    /communities/{communityId}/members/count                 — Get member count
+ * - PUT    /users/{userId}/communities/{communityId}/settings/allow-files — Toggle file uploads
  * - POST   /users/{userId}/communities/{communityId}/storage/sas    — Get SAS token
  * - GET    /users/{userId}/communities/{communityId}/storage/content — List files
  * - DELETE /users/{userId}/communities/{communityId}/files/{fileId}  — Delete file
@@ -43,6 +47,9 @@ export interface Community {
   name: string;
   description?: string;
   joinCode?: string;
+  memberCount?: number;
+  allowMembersToAddFiles?: boolean;
+  totalFiles?: number;
   createdAt?: string;
   isAdmin?: boolean;
   photoId?: string;

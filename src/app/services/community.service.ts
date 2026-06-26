@@ -190,6 +190,32 @@ export class CommunityService {
     return this.http.post<ApiResponse<Reply>>(url, body);
   }
 
+  /** DELETE /communities/{communityId}/posts/{postId}/replies/{replyId} — delete a reply */
+  deleteReply(communityId: string, postId: string, replyId: string): Observable<ApiResponse<null>> {
+    const userId = this.auth.getCurrentUserId();
+    const url = `${environment.apiUrl}/communities/${communityId}/posts/${postId}/replies/${replyId}?userId=${userId}`;
+    return this.http.delete<ApiResponse<null>>(url);
+  }
+
+  /** DELETE /communities/{communityId}/posts/{postId} — delete a post */
+  deletePost(communityId: string, postId: string): Observable<ApiResponse<null>> {
+    const userId = this.auth.getCurrentUserId();
+    const url = `${environment.apiUrl}/communities/${communityId}/posts/${postId}?userId=${userId}`;
+    return this.http.delete<ApiResponse<null>>(url);
+  }
+
+  /** GET /communities/{communityId}/members/count — get total member count */
+  getMemberCount(communityId: string): Observable<ApiResponse<number>> {
+    const url = `${environment.apiUrl}/communities/${communityId}/members/count`;
+    return this.http.get<ApiResponse<number>>(url);
+  }
+
+  /** PUT /users/{userId}/communities/{communityId}/settings/allow-files — toggle member file upload permission */
+  updateCommunitySettings(communityId: string, allowMembersToAddFiles: boolean): Observable<ApiResponse<null>> {
+    const url = `${this.userPath()}/communities/${communityId}/settings/allow-files`;
+    return this.http.put<ApiResponse<null>>(url, { allowMembersToAddFiles });
+  }
+
   // ─── COMMUNITY STORAGE ─────────────────────────────
 
   /** POST /users/{userId}/communities/{communityId}/storage/sas — get SAS upload token */

@@ -41,8 +41,8 @@ export class ChatService {
   private http = inject(HttpClient);
   private auth = inject(AuthService);
 
-  private getBasePath(spaceId: string): string {
-    const userId = this.auth.getCurrentUserId();
+  private getBasePath(spaceId: string, asUserId?: string): string {
+    const userId = asUserId || this.auth.getCurrentUserId();
     return `${environment.apiUrl}/users/${userId}/spaces/${spaceId}/chat`;
   }
 
@@ -52,15 +52,16 @@ export class ChatService {
    * POST /chat/sessions
    * Body: { filesId: string[], title?: string }
    * Returns: ChatSessionDetailDto
+   * @param asUserId - use a different userId in the URL path (e.g. the file's uploader)
    */
-  createSession(spaceId: string, filesId: string[], title?: string): Observable<ChatSessionDetail> {
+  createSession(spaceId: string, filesId: string[], title?: string, asUserId?: string): Observable<ChatSessionDetail> {
     const body: CreateChatSessionRequest = { filesId };
     if (title) {
       body.title = title;
     }
 
     return this.http.post<ApiResponse<ChatSessionDetail>>(
-      `${this.getBasePath(spaceId)}/sessions`,
+      `${this.getBasePath(spaceId, asUserId)}/sessions`,
       body
     ).pipe(
       map(res => {
@@ -98,14 +99,14 @@ export class ChatService {
    * Body: { message: string, filesId?: string[] }
    * Returns: SendMessageResponseDto { sessionId, userMessage, assistantMessage }
    */
-  sendMessage(spaceId: string, sessionId: string, message: string, filesId?: string[]): Observable<SendMessageResponse> {
+  sendMessage(spaceId: string, sessionId: string, message: string, filesId?: string[], asUserId?: string): Observable<SendMessageResponse> {
     const body: SendMessageRequest = { message };
     if (filesId && filesId.length > 0) {
       body.filesId = filesId;
     }
 
     return this.http.post<ApiResponse<SendMessageResponse>>(
-      `${this.getBasePath(spaceId)}/sessions/${sessionId}/messages`,
+      `${this.getBasePath(spaceId, asUserId)}/sessions/${sessionId}/messages`,
       body
     ).pipe(
       map(res => {
@@ -144,9 +145,9 @@ export class ChatService {
    * DELETE /chat/sessions/{sessionId}
    * Returns: GeneralResponse { isSuccess, message }
    */
-  deleteSession(spaceId: string, sessionId: string): Observable<GeneralResponse> {
+  deleteSession(spaceId: string, sessionId: string, asUserId?: string): Observable<GeneralResponse> {
     return this.http.delete<GeneralResponse>(
-      `${this.getBasePath(spaceId)}/sessions/${sessionId}`
+      `${this.getBasePath(spaceId, asUserId)}/sessions/${sessionId}`
     ).pipe(
       catchError(this.handleError)
     );

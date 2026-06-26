@@ -86,6 +86,19 @@ export class CommunitiesComponent implements OnInit {
 
   // Settings/Photo State
   photoUploading = false;
+  allowFilesLoading = false;
+
+  // Member count
+  memberCount: number | null = null;
+  memberCountLoading = false;
+
+  // Delete loading states
+  deletePostLoadingId: string | null = null;
+  deleteReplyLoadingId: string | null = null;
+
+  get currentUserId(): string | null {
+    return this.authService.getCurrentUserId();
+  }
 
   // Forms
   createForm = this.fb.group({
@@ -293,11 +306,12 @@ export class CommunitiesComponent implements OnInit {
         this.selectedDetail = detail;
         this.activeCommunityId = detail?.id ?? id;
         this.showToast('success', 'Community details loaded!');
-        
-        // Prefetch basic lists
+
+        // Prefetch basic lists and stats
         this.viewLeaderboard(this.activeCommunityId);
         this.loadPosts(this.activeCommunityId);
         this.loadFiles(this.activeCommunityId);
+        this.fetchMemberCount(this.activeCommunityId);
       },
       error: (err) => {
         this.detailLoadingId = null;
@@ -336,6 +350,7 @@ export class CommunitiesComponent implements OnInit {
     this.selectedPost = null;
     this.files = [];
     this.activeTab = 'overview';
+    this.memberCount = null;
   }
 
   copyJoinCode(code?: string) {
@@ -347,6 +362,82 @@ export class CommunitiesComponent implements OnInit {
     navigator.clipboard.writeText(code)
       .then(() => this.showToast('success', 'Join code copied to clipboard.'))
       .catch(() => this.showToast('error', 'Unable to copy join code.'));
+  }
+
+  // ─── MEMBER COUNT ──────────────────────────────────
+
+  fetchMemberCount(communityId: string) {
+    this.memberCountLoading = true;
+    this.communityService.getMemberCount(communityId).subscribe({
+      next: (res) => {
+        this.memberCountLoading = false;
+        if (res.isSuccess) this.memberCount = res.data ?? null;
+      },
+      error: () => { this.memberCountLoading = false; }
+    });
+  }
+
+  // ─── COMMUNITY SETTINGS ────────────────────────────
+
+  toggleAllowFiles() {
+    if (!this.activeCommunityId || !this.selectedDetail) return;
+    const newValue = !this.selectedDetail.allowMembersToAddFiles;
+    this.allowFilesLoading = true;
+    this.communityService.updateCommunitySettings(this.activeCommunityId, newValue).subscribe({
+      next: (res) => {
+        this.allowFilesLoading = false;
+        if (res.isSuccess) {
+          this.selectedDetail!.allowMembersToAddFiles = newValue;
+          this.showToast('success', `Members can ${newValue ? 'now' : 'no longer'} upload files.`);
+        } else {
+          this.showToast('error', res.message || 'Failed to update settings');
+        }
+      },
+      error: (err) => {
+        this.allowFilesLoading = false;
+        this.showToast('error', `Settings update failed: ${err.message}`);
+      }
+    });
+  }
+
+  // ─── DELETE POST / REPLY ────────────────────────────
+
+  removePost(post: Post) {
+    if (!this.activeCommunityId) return;
+    if (!confirm('Delete this post and all its replies?')) return;
+    this.deletePostLoadingId = post.id;
+    this.communityService.deletePost(this.activeCommunityId, post.id).subscribe({
+      next: () => {
+        this.deletePostLoadingId = null;
+        this.posts = this.posts.filter(p => p.id !== post.id);
+        if (this.selectedPost?.id === post.id) this.selectedPost = null;
+        this.showToast('success', 'Post deleted.');
+      },
+      error: (err) => {
+        this.deletePostLoadingId = null;
+        this.showToast('error', `Failed to delete post: ${err.message}`);
+      }
+    });
+  }
+
+  removeReply(replyId: string) {
+    if (!this.activeCommunityId || !this.selectedPost) return;
+    if (!confirm('Delete this reply?')) return;
+    this.deleteReplyLoadingId = replyId;
+    this.communityService.deleteReply(this.activeCommunityId, this.selectedPost.id, replyId).subscribe({
+      next: () => {
+        this.deleteReplyLoadingId = null;
+        if (this.selectedPost?.replies) {
+          this.selectedPost.replies = this.selectedPost.replies.filter(r => r.id !== replyId);
+          this.selectedPost.replyCount = Math.max(0, (this.selectedPost.replyCount || 0) - 1);
+        }
+        this.showToast('success', 'Reply deleted.');
+      },
+      error: (err) => {
+        this.deleteReplyLoadingId = null;
+        this.showToast('error', `Failed to delete reply: ${err.message}`);
+      }
+    });
   }
 
   // ─── POSTS & DISCUSSIONS ───────────────────────────
@@ -570,29 +661,41 @@ export class CommunitiesComponent implements OnInit {
   }
 
   /**
-   * Get the first workspace ID then call the AI.
+   * Resolve the best workspace to use for AI calls on a community file.
+   *
+   * Community files live in community storage, not personal workspace storage.
+   * The backend auto-creates a "<CommunityName> Workspace" for each community
+   * and those files should be accessible via that workspace.
+   * We therefore prefer the community workspace; only fall back to a personal
+   * workspace if no community workspace is found.
    */
   private resolveWorkspaceAndCallAi(
     communityId: string, post: Post, fileId: string, fileName: string, userId: string, userText: string
   ) {
-    // Try cached spaces first
-    const cachedSpaces = (this.spaceService as any)['spacesSubject']?.value;
-    if (cachedSpaces && cachedSpaces.length > 0) {
-      const workspaceId: string = cachedSpaces[0].id;
-      this.askAiQuestion(communityId, post, fileId, fileName, userId, workspaceId, userText);
-      return;
-    }
+    // Community files are stored in the UPLOADER's namespace and indexed in their workspace.
+    // If the current user is not the uploader, using our own workspace would fail with
+    // "files not found". We load the post author's spaces instead.
+    const fileAuthorId = post.authorUserId || userId;
 
-    // Fetch from API properly using spaceService to map and populate caches
-    this.spaceService.loadSpaces().subscribe({
+    this.spaceService.loadSpacesForUser(fileAuthorId).subscribe({
       next: (spaces) => {
-        if (spaces && spaces.length > 0) {
-          const workspaceId: string = spaces[0].id;
-          this.askAiQuestion(communityId, post, fileId, fileName, userId, workspaceId, userText);
-        } else {
+        if (!spaces || spaces.length === 0) {
           this.postAiError(communityId, post,
-            'You need at least one study space in your Dashboard to use the @ai feature.');
+            'The file uploader\'s workspace could not be reached. Please try again later.');
+          return;
         }
+
+        const communityName = (this.selectedDetail?.name ?? '').trim().toLowerCase();
+        const communityWorkspace = spaces.find(s => {
+          const title = (s.title ?? '').trim().toLowerCase();
+          return title === `${communityName} workspace` || title === communityName;
+        });
+
+        const workspaceId = communityWorkspace?.id ?? spaces[0].id;
+        console.log('[AI] Using workspace:', workspaceId,
+          communityWorkspace ? '(author community workspace)' : '(author personal fallback)',
+          'authorId:', fileAuthorId);
+        this.askAiQuestion(communityId, post, fileId, fileName, userId, workspaceId, userText, fileAuthorId);
       },
       error: () => {
         this.postAiError(communityId, post, 'Could not reach the AI service. Please try again.');
@@ -602,10 +705,12 @@ export class CommunitiesComponent implements OnInit {
 
   /**
    * Use chat sessions to answer custom questions about the community file.
+   * @param fileAuthorId - the userId of the person who uploaded the file; all chat API
+   *   calls use this ID in the URL path so the backend resolves files in the correct namespace.
    */
   private askAiQuestion(
     communityId: string, post: Post, fileId: string,
-    fileName: string, userId: string, workspaceId: string, userText: string
+    fileName: string, userId: string, workspaceId: string, userText: string, fileAuthorId?: string
   ) {
     if (!fileId) {
       this.postAiError(communityId, post,
@@ -616,12 +721,14 @@ export class CommunitiesComponent implements OnInit {
     const userQuestion = userText.replace(/^@ai\s*/i, '').trim();
     const query = userQuestion || 'Summarize this file and give me a recap of its contents.';
 
-    // 1. Create a chat session with the file
+    // Use the file author's userId in the API path so the backend looks up files
+    // in the correct storage namespace (not the current user's namespace).
+    const authorId = fileAuthorId || userId;
     const sessionTitle = `Community AI - ${fileName}`;
-    this.chatService.createSession(workspaceId, [fileId], sessionTitle).subscribe({
+
+    this.chatService.createSession(workspaceId, [fileId], sessionTitle, authorId).subscribe({
       next: (session) => {
-        // 2. Send the message (question)
-        this.chatService.sendMessage(workspaceId, session.id, query, [fileId]).subscribe({
+        this.chatService.sendMessage(workspaceId, session.id, query, [fileId], authorId).subscribe({
           next: (chatRes) => {
             console.log('[AI] sendMessage success. Response:', chatRes);
             const replyText = chatRes?.assistantMessage?.content;
@@ -630,8 +737,7 @@ export class CommunitiesComponent implements OnInit {
             } else {
               this.postAiError(communityId, post, 'AI did not return an answer. Please try again.');
             }
-            // 3. Clean up the temporary chat session so it doesn't clutter the user's sidebar
-            this.chatService.deleteSession(workspaceId, session.id).subscribe({
+            this.chatService.deleteSession(workspaceId, session.id, authorId).subscribe({
               error: (delErr) => console.warn('Could not clean up temporary chat session:', delErr)
             });
           },
@@ -639,15 +745,14 @@ export class CommunitiesComponent implements OnInit {
             console.error('[AI] sendMessage failed:', err);
             const msg = err?.error?.message || err?.message || 'AI failed to process this request.';
             this.postAiError(communityId, post, msg);
-            // Clean up the session on error too
-            this.chatService.deleteSession(workspaceId, session.id).subscribe();
+            this.chatService.deleteSession(workspaceId, session.id, authorId).subscribe();
           }
         });
       },
       error: (err) => {
         console.error('[AI] createSession failed:', err);
-        const msg = err?.error?.message || err?.message || 'Failed to initialize AI session.';
-        this.postAiError(communityId, post, msg);
+        const raw = err?.error?.message || err?.message || '';
+        this.postAiError(communityId, post, raw || 'Failed to initialize AI session.');
       }
     });
   }
@@ -1119,17 +1224,29 @@ export class CommunitiesComponent implements OnInit {
     return null;
   }
 
-  /** Download a file from a SAS URL by fetching the blob */
+  /** Fetch the file bytes from an Azure SAS URL and trigger a browser download. */
   private downloadFromSasUrl(sasUrl: string, fileName: string) {
     fetch(sasUrl)
       .then(response => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return response.blob();
       })
-      .then(blob => this.triggerBlobDownload(blob, fileName))
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        // Delay revoke so Chrome finishes writing to disk before the blob is released.
+        setTimeout(() => window.URL.revokeObjectURL(url), 30_000);
+        this.showToast('success', 'File downloaded successfully!');
+      })
       .catch(err => {
         console.error('[DL] SAS blob fetch failed:', err);
-        this.showToast('error', 'Download failed: Could not retrieve file.');
+        this.showToast('error', 'Download failed. Please try again.');
       });
   }
 
@@ -1191,8 +1308,14 @@ export class CommunitiesComponent implements OnInit {
     const link = document.createElement('a');
     link.href = url;
     link.download = fileName;
+    link.style.display = 'none';
+    document.body.appendChild(link);
     link.click();
-    window.URL.revokeObjectURL(url);
+    document.body.removeChild(link);
+    // Revoke after a delay — click() is non-blocking and Chrome writes the file
+    // asynchronously. Revoking immediately truncates the blob before the OS
+    // finishes saving it, producing an empty/corrupt file at the file:// path.
+    setTimeout(() => window.URL.revokeObjectURL(url), 10_000);
     this.showToast('success', 'File downloaded successfully!');
   }
 
