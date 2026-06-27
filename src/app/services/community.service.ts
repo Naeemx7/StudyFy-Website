@@ -6,7 +6,7 @@
 
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, Observable, tap, map, switchMap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
 import {
@@ -251,13 +251,29 @@ export class CommunityService {
   /** GET /users/{userId}/communities/{communityId}/files/{fileId}/download — download a file */
   downloadCommunityFile(communityId: string, fileId: string): Observable<Blob> {
     const url = `${this.userPath()}/communities/${communityId}/files/${fileId}/download`;
-    return this.http.get(url, { responseType: 'blob' });
+    return this.http.get<ApiResponse<Record<string, string>>>(url).pipe(
+      map(res => {
+        if (!res.isSuccess) throw new Error(res.message || 'Download failed');
+        const downloadUrl = Object.values(res.data || {})[0];
+        if (!downloadUrl) throw new Error('No download URL returned by server');
+        return downloadUrl;
+      }),
+      switchMap(downloadUrl => this.http.get(downloadUrl, { responseType: 'blob' }))
+    );
   }
 
   /** Same as downloadCommunityFile but using a specific user's ID (for cross-user downloads) */
   downloadCommunityFileAsUser(userId: string, communityId: string, fileId: string): Observable<Blob> {
     const url = `${environment.apiUrl}/users/${userId}/communities/${communityId}/files/${fileId}/download`;
-    return this.http.get(url, { responseType: 'blob' });
+    return this.http.get<ApiResponse<Record<string, string>>>(url).pipe(
+      map(res => {
+        if (!res.isSuccess) throw new Error(res.message || 'Download failed');
+        const downloadUrl = Object.values(res.data || {})[0];
+        if (!downloadUrl) throw new Error('No download URL returned by server');
+        return downloadUrl;
+      }),
+      switchMap(downloadUrl => this.http.get(downloadUrl, { responseType: 'blob' }))
+    );
   }
 
   /** Same as getCommunityStorageSas but using a specific user's ID */
