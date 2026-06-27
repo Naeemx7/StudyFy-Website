@@ -1628,7 +1628,14 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
     // Build per-tag stats from the tagName stored on each question
     const tagMap = new Map<string, { total: number; correct: number }>();
     for (const q of this.quizQuestions) {
-      const key = q.tagName ?? (this.fileTags[0] ?? 'General');
+      let key = q.tagName;
+      // If AI hallucinated a tag not on the file, fallback to the file's primary tag
+      if (!key || (this.fileTags.length > 0 && !this.fileTags.includes(key))) {
+        key = this.fileTags.length > 0 ? this.fileTags[0] : 'General';
+      } else if (!key) {
+        key = 'General';
+      }
+
       const entry = tagMap.get(key) ?? { total: 0, correct: 0 };
       entry.total++;
       if (q.isCorrect) entry.correct++;
