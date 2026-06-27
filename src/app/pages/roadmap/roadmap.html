@@ -1,249 +1,302 @@
-<section class="bg-white pt-20 relative">
-  <div class="mx-auto w-full max-w-screen-2xl px-4 sm:px-6 lg:px-8">
-    <!-- Top header -->
-    <div class="py-6">
-      <button
-        type="button"
-        class="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition"
-        (click)="goBack()"
-      >
-        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-        </svg>
-        Back to Dashboard
-      </button>
+<div class="min-h-screen bg-[#f9f9f9] flex font-sans">
 
-      @if (spaceTitle) {
-      <div>
-        <div class="text-2xl font-extrabold text-gray-900">{{ spaceTitle }}</div>
-        @if (spaceSubtitle) {
-        <div class="text-sm text-gray-500 mt-1">{{ spaceSubtitle }}</div>
+  <!-- ── Sidebar (identical to Dashboard) ── -->
+  <aside class="fixed top-0 left-0 h-full w-[256px] bg-[#f2f4f4] flex flex-col px-4 py-8 z-20">
+    <div class="px-4 mb-10">
+      <div class="flex items-center gap-3 h-[38px]">
+        <img src="assets/settings/logo-cropped.png" alt="Studyfy Logo" class="w-[47px] h-[46px] object-contain shrink-0">
+        <span class="text-[20px] font-bold text-[#2d3435] leading-[22.5px]">Studyfy</span>
+      </div>
+    </div>
+
+    <nav class="flex flex-col gap-1 flex-1">
+      <a routerLink="/dashboard"
+         class="flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-medium text-[#596061] tracking-[0.35px] hover:bg-white/60 transition-all">
+        <div class="w-[16px] h-[18px] flex items-center justify-center shrink-0">
+          <img src="assets/settings/icon-home.svg" alt="Home" class="w-full h-full block">
+        </div>
+        Home
+      </a>
+
+      <a routerLink="/analytics"
+         class="flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-medium text-[#596061] tracking-[0.35px] hover:bg-white/60 transition-all">
+        <div class="w-[18px] h-[18px] flex items-center justify-center shrink-0">
+          <img src="assets/settings/icon-analytics.svg" alt="Analytics" class="w-full h-full block">
+        </div>
+        Analytics
+      </a>
+
+      <a routerLink="/communities"
+         class="flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-medium text-[#596061] tracking-[0.35px] hover:bg-white/60 transition-all">
+        <div class="w-[22px] h-[16px] flex items-center justify-center shrink-0">
+          <img src="assets/settings/icon-community.svg" alt="Community" class="w-full h-full block">
+        </div>
+        Community
+      </a>
+
+      <a routerLink="/profile"
+         class="flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-medium text-[#596061] tracking-[0.35px] hover:bg-white/60 transition-all">
+        <div class="w-[16px] h-[16px] flex items-center justify-center shrink-0">
+          <img src="assets/settings/icon-profile.svg" alt="Profile" class="w-full h-full block">
+        </div>
+        Profile
+      </a>
+    </nav>
+  </aside>
+
+  <!-- ── Main Content ── -->
+  <div class="flex-1 pl-[256px] flex flex-col min-h-screen">
+
+    <!-- Top Bar -->
+    <header class="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[rgba(172,179,180,0.15)] h-[64px] flex items-center px-6 gap-4">
+
+      <!-- Search -->
+      <div class="relative flex-1 max-w-[360px]">
+        <img src="assets/settings/icon-search.svg" alt="Search" class="absolute left-[14.5px] top-[12.5px] w-[15px] h-[15px] pointer-events-none">
+        <input
+          type="text"
+          placeholder="Search across documents and AI chats..."
+          class="bg-[#f2f4f4] rounded-full pl-10 pr-4 py-[10px] text-[12px] font-medium text-[#6b7280] w-full outline-none placeholder:text-[#6b7280]"
+        />
+      </div>
+
+      <!-- Right actions -->
+      <div class="flex items-center gap-4 ml-auto">
+        <!-- Streak badge -->
+        <div class="flex items-center gap-[4px] bg-[rgba(0,110,47,0.1)] px-[12px] py-[6px] rounded-full h-[28px]">
+          <div class="w-[9.33px] h-[10.5px] relative shrink-0">
+            <img src="assets/settings/icon-streak-flame.svg" alt="Streak" class="absolute inset-0 w-full h-full block">
+          </div>
+          <span class="text-[12px] font-bold text-[#006e2f] whitespace-nowrap">{{ streak }} DAY STREAK</span>
+        </div>
+
+        <!-- Notification bell -->
+        <button class="p-[8px] rounded-full hover:bg-[#f2f4f4] transition-colors h-[32px] w-[32px] flex items-center justify-center">
+          <div class="w-[13.33px] h-[16.67px] relative shrink-0">
+            <img src="assets/settings/icon-bell.svg" alt="Notifications" class="absolute inset-0 w-full h-full block">
+          </div>
+        </button>
+
+        <!-- Avatar Dropdown -->
+        @if (currentUser$ | async; as user) {
+          <div class="relative ml-1">
+            <button (click)="toggleAvatarDropdown(); $event.stopPropagation()"
+                    class="flex items-center gap-[6px] hover:bg-gray-50 rounded-full pr-[6px] py-[4px] pl-[4px] transition-all border border-transparent hover:border-gray-100">
+              <div class="w-8 h-8 rounded-full overflow-hidden border border-[rgba(172,179,180,0.3)] flex items-center justify-center bg-[#e2dfff] shrink-0">
+                @if (navPhotoUrl) {
+                  <img [src]="navPhotoUrl" alt="avatar" class="w-full h-full object-cover" />
+                } @else {
+                  <span class="text-[12px] font-bold text-[#4f46e5]">{{ getInitials(user.googleDisplayName || user.userName) }}</span>
+                }
+              </div>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-gray-400 mr-[4px]" [class.rotate-180]="avatarDropdownOpen">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+
+            @if (avatarDropdownOpen) {
+              <div (click)="$event.stopPropagation()" class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-gray-100 py-1 z-50">
+                <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/50 rounded-t-xl">
+                  <p class="text-sm font-semibold text-gray-900">{{ getDisplayName(user.googleDisplayName || user.userName) }}</p>
+                  <p class="text-xs text-gray-500 truncate">{{ user.email }}</p>
+                </div>
+                <div class="p-1">
+                  <a routerLink="/profile" (click)="closeAvatarDropdown()" class="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg> Profile
+                  </a>
+                  <a routerLink="/settings" (click)="closeAvatarDropdown()" class="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg> Settings
+                  </a>
+                </div>
+                <div class="border-t border-gray-100 p-1">
+                  <button (click)="logout()" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-[#9e3f4e] hover:bg-[rgba(255,139,154,0.1)] rounded-lg transition-colors text-left">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg> Log Out
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
         }
       </div>
-      }
-    </div>
+    </header>
 
-    <!-- Main Card -->
-    <div class="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8 shadow-soft">
-      <div class="flex items-start justify-between gap-6">
-        <div>
-          <h1 class="text-3xl font-extrabold tracking-tight text-gray-900">Study Materials</h1>
-          <p class="mt-1 text-sm text-gray-600">Upload files and open them in the AI Workspace</p>
-        </div>
+    <!-- Page Content -->
+    <main class="flex-1 px-6 py-8">
 
-        <div class="text-right">
-          <div class="text-3xl font-extrabold text-gray-900">{{ totalCount }}</div>
-          <div class="text-xs text-gray-500">{{ totalCount === 1 ? 'File' : 'Files' }}</div>
-        </div>
+      <!-- Breadcrumb -->
+      <div class="flex items-center gap-2 text-[14px] text-[#596061] mb-4">
+        <a routerLink="/dashboard" class="hover:text-[#2d3435] transition-colors">Home</a>
+        <svg width="6" height="10" viewBox="0 0 6 10" fill="none" stroke="#596061" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 1l4 4-4 4"/>
+        </svg>
+        <span class="text-[#2d3435] font-medium">{{ spaceTitle }}</span>
       </div>
-    </div>
 
-    <!-- Error message -->
-    @if (errorMessage) {
-    <div
-      class="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
-    >
-      {{ errorMessage }}
-    </div>
-    }
+      <!-- Title & Description -->
+      <div class="mb-8">
+        <h1 class="text-[32px] font-bold text-[#2d3435] leading-[40px] mb-2">{{ spaceTitle }}</h1>
+        @if (spaceSubtitle) {
+          <p class="text-[14px] text-[#596061] leading-[20px] max-w-[600px]">{{ spaceSubtitle }}</p>
+        }
+      </div>
 
-    <!-- Upload progress (while uploading) -->
-    @if (isUploading) {
-    <div class="mt-4 space-y-2">
-      @for (p of uploadProgress; track p.fileName) {
-      <div
-        class="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3"
-      >
-        <div class="min-w-0 flex-1">
-          <div class="text-sm font-semibold text-gray-900 truncate">{{ p.fileName }}</div>
-          <div class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
-            <div
-              class="h-full rounded-full bg-black transition-all"
-              [style.width.%]="p.progress"
-            ></div>
+      <!-- Two-column Layout -->
+      <div class="flex gap-6 items-start">
+
+        <!-- Left: Files Panel -->
+        <div class="flex-1 bg-white border border-[#e5e7eb] rounded-[8px] overflow-hidden">
+
+          <!-- Files Header -->
+          <div class="flex items-center justify-between px-6 py-4 border-b border-[#e5e7eb]">
+            <span class="text-[14px] font-bold text-[#2d3435]">Files</span>
+            <span class="text-[14px] font-medium text-[#596061]">{{ totalCount }} Total</span>
           </div>
-        </div>
-        <div class="text-xs font-semibold text-gray-500">{{ p.progress }}%</div>
-      </div>
-      }
-    </div>
-    }
 
-    <!-- Grid -->
-    <div class="mt-10 grid gap-6 lg:grid-cols-3">
-      <div class="lg:col-span-2">
-        <div class="flex items-center justify-between">
-          <h2 class="text-xs font-bold tracking-[0.16em] text-gray-500">YOUR FILES</h2>
+          <!-- File List -->
+          <div class="divide-y divide-[#f2f4f4]">
 
-          <button
-            type="button"
-            class="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50 transition"
-            (click)="openPicker(fileInput)"
-            [disabled]="isUploading"
-          >
-            <svg
-              class="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="2"
-              stroke="currentColor"
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            Add File
-          </button>
-        </div>
-
-        <!-- File list -->
-        <div class="mt-4 space-y-4">
-          @for (f of files; track f.id; let i = $index) {
-          <button
-            type="button"
-            class="w-full rounded-2xl border border-gray-200 bg-white p-5 text-left shadow-sm transition hover:bg-gray-50 hover:border-gray-300"
-            (click)="openWorkspace(f)"
-          >
-            <div class="flex items-start gap-4">
-              <!-- File icon -->
-              <div class="relative">
-                <div
-                  class="grid h-12 w-12 place-items-center rounded-full bg-gray-100 text-2xl shadow-sm"
-                >
-                  {{ getFileIcon(f.type) }}
+            <!-- Upload Progress Items -->
+            @for (p of uploadProgress; track p.fileName) {
+              <div class="flex items-center gap-4 px-6 py-4">
+                <div class="w-[36px] h-[36px] bg-[#f2f4f4] rounded-[6px] flex items-center justify-center shrink-0">
+                  <svg class="w-4 h-4 text-[#4f46e5] animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                  </svg>
                 </div>
-                <div
-                  class="absolute -right-1 -top-1 grid h-6 w-6 place-items-center rounded-full bg-white text-xs font-bold text-gray-900 shadow"
-                >
-                  {{ i + 1 }}
-                </div>
-              </div>
-
-              <!-- Content -->
-              <div class="min-w-0 flex-1">
-                <div class="flex items-start justify-between gap-4">
-                  <div class="min-w-0">
-                    <div class="truncate text-base font-extrabold text-gray-900">{{ f.name }}</div>
-                    <div class="mt-1 text-sm text-gray-500">
-                      {{ formatSize(f.size) }} &bull; {{ f.type || 'Unknown type' }}
-                    </div>
-                  </div>
-
-                  <div class="flex items-center gap-3">
-                    <button
-                      type="button"
-                      class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
-                      (click)="removeFile(f.id, $event)"
-                    >
-                      Remove
-                    </button>
-                    <svg
-                      class="h-6 w-6 text-gray-400"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke-width="2"
-                      stroke="currentColor"
-                    >
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                    </svg>
+                <div class="flex-1 min-w-0">
+                  <p class="text-[14px] font-semibold text-[#2d3435] truncate">Uploading... {{ p.progress }}%</p>
+                  <div class="h-[3px] bg-[#e5e7eb] rounded-full mt-2 overflow-hidden">
+                    <div class="h-full bg-[#4f46e5] rounded-full transition-all" [style.width.%]="p.progress"></div>
                   </div>
                 </div>
+                <button class="text-[#acb3b4] hover:text-[#2d3435] transition-colors">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
               </div>
-            </div>
-          </button>
-          }
+            }
 
-          <!-- Empty state -->
-          @if (files.length === 0 && !isUploading) {
+            <!-- Actual Files -->
+            @for (file of files; track file.id) {
+              <div class="flex items-center gap-4 px-6 py-4 group hover:bg-[#fafafa] cursor-pointer" (click)="openWorkspace(file)">
+                <!-- File Icon -->
+                <div class="w-[36px] h-[36px] bg-[#fff5f5] border border-[#fecaca] rounded-[6px] flex items-center justify-center shrink-0">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7 10.5H8V8.5H9C9.28333 8.5 9.52083 8.40417 9.7125 8.2125C9.90417 8.02083 10 7.78333 10 7.5V6.5C10 6.21667 9.90417 5.97917 9.7125 5.7875C9.52083 5.59583 9.28333 5.5 9 5.5H7V10.5V10.5M8 7.5V6.5H9V7.5H8V7.5M11 10.5H13C13.2833 10.5 13.5208 10.4042 13.7125 10.2125C13.9042 10.0208 14 9.78333 14 9.5V6.5C14 6.21667 13.9042 5.97917 13.7125 5.7875C13.5208 5.59583 13.2833 5.5 13 5.5H11V10.5V10.5M12 9.5V6.5H13V9.5H12V9.5M15 10.5H16V8.5H17V7.5H16V6.5H17V5.5H15V10.5V10.5M6 16C5.45 16 4.97917 15.8042 4.5875 15.4125C4.19583 15.0208 4 14.55 4 14V2C4 1.45 4.19583 0.979167 4.5875 0.5875C4.97917 0.195833 5.45 0 6 0H18C18.55 0 19.0208 0.195833 19.4125 0.5875C19.8042 0.979167 20 1.45 20 2V14C20 14.55 19.8042 15.0208 19.4125 15.4125C19.0208 15.8042 18.55 16 18 16H6V16M6 14H18V14V14V2V2V2H6V2V2V14V14V14V14M2 20C1.45 20 0.979167 19.8042 0.5875 19.4125C0.195833 19.0208 0 18.55 0 18V4H2V18V18V18H16V20H2V20M6 2V2V2V2V14V14V14V14V14V14V2V2V2V2" fill="#EF4444"/>
+                  </svg>
+                </div>
+                <!-- File Info -->
+                <div class="flex-1 min-w-0">
+                  <p class="text-[14px] font-semibold text-[#2d3435] truncate">{{ file.name }}</p>
+                  @if (file.uploadedAt) {
+                    <p class="text-[12px] text-[#acb3b4]">{{ file.uploadedAt | date:'MMM dd, yyyy' }}</p>
+                  }
+                </div>
+                <!-- Delete icon (hover) -->
+                <button (click)="removeFile(file.id, $event)"
+                        class="opacity-0 group-hover:opacity-100 p-1.5 text-[#acb3b4] hover:text-[#9e3f4e] transition-all">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                  </svg>
+                </button>
+              </div>
+            }
+
+            <!-- Empty State -->
+            @if (files.length === 0 && uploadProgress.length === 0 && !loadingFiles) {
+              <div class="px-6 py-8 text-center text-[14px] text-[#acb3b4]">
+                No files yet. Upload your first file below.
+              </div>
+            }
+          </div>
+
+          <!-- Drag and Drop Zone -->
+          <input #fileInput type="file" multiple class="hidden" accept=".pdf,.txt,.doc,.docx,.mp3,.mp4" (change)="onFilesSelected($event)">
           <div
-            class="rounded-2xl border border-dashed border-gray-200 bg-white p-10 text-center text-sm text-gray-500"
-          >
-            Upload files to start studying with the AI Workspace.
-          </div>
-          }
-
-          <!-- Upload more study material -->
-          <button
-            type="button"
-            class="w-full rounded-2xl border border-dashed border-gray-200 bg-white p-7 text-left hover:bg-gray-50 transition"
+            class="m-4 border-2 border-dashed rounded-[8px] py-8 px-6 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all"
+            [class.border-[#4f46e5]]="isDragActive"
+            [class.bg-[#f5f5ff]]="isDragActive"
+            [class.border-[#e5e7eb]]="!isDragActive"
             (click)="openPicker(fileInput)"
-            [disabled]="isUploading"
+            (dragover)="onDragOver($event)"
+            (dragleave)="onDragLeave($event)"
+            (drop)="onDrop($event)"
           >
-            <div class="flex items-center gap-4">
-              <div class="grid h-12 w-12 place-items-center rounded-full bg-gray-100 text-gray-600">
-                <svg
-                  class="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke-width="2"
-                  stroke="currentColor"
-                >
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-              </div>
-              <div class="text-base font-semibold text-gray-900">Upload more study material</div>
+            <div class="w-[40px] h-[40px] shrink-0 text-[#4f46e5] flex items-center justify-center">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
             </div>
-          </button>
-
-          <input
-            #fileInput
-            type="file"
-            class="hidden"
-            multiple
-            accept=".pdf,.doc,.docx,.ppt,.pptx,.txt"
-            (change)="onFilesSelected($event)"
-          />
-        </div>
-      </div>
-
-      <!-- RIGHT sidebar -->
-      <div class="space-y-6">
-        <!-- Info card -->
-        <div class="rounded-2xl border border-gray-200 bg-white p-6">
-          <div class="text-xs font-bold tracking-[0.16em] text-gray-500">HOW IT WORKS</div>
-          <div class="mt-4 space-y-3 text-sm text-gray-600">
-            <div class="flex items-start gap-3">
-              <span class="mt-0.5 text-lg">📤</span>
-              <span>Upload your study materials (PDF, Word, TXT)</span>
-            </div>
-            <div class="flex items-start gap-3">
-              <span class="mt-0.5 text-lg">🤖</span>
-              <span>Click a file to open the AI Workspace</span>
-            </div>
-            <div class="flex items-start gap-3">
-              <span class="mt-0.5 text-lg">💡</span>
-              <span>Get summaries, flashcards, and take quizzes</span>
-            </div>
+            <p class="text-[14px] text-[#596061]">
+              Drag and drop files here or <span class="text-[#4f46e5] font-semibold cursor-pointer hover:underline">click to browse</span>
+            </p>
           </div>
+
+          <!-- Error -->
+          @if (errorMessage) {
+            <div class="mx-4 mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">{{ errorMessage }}</div>
+          }
         </div>
 
-        <!-- Quick Actions card -->
-        <div class="rounded-2xl border border-gray-200 bg-white p-6">
-          <div class="text-xs font-bold tracking-[0.16em] text-gray-500">QUICK ACTIONS</div>
-          <div class="mt-4 space-y-3">
-            <button
-              class="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50 transition"
-              (click)="openPicker(fileInput)"
-              [disabled]="isUploading"
-            >
-              Upload Files
+        <!-- Right Sidebar -->
+        <div class="w-[220px] shrink-0 flex flex-col gap-4 sticky top-[88px] self-start">
+
+          <!-- Quick Actions Card -->
+          <div class="bg-white border border-[#e5e7eb] rounded-[8px] p-4 flex flex-col gap-3">
+            <span class="text-[11px] font-bold text-[#596061] tracking-[0.6px] uppercase">Quick Actions</span>
+
+            <!-- Upload New File -->
+            <button (click)="openPicker(fileInput)"
+                    class="w-full bg-[#4f46e5] text-white text-[14px] font-semibold rounded-[8px] py-[10px] flex items-center justify-center gap-2 hover:bg-[#3d34d3] transition-colors">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Upload New File
             </button>
+
+            <!-- Generate Quiz -->
+            <a routerLink="/quiz"
+               class="w-full border border-[#4f46e5] text-[#4f46e5] text-[14px] font-semibold rounded-[8px] py-[10px] flex flex-col items-center justify-center gap-1 hover:bg-[#f5f5ff] transition-colors text-center">
+              <div class="flex items-center gap-2">
+                <img src="assets/dashboard/icon-quiz.svg" alt="Quiz" class="w-[16px] h-[16px] block">
+                <span>Generate Quiz</span>
+              </div>
+              <span class="text-[11px] font-normal text-[#596061]">Select files & create a quiz</span>
+            </a>
+
+            <!-- View Analytics -->
+            <a routerLink="/analytics"
+               class="w-full border border-[#4f46e5] text-[#4f46e5] text-[14px] font-semibold rounded-[8px] py-[10px] flex items-center justify-center gap-2 hover:bg-[#f5f5ff] transition-colors">
+              <img src="assets/dashboard/icon-analytics.svg" alt="Analytics" class="w-[16px] h-[12px] block">
+              View Analytics
+            </a>
           </div>
+
+          <!-- Total Files Card -->
+          <div class="bg-white border border-[#e5e7eb] rounded-[8px] p-[25px] flex flex-col items-center gap-2">
+            <div class="w-[24px] h-[24px] shrink-0">
+              <img src="assets/dashboard/icon-file.svg" alt="Files" class="w-full h-full block">
+            </div>
+            <span class="text-[11px] font-bold text-[#596061] tracking-[0.6px] uppercase">Total Files</span>
+            <span class="text-[32px] font-bold text-[#2d3435] leading-[40px]">{{ totalCount }}</span>
+          </div>
+
+          <!-- Total Quizzes Card (placeholder — loaded from API) -->
+          <div class="bg-white border border-[#e5e7eb] rounded-[8px] p-[25px] flex flex-col items-center gap-2">
+            <div class="w-[24px] h-[24px] shrink-0">
+              <img src="assets/dashboard/icon-quizzes-done.svg" alt="Quizzes" class="w-full h-full block">
+            </div>
+            <span class="text-[11px] font-bold text-[#596061] tracking-[0.6px] uppercase">Total Quizzes</span>
+            <span class="text-[32px] font-bold text-[#2d3435] leading-[40px]">--</span>
+          </div>
+
         </div>
       </div>
-    </div>
-
-    <div class="py-10"></div>
+    </main>
   </div>
 
-  <!-- Drag overlay -->
-  @if (isDragActive) {
-  <div
-    class="absolute inset-0 z-20 grid place-items-center bg-black/20 backdrop-blur-sm"
-  >
-    <div
-      class="rounded-2xl border-2 border-dashed border-gray-400 bg-white px-10 py-8 text-base font-semibold text-gray-800 shadow-sm"
-    >
-      Drop files anywhere to upload
-    </div>
-  </div>
-  }
-</section>
+</div>

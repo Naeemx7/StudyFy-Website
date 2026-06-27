@@ -1,14 +1,16 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, ActivatedRoute } from '@angular/router';
-import { forkJoin, of } from 'rxjs';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
+import { forkJoin, of, Subscription } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { StorageService } from '../../services/storage.service';
 import { SpaceService } from '../../services/space.service';
+import { AuthService } from '../../services/auth.service';
+import { AnalyticsService } from '../../services/analytics.service';
 import { UploadProgress } from '../../models/storage.models';
 
 interface RoadmapFile {
-  id: string;        // fileId from backend (or temp id before content extraction)
+  id: string;
   name: string;
   size: number;
   type: string;
@@ -18,11 +20,18 @@ interface RoadmapFile {
 @Component({
   selector: 'app-roadmap',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './roadmap.html',
   styleUrl: './roadmap.css',
 })
-export class RoadmapComponent implements OnInit {
+export class RoadmapComponent implements OnInit, OnDestroy {
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private storageService = inject(StorageService);
+  private spaceService = inject(SpaceService);
+  private auth = inject(AuthService);
+  private analyticsService = inject(AnalyticsService);
+
   spaceTitle = '';
   spaceSubtitle = '';
   spaceId = '';
@@ -36,15 +45,17 @@ export class RoadmapComponent implements OnInit {
   isDragActive = false;
   private dragCounter = 0;
 
-  constructor(
-    private router: Router,
-    private route: ActivatedRoute,
-    private storageService: StorageService,
-    private spaceService: SpaceService
-  ) {}
+  // New UI states
+  currentUser$ = this.auth.currentUser$;
+  streak = 0;
+  totalQuizzes = 0;
+  avatarDropdownOpen = false;
+  navPhotoUrl: string | null = null;
+  private lastPhotoId: string | undefined;
+  private userSub?: Subscription;
+  private spaceSub?: Subscription;
 
   ngOnInit(): void {
-    // Get spaceId from route params
     this.spaceId = this.route.snapshot.paramMap.get('spaceId') || '';
 
     if (!this.spaceId) {
@@ -57,19 +68,76 @@ export class RoadmapComponent implements OnInit {
       next: (space) => {
         this.spaceTitle = space.title;
         this.spaceSubtitle = space.description;
+        this.totalQuizzes = space.totalQuizzes ?? 0;
       },
       error: () => {
         this.spaceTitle = 'Study Space';
       }
     });
 
-    // Load saved files from localStorage
     this.loadFilesFromStorage();
 
-    // Subscribe to upload progress
     this.storageService.uploadProgress$.subscribe(progress => {
       this.uploadProgress = progress;
     });
+
+    // Load analytics for streak
+    this.analyticsService.getGlobalAnalytics().subscribe({
+      next: (data) => {
+        this.streak = data.currentStreak ?? 0;
+      }
+    });
+
+    // Handle user photo
+    this.userSub = this.auth.currentUser$.subscribe(user => {
+      if (user?.photoId && user.photoId !== this.lastPhotoId) {
+        this.lastPhotoId = user.photoId;
+        this.auth.fetchProfilePhoto().subscribe({
+          next: url => { this.navPhotoUrl = url; },
+          error: () => { this.navPhotoUrl = null; }
+        });
+      } else if (!user?.photoId && this.lastPhotoId) {
+        this.lastPhotoId = undefined;
+        this.navPhotoUrl = null;
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.userSub?.unsubscribe();
+    this.spaceSub?.unsubscribe();
+    if (this.navPhotoUrl) URL.revokeObjectURL(this.navPhotoUrl);
+  }
+
+  // ===== UI Helpers for Topbar =====
+  getDisplayName(name: string | undefined): string {
+    if (!name) return 'User';
+    if (name.includes('@')) return name.split('@')[0];
+    return name;
+  }
+
+  getInitials(name: string | undefined): string {
+    return name ? name.charAt(0).toUpperCase() : 'U';
+  }
+
+  toggleAvatarDropdown(): void {
+    this.avatarDropdownOpen = !this.avatarDropdownOpen;
+  }
+
+  closeAvatarDropdown(): void {
+    this.avatarDropdownOpen = false;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (this.avatarDropdownOpen) {
+      this.closeAvatarDropdown();
+    }
+  }
+
+  logout(): void {
+    this.auth.logout();
+    this.router.navigate(['/login']);
   }
 
   // ===== Upload =====
@@ -147,21 +215,15 @@ export class RoadmapComponent implements OnInit {
     this.isUploading = true;
     this.errorMessage = '';
 
-    // Step 1: Upload files to Azure via StorageService
     this.storageService.uploadFiles(this.spaceId, selected).subscribe({
       next: (fileNames) => {
-        // Step 2: Call GET /storage/content for each file.
-        // This is REQUIRED — the backend only saves the file to the database
-        // after this call. Without it, totalFiles stays wrong and AI features
-        // (summary, quiz, flashcards) cannot find the file.
         const registrations = fileNames.map(name =>
           this.storageService.getFileContent(this.spaceId, name).pipe(
-            catchError(() => of(null)) // don't fail the whole batch if one errors
+            catchError(() => of(null))
           )
         );
 
         forkJoin(registrations).subscribe(results => {
-          // Build file list using fileId from backend when available
           const mapped: RoadmapFile[] = selected.map((f, i) => ({
             id: results[i]?.fileId ?? f.name,
             name: f.name,
@@ -186,8 +248,20 @@ export class RoadmapComponent implements OnInit {
 
   removeFile(id: string, ev?: MouseEvent) {
     ev?.stopPropagation();
+    
+    const originalFiles = [...this.files];
     this.files = this.files.filter((f) => f.id !== id);
     this.saveFilesToStorage();
+
+    this.storageService.deleteFile(this.spaceId, id).subscribe({
+      next: () => console.log('File deleted from backend'),
+      error: (err) => {
+        console.error('Failed to delete file:', err);
+        this.files = originalFiles;
+        this.saveFilesToStorage();
+        this.errorMessage = 'Failed to delete file from server';
+      }
+    });
   }
 
   // ===== Navigation =====
