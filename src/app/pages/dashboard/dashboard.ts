@@ -1,26 +1,9 @@
-/**
- * Dashboard Component
- *
- * The main hub after login. Shows:
- * - Welcome message with user's name
- * - Quick stats: totalFiles + totalQuizzes from spaces API, streak + avgScore from analytics
- * - List of user's spaces with real progress percentages
- * - Create new space button/modal
- *
- * DATA FLOW:
- * 1. Component initializes (ngOnInit)
- * 2. loadSpaces() fetches spaces — each space already has totalFiles, totalQuizzes, progress
- * 3. spaces$ subscription sums totalFiles + totalQuizzes for stat cards
- * 4. loadAnalytics() fetches streak + avgScore (silently fails if backend 500s)
- */
-
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { combineLatest, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { NavbarComponent } from '../../components/navbar/navbar';
 import { AuthService } from '../../services/auth.service';
 import { SpaceService } from '../../services/space.service';
 import { CommunityService } from '../../services/community.service';
@@ -31,7 +14,7 @@ import { GlobalAnalytics } from '../../models/analytics.models';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, NavbarComponent, ReactiveFormsModule],
+  imports: [CommonModule, RouterLink, RouterLinkActive, ReactiveFormsModule],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
@@ -41,15 +24,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private communityService = inject(CommunityService);
   private analyticsService = inject(AnalyticsService);
   private fb = inject(FormBuilder);
+  private router = inject(Router);
+  private elementRef = inject(ElementRef);
   private spaceSub?: Subscription;
 
-  // User data from auth service
   currentUser$ = this.auth.currentUser$;
 
-  // Spaces filtered to exclude entries that are actually community workspaces.
-  // The backend auto-creates a space named "<communityName> Workspace" for every
-  // community. We detect these by matching the space title against known community
-  // names (both exact match and the "<name> Workspace" pattern the backend uses).
   spaces$ = combineLatest([
     this.spaceService.spaces$,
     this.communityService.communities$
@@ -58,7 +38,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const communityNames = new Set((communities ?? []).map(c => c.name?.trim().toLowerCase()));
       return spaces.filter(s => {
         const title = (s.title ?? '').trim().toLowerCase();
-        // Match "<communityName> Workspace" pattern (backend auto-naming)
         const baseName = title.endsWith(' workspace') ? title.slice(0, -' workspace'.length).trim() : title;
         return !communityNames.has(baseName) && !communityNames.has(title);
       });
@@ -67,89 +46,130 @@ export class DashboardComponent implements OnInit, OnDestroy {
   spacesLoading$ = this.spaceService.loading$;
   spacesError$ = this.spaceService.error$;
 
-  // ---- Stat cards ----
-  // totalFiles + totalQuizzes come from spaces$ (spaces API returns them directly)
-  // streak + avgScore come from analytics API (silently 0/-- if backend 500s)
   streak = 0;
   totalFiles = 0;
   totalQuizzes = 0;
-  /** null = no quiz data yet; number = rounded percentage (0–100) */
+  totalSpaces = 0;
   avgScore: number | null = null;
   analyticsLoading = false;
 
-  // UI State for Modal
+  navPhotoUrl: string | null = null;
+  avatarDropdownOpen = false;
+  private lastPhotoId: string | undefined;
+
   showCreateModal = false;
   isCreating = false;
   createError = '';
 
-  // UI State for Delete Modal
   showDeleteModal = false;
   isDeleting = false;
   deleteError = '';
   spaceToDelete: Space | null = null;
 
-  // Form for creating a space
   createSpaceForm: FormGroup = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(3)]],
     description: ['', [Validators.maxLength(200)]]
   });
 
-  /**
-   * ngOnInit - Called when component initializes
-   * This is where we load data from APIs
-   */
-  ngOnInit(): void {
-    // Load spaces — the spaces API returns totalFiles, totalQuizzes, averageScore per space
-    this.spaceService.loadSpaces().subscribe();
+  private readonly SPACE_COLORS = [
+    '#4f46e5', '#10b981', '#f0532c', '#f88a1d', '#8b5cf6', '#ec4899'
+  ];
 
-    // Load communities so we can filter their IDs out of the spaces list
+  ngOnInit(): void {
+    this.spaceService.loadSpaces().subscribe();
     this.communityService.listCommunities().subscribe();
 
-    // Sum totalFiles + totalQuizzes from spaces that are NOT communities
     this.spaceSub = this.spaces$.subscribe(spaces => {
       this.totalFiles = spaces.reduce((sum, s) => sum + (s.totalFiles ?? 0), 0);
       this.totalQuizzes = spaces.reduce((sum, s) => sum + (s.totalQuizzes ?? 0), 0);
+      this.totalSpaces = spaces.length;
     });
 
-    // Load streak + avgScore from analytics (separate endpoint, may 500)
     this.loadAnalytics();
+
+    this.auth.currentUser$.subscribe(user => {
+      if (user?.photoId && user.photoId !== this.lastPhotoId) {
+        this.lastPhotoId = user.photoId;
+        this.auth.fetchProfilePhoto().subscribe({
+          next: url => { this.navPhotoUrl = url; },
+          error: () => { this.navPhotoUrl = null; }
+        });
+      } else if (!user?.photoId && this.lastPhotoId) {
+        this.lastPhotoId = undefined;
+        this.navPhotoUrl = null;
+      }
+    });
   }
 
   ngOnDestroy(): void {
     this.spaceSub?.unsubscribe();
+    if (this.navPhotoUrl) URL.revokeObjectURL(this.navPhotoUrl);
   }
 
-  /**
-   * LOAD ANALYTICS
-   * Fetches streak + avgScore from analytics endpoint.
-   * totalFiles and totalQuizzes come from spaces$ instead — no analytics needed for those.
-   * Silently fails (streak stays 0, avgScore stays --) if backend returns 500.
-   */
   private loadAnalytics(): void {
     this.analyticsLoading = true;
-
     this.analyticsService.getGlobalAnalytics().subscribe({
       next: (data: GlobalAnalytics) => {
         this.analyticsLoading = false;
         this.streak = data.currentStreak ?? 0;
-
-        // Use backend's pre-calculated averageScore from spaceDetails (weighted by totalQuizzes)
         if (data.spaceDetails?.length > 0) {
-          const totalQuizzes = data.spaceDetails.reduce((sum, s) => sum + (s.totalQuizzes ?? 0), 0);
-          if (totalQuizzes > 0) {
+          const totalQ = data.spaceDetails.reduce((sum, s) => sum + (s.totalQuizzes ?? 0), 0);
+          if (totalQ > 0) {
             const weightedSum = data.spaceDetails.reduce(
-              (sum, s) => sum + (s.averageScore ?? 0) * (s.totalQuizzes ?? 0),
-              0
+              (sum, s) => sum + (s.averageScore ?? 0) * (s.totalQuizzes ?? 0), 0
             );
-            this.avgScore = Math.round(weightedSum / totalQuizzes);
+            this.avgScore = Math.round(weightedSum / totalQ);
           }
         }
       },
-      error: () => {
-        // Silent fail — streak stays 0, avgScore stays --
-        this.analyticsLoading = false;
-      }
+      error: () => { this.analyticsLoading = false; }
     });
+  }
+
+  getSpaceColor(title: string): string {
+    if (!title) return this.SPACE_COLORS[0];
+    const idx = title.charCodeAt(0) % this.SPACE_COLORS.length;
+    return this.SPACE_COLORS[idx];
+  }
+
+  getSpaceInitial(title: string): string {
+    return title ? title.charAt(0).toUpperCase() : '?';
+  }
+
+  getDisplayName(name: string | undefined): string {
+    if (!name) return 'User';
+    if (name.includes('@')) return name.split('@')[0];
+    return name;
+  }
+
+  getInitials(name: string | undefined): string {
+    return name ? name.charAt(0).toUpperCase() : 'U';
+  }
+
+  formatDate(date: string | Date | undefined): string {
+    if (!date) return '';
+    const d = typeof date === 'string' ? new Date(date) : date;
+    return d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }).toUpperCase();
+  }
+
+  toggleAvatarDropdown(): void {
+    this.avatarDropdownOpen = !this.avatarDropdownOpen;
+  }
+
+  closeAvatarDropdown(): void {
+    this.avatarDropdownOpen = false;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (this.avatarDropdownOpen) {
+      this.closeAvatarDropdown();
+    }
+  }
+
+  logout(): void {
+    this.auth.logout();
+    this.router.navigate(['/login']);
   }
 
   openCreateModal() {
@@ -165,12 +185,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   onCreateSpace() {
     if (this.createSpaceForm.invalid) return;
-
     this.isCreating = true;
     this.createError = '';
-    
     const { name, description } = this.createSpaceForm.value;
-
     this.spaceService.createSpace(name, description || '').subscribe({
       next: () => {
         this.isCreating = false;
@@ -183,12 +200,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  /**
-   * CONFIRM DELETE SPACE
-   * Opens the delete confirmation modal
-   * @param space - The space to delete
-   * @param event - Click event (to prevent navigation)
-   */
   confirmDeleteSpace(space: Space, event: Event) {
     event.preventDefault();
     event.stopPropagation();
@@ -197,26 +208,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.deleteError = '';
   }
 
-  /**
-   * CANCEL DELETE
-   * Closes the delete modal without deleting
-   */
   cancelDelete() {
     this.showDeleteModal = false;
     this.spaceToDelete = null;
     this.deleteError = '';
   }
 
-  /**
-   * DELETE SPACE
-   * Calls the API to delete the space
-   */
   deleteSpace() {
     if (!this.spaceToDelete) return;
-
     this.isDeleting = true;
     this.deleteError = '';
-
     this.spaceService.deleteSpace(this.spaceToDelete.id).subscribe({
       next: () => {
         this.isDeleting = false;
@@ -228,15 +229,5 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.deleteError = err?.message || 'Failed to delete space';
       }
     });
-  }
-
-  /**
-   * Get display-friendly name
-   * For Google users who sign in with email, strips the @domain part
-   */
-  getDisplayName(userName: string | undefined): string {
-    if (!userName) return 'User';
-    if (userName.includes('@')) return userName.split('@')[0];
-    return userName;
   }
 }
