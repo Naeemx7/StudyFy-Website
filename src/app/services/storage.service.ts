@@ -244,6 +244,35 @@ export class StorageService {
   }
 
   /**
+   * DELETE FILE
+   * 
+   * Deletes a file from a workspace.
+   * 
+   * @param spaceId - The workspace ID
+   * @param fileId - The ID of the file to delete
+   * 
+   * ENDPOINT: DELETE /users/{userId}/workspaces/{workspaceId}/files/{fileId}
+   */
+  deleteFile(spaceId: string, fileId: string): Observable<void> {
+    const userId = this.auth.getCurrentUserId();
+    
+    if (!userId) {
+      return throwError(() => new Error('User not logged in'));
+    }
+
+    const url = `${environment.apiUrl}/users/${userId}/workspaces/${spaceId}/files/${fileId}`;
+    
+    return this.http.delete<any>(url).pipe(
+      map(response => {
+        if (response && response.isSuccess === false) {
+           throw new Error(response.message || 'Failed to delete file');
+        }
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
    * Update upload progress (internal helper)
    */
   private updateProgress(
