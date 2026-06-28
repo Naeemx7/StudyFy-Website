@@ -224,8 +224,7 @@
           <div class="flex gap-4 mb-8 max-w-[480px]">
             <div class="bg-white border border-[#e5e7eb] rounded-[8px] p-5 flex-1">
               <p class="text-[26px] font-bold text-[#2d3435]">
-                @if (memberCountLoading) { <span class="text-gray-300 animate-pulse">—</span>
-                } @else { {{ memberCount !== null ? memberCount : '—' }} }
+                {{ selectedDetail!.memberCount ?? '—' }}
               </p>
               <p class="text-[13px] text-[#596061]">Active Members</p>
             </div>
@@ -274,8 +273,8 @@
             <div>
               <div class="flex items-center justify-between mb-5">
                 <h2 class="text-[20px] font-bold text-[#2d3435]">Members</h2>
-                @if (memberCount !== null) {
-                  <span class="text-[13px] text-[#596061]">{{ memberCount }} Total</span>
+                @if (selectedDetail!.memberCount) {
+                  <span class="text-[13px] text-[#596061]">{{ selectedDetail!.memberCount }} Total</span>
                 }
               </div>
               @if (leaderboardLoadingId === activeCommunityId && leaderboard.length === 0) {
@@ -895,6 +894,16 @@
           </button>
         </div>
 
+        <!-- Danger zone -->
+        <div class="border-t border-[#fde8e8] pt-4 mb-5">
+          <p class="text-[11px] font-bold uppercase tracking-wider text-red-400 mb-3">Danger Zone</p>
+          <button (click)="showSettingsModal = false; delete(selectedDetail.id)"
+                  [disabled]="deleteLoadingId === selectedDetail.id"
+                  class="w-full py-2.5 border border-red-300 text-red-500 text-[13px] font-semibold rounded-[8px] hover:bg-red-50 disabled:opacity-50 transition-colors">
+            {{ deleteLoadingId === selectedDetail.id ? 'Deleting...' : 'Delete Community' }}
+          </button>
+        </div>
+
         <!-- Buttons -->
         <div class="flex items-center justify-end gap-3">
           <button (click)="showSettingsModal = false"
@@ -903,7 +912,50 @@
           </button>
           <button (click)="showSettingsModal = false"
                   class="px-6 py-2.5 bg-[#4f46e5] hover:bg-[#3d34d3] text-white text-[14px] font-semibold rounded-[8px] transition-colors">
-            Save Changes
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ── Delete Community Confirm Modal ── -->
+  @if (showDeleteConfirmModal && communityToDelete) {
+    <div class="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+         (click)="showDeleteConfirmModal = false; communityToDelete = null">
+      <div class="bg-white rounded-[16px] w-full max-w-[400px] p-7 shadow-2xl" (click)="$event.stopPropagation()">
+
+        <!-- Icon -->
+        <div class="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-5">
+          <svg class="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+        </div>
+
+        <h3 class="text-[20px] font-bold text-[#2d3435] text-center mb-2">Delete Community?</h3>
+        <p class="text-[14px] text-[#596061] text-center leading-relaxed mb-1">
+          You're about to permanently delete
+        </p>
+        <p class="text-[15px] font-bold text-[#2d3435] text-center mb-2">"{{ communityToDelete.name }}"</p>
+        <p class="text-[13px] text-[#596061] text-center leading-relaxed mb-7">
+          All members, posts, files, and progress will be lost forever. This cannot be undone.
+        </p>
+
+        <div class="flex gap-3">
+          <button (click)="showDeleteConfirmModal = false; communityToDelete = null"
+                  class="flex-1 py-3 border-2 border-[#e5e7eb] text-[#596061] text-[14px] font-semibold rounded-[10px] hover:bg-[#f9f9f9] transition-colors">
+            Cancel
+          </button>
+          <button (click)="confirmDelete()"
+                  [disabled]="deleteLoadingId === communityToDelete.id"
+                  class="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white text-[14px] font-bold rounded-[10px] transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
+            @if (deleteLoadingId === communityToDelete.id) {
+              <div class="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
+              Deleting...
+            } @else {
+              Yes, Delete
+            }
           </button>
         </div>
       </div>
