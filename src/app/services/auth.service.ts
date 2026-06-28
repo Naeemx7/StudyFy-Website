@@ -512,6 +512,40 @@ export class AuthService {
     );
   }
 
+  /**
+   * UPDATE PROFILE
+   *
+   * PUT /users/{userId}/profile  (multipart/form-data)
+   * Updates UserName, Age, IsStudent, Target. Photo is kept separate via uploadProfilePhoto().
+   * On success, patches the stored user with the returned data.
+   *
+   * @param fields - Object with the profile fields to update
+   */
+  updateProfile(fields: { userName?: string; age?: number; isStudent?: boolean; target?: string }): Observable<GeneralResponse & { data?: UserResponse }> {
+    const userId = this.getCurrentUserId();
+    const formData = new FormData();
+    if (fields.userName !== undefined) formData.append('UserName', fields.userName);
+    if (fields.age !== undefined) formData.append('Age', fields.age.toString());
+    if (fields.isStudent !== undefined) formData.append('IsStudent', fields.isStudent.toString());
+    if (fields.target !== undefined) formData.append('Target', fields.target);
+
+    return this.http.put<GeneralResponse & { data?: UserResponse }>(
+      `${environment.apiUrl}/users/${userId}/profile`, formData
+    ).pipe(
+      tap(res => {
+        if (res.isSuccess && res.data) {
+          this.patchStoredUser({
+            userName: res.data.userName,
+            age: res.data.age,
+            isStudent: res.data.isStudent ?? true,
+            target: res.data.target,
+          });
+        }
+      }),
+      catchError(this.handleError)
+    );
+  }
+
   /** Merge a partial update into the stored user and notify subscribers. */
   private patchStoredUser(patch: Partial<User>): void {
     const user = this.currentUserSubject.value;
