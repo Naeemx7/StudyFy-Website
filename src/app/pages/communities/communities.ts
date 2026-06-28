@@ -7,7 +7,7 @@ import { SpaceService } from '../../services/space.service';
 import { ChatService } from '../../services/chat.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { NavbarComponent } from '../../components/navbar/navbar';
+import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import {
   Community,
@@ -22,7 +22,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 @Component({
   selector: 'app-communities',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, NavbarComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule],
   templateUrl: './communities.html',
   styleUrls: ['./communities.css']
 })
@@ -95,6 +95,35 @@ export class CommunitiesComponent implements OnInit {
   // Delete loading states
   deletePostLoadingId: string | null = null;
   deleteReplyLoadingId: string | null = null;
+
+  // Modal visibility
+  showCreateModal = false;
+  showJoinModal = false;
+  showSettingsModal = false;
+  showNewPostModal = false;
+
+  // Detail sub-tab
+  activeOverviewTab: 'members' | 'leaderboard' = 'members';
+
+  get totalCommunityXp(): number {
+    return this.leaderboard.reduce((sum, e) => sum + (e.xp || 0), 0);
+  }
+
+  getMemberColor(index: number): string {
+    const colors = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#007184'];
+    return colors[(index - 1 + colors.length) % colors.length];
+  }
+
+  getFileIconBg(fileName: string): string {
+    const ext = (fileName.split('.').pop() ?? '').toLowerCase();
+    const map: Record<string, string> = {
+      pdf: 'bg-red-400', doc: 'bg-blue-500', docx: 'bg-blue-500',
+      xls: 'bg-green-500', xlsx: 'bg-green-500', csv: 'bg-green-500',
+      ppt: 'bg-orange-400', pptx: 'bg-orange-400',
+      png: 'bg-purple-400', jpg: 'bg-purple-400', jpeg: 'bg-purple-400', gif: 'bg-purple-400',
+    };
+    return map[ext] ?? 'bg-gray-400';
+  }
 
   get currentUserId(): string | null {
     return this.authService.getCurrentUserId();
@@ -186,6 +215,7 @@ export class CommunitiesComponent implements OnInit {
         this.createLoading = false;
         if (res.isSuccess && res.data) {
           this.createForm.reset({ name: '', description: '' });
+          this.showCreateModal = false;
           this.showToast('success', 'Community created successfully!');
           this.clearSelected();
         } else {
@@ -208,6 +238,7 @@ export class CommunitiesComponent implements OnInit {
         this.joinLoading = false;
         if (res.isSuccess) {
           this.joinForm.reset({ joinCode: '' });
+          this.showJoinModal = false;
           this.showToast('success', 'Joined community successfully!');
           this.load();
         } else {
@@ -500,6 +531,7 @@ export class CommunitiesComponent implements OnInit {
       next: (res) => {
         this.createPostLoading = false;
         if (res.isSuccess) {
+          this.showNewPostModal = false;
           this.showToast('success', 'Post created successfully!');
           this.postForm.reset();
           this.selectedPostPhoto = null;
