@@ -1,109 +1,154 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NavbarComponent } from '../../components/navbar/navbar';
+import { FormsModule } from '@angular/forms';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { AnalyticsService } from '../../services/analytics.service';
-import { BadgeService, BadgeStatus, BadgeTier, TIER_COLORS } from '../../services/badge.service';
-import { User } from '../../models/auth.models';
+import { SpaceService } from '../../services/space.service';
+import { CommunityService } from '../../services/community.service';
+import { User, TARGET_OPTIONS } from '../../models/auth.models';
+import { Community } from '../../models/community.models';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, NavbarComponent],
+  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive],
   templateUrl: './profile.html',
 })
 export class ProfileComponent implements OnInit, OnDestroy {
   private auth = inject(AuthService);
   private analyticsService = inject(AnalyticsService);
-  private badgeService = inject(BadgeService);
+  private spaceService = inject(SpaceService);
+  private communityService = inject(CommunityService);
+
+  readonly targetOptions = TARGET_OPTIONS;
 
   user: User | null = null;
-  badgeStatuses: BadgeStatus[] = [];
+  currentUser$ = this.auth.currentUser$;
 
-  totalXp = 0;
+  avatarDropdownOpen = false;
+
+  // Analytics stats
   streak = 0;
-  longestStreak = 0;
+  totalSpaces = 0;
+  totalQuizzes = 0;
+  avgScore: number | null = null;
   analyticsLoading = true;
-  analyticsError = '';
 
+  // Communities
+  communities: Community[] = [];
+  communitiesLoading = true;
+
+  // Photo
   photoUploading = false;
   photoError = '';
-  /** Blob URL created from the locally-selected file — shown immediately on upload */
   localPhotoUrl: string | null = null;
   photoBroken = false;
+  private lastPhotoId: string | undefined;
 
-  /** badges awarded on the server (from analytics endpoint) */
-  serverBadges: string[] = [];
+  // Edit modal
+  showEditModal = false;
+  editSaving = false;
+  editError = '';
+  editSuccess = false;
+  editForm = { userName: '', age: 0, isStudent: true, target: '' };
 
-  readonly tierColors = TIER_COLORS;
+  // Photo file input ref for modal
+  editPhotoFile: File | null = null;
+  editPhotoPreview: string | null = null;
+
+  private subs: Subscription[] = [];
 
   ngOnInit(): void {
-    this.auth.currentUser$.subscribe(u => { this.user = u; });
+    this.subs.push(
+      this.auth.currentUser$.subscribe(u => { this.user = u; })
+    );
 
-    this.badgeStatuses = this.badgeService.getAllBadgeStatuses();
+    this.loadPhoto();
 
-    this.loadPhotoFromServer();
-
+    // Analytics
     this.analyticsService.getGlobalAnalytics().subscribe({
       next: data => {
-        this.totalXp = data.totalXp ?? 0;
         this.streak = data.currentStreak ?? 0;
-        this.longestStreak = data.longestStreak ?? 0;
-        this.serverBadges = data.userBadges ?? [];
+        this.totalQuizzes = data.spaceDetails?.reduce((s, d) => s + (d.totalQuizzes ?? 0), 0) ?? 0;
+        const totalQ = this.totalQuizzes;
+        if (totalQ > 0 && data.spaceDetails?.length) {
+          const weighted = data.spaceDetails.reduce((s, d) => s + (d.averageScore ?? 0) * (d.totalQuizzes ?? 0), 0);
+          this.avgScore = Math.round(weighted / totalQ);
+        }
         this.analyticsLoading = false;
       },
-      error: () => {
-        this.analyticsLoading = false;
-        this.analyticsError = 'Could not load analytics';
-      }
+      error: () => { this.analyticsLoading = false; }
+    });
+
+    // Spaces count
+    this.subs.push(
+      this.spaceService.spaces$.subscribe(spaces => { this.totalSpaces = spaces.length; })
+    );
+    this.spaceService.loadSpaces().subscribe();
+
+    // Communities
+    this.communityService.listCommunities().subscribe({
+      next: res => {
+        this.communities = res.data?.slice(0, 3) ?? [];
+        this.communitiesLoading = false;
+      },
+      error: () => { this.communitiesLoading = false; }
     });
   }
 
   ngOnDestroy(): void {
+    this.subs.forEach(s => s.unsubscribe());
     if (this.localPhotoUrl) URL.revokeObjectURL(this.localPhotoUrl);
+    if (this.editPhotoPreview) URL.revokeObjectURL(this.editPhotoPreview);
   }
 
-  private setBlobUrl(url: string): void {
-    if (this.localPhotoUrl) URL.revokeObjectURL(this.localPhotoUrl);
-    this.localPhotoUrl = url;
-    this.photoBroken = false;
-  }
-
-  private loadPhotoFromServer(): void {
+  private loadPhoto(): void {
     this.auth.fetchProfilePhoto().subscribe({
-      next: url => this.setBlobUrl(url),
-      error: () => { /* no photo on server yet */ }
+      next: url => { this.localPhotoUrl = url; this.photoBroken = false; },
+      error: () => {}
     });
   }
 
   get displayPhotoUrl(): string | null {
-    return this.localPhotoUrl || null;
+    return this.editPhotoPreview || this.localPhotoUrl || null;
   }
 
-  onPhotoSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
+  get displayName(): string {
+    const u = this.user;
+    if (!u) return 'User';
+    const name = u.googleDisplayName || u.userName || '';
+    return name.includes('@') ? name.split('@')[0] : (name || 'User');
+  }
 
-    // Instant local preview
-    this.setBlobUrl(URL.createObjectURL(file));
-    this.photoUploading = true;
-    this.photoError = '';
+  getInitials(): string {
+    return this.displayName.charAt(0).toUpperCase() || 'U';
+  }
 
-    this.auth.uploadProfilePhoto(file).subscribe({
-      next: () => {
-        this.photoUploading = false;
-        // Replace local preview with the authenticated server copy
-        this.loadPhotoFromServer();
-      },
-      error: (err: Error) => {
-        this.photoUploading = false;
-        this.localPhotoUrl = null;
-        this.photoError = err.message || 'Failed to upload photo';
-      }
-    });
+  get targetDisplayLabel(): string {
+    const val = String(this.user?.target || '');
+    if (!val) return '';
+    const opt = this.targetOptions.find(o => o.value === val || o.label === val);
+    return opt ? opt.label : val;
+  }
 
-    input.value = '';
+  getCommunityInitials(name: string): string {
+    const words = (name || '').trim().split(/\s+/);
+    return words.length >= 2
+      ? (words[0][0] + words[1][0]).toUpperCase()
+      : (name || '?').charAt(0).toUpperCase();
+  }
+
+  getCommunityColor(name: string): string {
+    const colors = [
+      { bg: '#f0efff', text: '#4e45e4' },
+      { bg: '#e1fde5', text: '#006e2f' },
+      { bg: '#fff3e0', text: '#e65c00' },
+      { bg: '#fce4ec', text: '#b71c1c' },
+    ];
+    const idx = (name?.charCodeAt(0) ?? 0) % colors.length;
+    return `background:${colors[idx].bg};color:${colors[idx].text}`;
   }
 
   onPhotoLoadError(): void {
@@ -111,58 +156,117 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.photoBroken = true;
   }
 
-  removePhoto(): void {
-    this.photoUploading = true;
-    this.photoError = '';
+  // ── Edit Modal ──────────────────────────────────────
+  openEditModal(): void {
+    const u = this.user;
 
-    this.auth.deleteProfilePhoto().subscribe({
+    let targetVal = '';
+    if (u?.target !== undefined && u?.target !== null) {
+      const stringTarget = String(u.target);
+      const opt = this.targetOptions.find(o => o.value === stringTarget || o.label === stringTarget);
+      targetVal = opt ? opt.value : stringTarget;
+    }
+
+    this.editForm = {
+      userName: u?.googleDisplayName || u?.userName || '',
+      age: u?.age ?? 0,
+      isStudent: u?.isStudent ?? true,
+      target: targetVal
+    };
+    this.editPhotoPreview = null;
+    this.editPhotoFile = null;
+    this.editError = '';
+    this.editSuccess = false;
+    this.showEditModal = true;
+  }
+
+  closeEditModal(): void {
+    if (this.editPhotoPreview) {
+      URL.revokeObjectURL(this.editPhotoPreview);
+      this.editPhotoPreview = null;
+    }
+    this.editPhotoFile = null;
+    this.showEditModal = false;
+  }
+
+  onModalPhotoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    if (this.editPhotoPreview) URL.revokeObjectURL(this.editPhotoPreview);
+    this.editPhotoFile = file;
+    this.editPhotoPreview = URL.createObjectURL(file);
+    input.value = '';
+  }
+
+  removeModalPhoto(): void {
+    if (this.editPhotoPreview) URL.revokeObjectURL(this.editPhotoPreview);
+    this.editPhotoPreview = null;
+    this.editPhotoFile = null;
+    // Delete from server if there's an existing photo
+    if (this.user?.photoId || this.localPhotoUrl) {
+      this.auth.deleteProfilePhoto().subscribe({
+        next: () => {
+          if (this.localPhotoUrl) URL.revokeObjectURL(this.localPhotoUrl);
+          this.localPhotoUrl = null;
+          this.photoBroken = false;
+        },
+        error: (err: Error) => { this.editError = err.message || 'Failed to remove photo'; }
+      });
+    }
+  }
+
+  saveProfile(): void {
+    this.editSaving = true;
+    this.editError = '';
+
+    this.auth.updateProfile({
+      userName: this.editForm.userName,
+      age: this.editForm.age || undefined,
+      isStudent: this.editForm.isStudent,
+      target: this.editForm.target || undefined
+    }).subscribe({
       next: () => {
-        this.photoUploading = false;
-        if (this.localPhotoUrl) URL.revokeObjectURL(this.localPhotoUrl);
-        this.localPhotoUrl = null;
-        this.photoBroken = false;
+        // If a new photo was selected, upload it
+        if (this.editPhotoFile) {
+          this.auth.uploadProfilePhoto(this.editPhotoFile).subscribe({
+            next: () => {
+              this.loadPhoto();
+              this.editPhotoPreview = null;
+              this.editPhotoFile = null;
+              this.editSaving = false;
+              this.editSuccess = true;
+              setTimeout(() => { this.showEditModal = false; this.editSuccess = false; }, 800);
+            },
+            error: (err: Error) => {
+              this.editSaving = false;
+              this.editError = err.message || 'Profile saved but photo upload failed';
+            }
+          });
+        } else {
+          this.editSaving = false;
+          this.editSuccess = true;
+          setTimeout(() => { this.showEditModal = false; this.editSuccess = false; }, 800);
+        }
       },
       error: (err: Error) => {
-        this.photoUploading = false;
-        this.photoError = err.message || 'Failed to remove photo';
+        this.editSaving = false;
+        this.editError = err.message || 'Failed to save profile';
       }
     });
   }
 
-  get earnedCount(): number {
-    return this.badgeStatuses.filter(b => b.tier !== 'LOCKED').length;
+  // ── Top Bar Dropdown ──
+  toggleAvatarDropdown(e: Event): void {
+    e.stopPropagation();
+    this.avatarDropdownOpen = !this.avatarDropdownOpen;
   }
 
-  get displayName(): string {
-    const u = this.user;
-    if (!u) return 'User';
-    const name = u.googleDisplayName || u.userName || '';
-    return name.includes('@') ? name.split('@')[0] : name;
+  closeDropdown(): void {
+    this.avatarDropdownOpen = false;
   }
 
-  getInitials(): string {
-    return this.displayName.charAt(0).toUpperCase() || 'U';
-  }
-
-  tierLabel(tier: BadgeTier): string {
-    return tier === 'LOCKED' ? 'Locked' : tier.charAt(0) + tier.slice(1).toLowerCase();
-  }
-
-  tierBgClass(tier: BadgeTier): string {
-    return {
-      LOCKED: 'bg-gray-100 text-gray-500',
-      BRONZE: 'bg-amber-50  text-amber-700',
-      SILVER: 'bg-slate-100 text-slate-600',
-      GOLD:   'bg-yellow-50 text-yellow-700',
-    }[tier];
-  }
-
-  cardBorderClass(tier: BadgeTier): string {
-    return {
-      LOCKED: 'border-gray-200',
-      BRONZE: 'border-amber-200',
-      SILVER: 'border-slate-300',
-      GOLD:   'border-yellow-300',
-    }[tier];
+  logout(): void {
+    this.auth.logout();
   }
 }
