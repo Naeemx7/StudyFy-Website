@@ -99,6 +99,9 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
   // Quiz practice mode (tags-quiz) — skip submission to avoid backend tag-not-found errors
   isTagsQuiz = false;
 
+  // UI state
+  showChatPanel = false;
+
   // Share state
   shareLoading = false;
   shareError = '';
@@ -206,6 +209,13 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
       return;
     }
 
+    // quiz: only re-generate if already in a terminal state (don't auto-generate on first visit)
+    if (this.quizState === 'in-progress' || this.quizState === 'completed' || this.quizState === 'review') {
+      return;
+    }
+  }
+
+  generateQuiz(): void {
     this.loadQuiz();
   }
 
@@ -221,6 +231,11 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
     }
 
     this.loadQuiz(true);
+  }
+
+  handleChatEnter(event: Event): void {
+    const ke = event as KeyboardEvent;
+    if (!ke.shiftKey) { ke.preventDefault(); this.onSendMessage(); }
   }
 
   onSendMessage(): void {
