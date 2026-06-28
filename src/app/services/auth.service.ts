@@ -327,15 +327,16 @@ export class AuthService {
 
     const err = errorBody as Record<string, unknown>;
 
-    if (typeof err['message'] === 'string') {
-      return err['message'];
-    }
-
+    // Check errors array/object first — more specific than the generic message
     if (err['errors'] && typeof err['errors'] === 'object') {
       const errors = err['errors'];
 
-      if (Array.isArray(errors)) {
-        return errors.join(', ');
+      if (Array.isArray(errors) && errors.length > 0) {
+        const joined = errors.map(e => String(e)).join(', ');
+        if (joined.toLowerCase().includes('token')) {
+          return 'Reset password failed.';
+        }
+        return joined;
       }
 
       const allMessages: string[] = [];
@@ -348,13 +349,16 @@ export class AuthService {
       }
 
       if (allMessages.length > 0) {
-        // Replace any token-related errors with user-friendly message
         const joined = allMessages.join(', ');
         if (joined.toLowerCase().includes('token')) {
           return 'Reset password failed.';
         }
         return joined;
       }
+    }
+
+    if (typeof err['message'] === 'string') {
+      return err['message'];
     }
 
     if (typeof err['title'] === 'string') {
@@ -532,15 +536,20 @@ export class AuthService {
     return this.http.put<GeneralResponse & { data?: UserResponse }>(
       `${environment.apiUrl}/users/${userId}/profile`, formData
     ).pipe(
-      tap(res => {
-        if (res.isSuccess && res.data) {
-          this.patchStoredUser({
-            userName: res.data.userName,
-            age: res.data.age,
-            isStudent: res.data.isStudent ?? true,
-            target: res.data.target,
-          });
+      map(res => {
+        if (!res.isSuccess) {
+          const msg = res.errors?.join(', ') || res.message || 'Failed to update profile';
+          throw new Error(msg);
         }
+        const newName = res.data?.userName ?? fields.userName;
+        this.patchStoredUser({
+          userName: newName,
+          googleDisplayName: newName,
+          age: res.data?.age ?? fields.age,
+          isStudent: res.data?.isStudent ?? fields.isStudent ?? true,
+          target: res.data?.target ?? fields.target,
+        });
+        return res;
       }),
       catchError(this.handleError)
     );
