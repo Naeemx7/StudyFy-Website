@@ -217,11 +217,21 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   saveProfile(): void {
-    this.editSaving = true;
     this.editError = '';
+    const trimmedName = this.editForm.userName.trim();
+    if (!trimmedName) {
+      this.editError = 'Username cannot be empty.';
+      return;
+    }
+    if (!/^[a-zA-Z0-9]+$/.test(trimmedName)) {
+      this.editError = 'Username can only contain letters and digits — no spaces or special characters.';
+      return;
+    }
+    this.editForm.userName = trimmedName;
+    this.editSaving = true;
 
     this.auth.updateProfile({
-      userName: this.editForm.userName,
+      userName: trimmedName,
       age: this.editForm.age || undefined,
       isStudent: this.editForm.isStudent,
       target: this.editForm.target || undefined
@@ -251,7 +261,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
       },
       error: (err: Error) => {
         this.editSaving = false;
-        this.editError = err.message || 'Failed to save profile';
+        const msg = (err.message || '').toLowerCase();
+        if (msg.includes('taken') || msg.includes('already') || msg.includes('duplicate') || msg.includes('exists') || msg.includes('unavailable')) {
+          this.editError = `"${this.editForm.userName}" is already taken. Please choose a different username.`;
+        } else {
+          this.editError = err.message || 'Failed to save profile';
+        }
       }
     });
   }
