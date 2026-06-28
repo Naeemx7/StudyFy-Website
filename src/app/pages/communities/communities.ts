@@ -88,10 +88,6 @@ export class CommunitiesComponent implements OnInit {
   photoUploading = false;
   allowFilesLoading = false;
 
-  // Member count
-  memberCount: number | null = null;
-  memberCountLoading = false;
-
   // Delete loading states
   deletePostLoadingId: string | null = null;
   deleteReplyLoadingId: string | null = null;
@@ -101,6 +97,8 @@ export class CommunitiesComponent implements OnInit {
   showJoinModal = false;
   showSettingsModal = false;
   showNewPostModal = false;
+  showDeleteConfirmModal = false;
+  communityToDelete: { id: string; name: string } | null = null;
 
   // Detail sub-tab
   activeOverviewTab: 'members' | 'leaderboard' = 'members';
@@ -272,14 +270,22 @@ export class CommunitiesComponent implements OnInit {
   }
 
   delete(id: string) {
-    if (!confirm('Are you sure you want to delete this community? This action is permanent!')) return;
+    const community = this.communitiesCache.find(c => c.id === id) || this.selectedDetail;
+    this.communityToDelete = { id, name: community?.name ?? 'this community' };
+    this.showDeleteConfirmModal = true;
+    this.showSettingsModal = false;
+  }
+
+  confirmDelete() {
+    if (!this.communityToDelete) return;
+    const { id } = this.communityToDelete;
+    this.showDeleteConfirmModal = false;
     this.deleteLoadingId = id;
     this.communityService.deleteCommunity(id).subscribe({
       next: () => {
         this.deleteLoadingId = null;
-        if (this.activeCommunityId === id) {
-          this.clearSelected();
-        }
+        this.communityToDelete = null;
+        if (this.activeCommunityId === id) this.clearSelected();
         this.showToast('success', 'Community deleted successfully!');
       },
       error: (err) => {
@@ -287,21 +293,21 @@ export class CommunitiesComponent implements OnInit {
           this.communityService.leaveCommunity(id).subscribe({
             next: () => {
               this.deleteLoadingId = null;
-              if (this.activeCommunityId === id) {
-                this.clearSelected();
-              }
+              this.communityToDelete = null;
+              if (this.activeCommunityId === id) this.clearSelected();
               this.load();
               this.showToast('success', 'Removed from your communities.');
             },
             error: () => {
               this.deleteLoadingId = null;
+              this.communityToDelete = null;
               this.showToast('error', 'Delete failed and fallback removal also failed.');
             }
           });
           return;
         }
-
         this.deleteLoadingId = null;
+        this.communityToDelete = null;
         this.showToast('error', `Delete failed: ${err.message || 'Unknown error'}`);
       }
     });
@@ -342,7 +348,7 @@ export class CommunitiesComponent implements OnInit {
         this.viewLeaderboard(this.activeCommunityId);
         this.loadPosts(this.activeCommunityId);
         this.loadFiles(this.activeCommunityId);
-        this.fetchMemberCount(this.activeCommunityId);
+        // memberCount comes directly from the community detail response
       },
       error: (err) => {
         this.detailLoadingId = null;
@@ -381,7 +387,6 @@ export class CommunitiesComponent implements OnInit {
     this.selectedPost = null;
     this.files = [];
     this.activeTab = 'overview';
-    this.memberCount = null;
   }
 
   copyJoinCode(code?: string) {
@@ -396,17 +401,6 @@ export class CommunitiesComponent implements OnInit {
   }
 
   // ─── MEMBER COUNT ──────────────────────────────────
-
-  fetchMemberCount(communityId: string) {
-    this.memberCountLoading = true;
-    this.communityService.getMemberCount(communityId).subscribe({
-      next: (res) => {
-        this.memberCountLoading = false;
-        if (res.isSuccess) this.memberCount = res.data ?? null;
-      },
-      error: () => { this.memberCountLoading = false; }
-    });
-  }
 
   // ─── COMMUNITY SETTINGS ────────────────────────────
 
