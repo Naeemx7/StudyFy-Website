@@ -1,726 +1,919 @@
-<section class="h-screen flex flex-col bg-gray-50">
-  <div class="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-3 shrink-0">
-    <div class="flex items-center gap-4">
-      <button type="button" class="text-gray-400 hover:text-gray-900 transition" (click)="goBack()">
-        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-        </svg>
-      </button>
-      <div>
-        <h1 class="text-base font-bold text-gray-900">{{ fileName }}</h1>
-        <p class="text-xs font-medium text-emerald-600">In Progress</p>
+<div class="h-screen bg-[#f9f9f9] flex flex-col overflow-hidden font-sans">
+
+  <!-- ══════════════════════════════════════════
+       TOP HEADER (shared across all tabs)
+  ══════════════════════════════════════════ -->
+  <header class="h-[56px] bg-white border-b border-[#e5e7eb] flex items-center px-6 gap-4 shrink-0 z-10">
+    <!-- Back -->
+    <button (click)="goBack()"
+            class="flex items-center gap-1.5 text-[13px] text-[#596061] hover:text-[#2d3435] transition-colors shrink-0">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+      Back to Workspace
+    </button>
+
+    <div class="w-px h-4 bg-[#e5e7eb] shrink-0"></div>
+
+    <!-- Filename -->
+    <div class="flex items-center gap-2 text-[13px] text-[#2d3435] font-semibold min-w-0">
+      <svg class="w-4 h-4 text-[#4f46e5] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+      </svg>
+      <span class="truncate max-w-[200px]">{{ fileName }}</span>
+    </div>
+
+    <!-- Center: Tab switcher -->
+    <div class="flex-1 flex items-center justify-center">
+      <div class="flex bg-[#f2f4f4] p-1 rounded-[10px] gap-0.5">
+        <button (click)="selectTab('summary')" [disabled]="isProcessing && activeTab !== 'summary' || !fileId"
+                class="px-5 py-1.5 rounded-[8px] text-[13px] font-semibold transition-all disabled:opacity-40"
+                [ngClass]="activeTab === 'summary' ? 'bg-white text-[#2d3435] shadow-sm' : 'text-[#596061] hover:text-[#2d3435]'">
+          Summary
+        </button>
+        <button (click)="selectTab('flashcards')" [disabled]="isProcessing && activeTab !== 'flashcards' || !fileId"
+                class="px-5 py-1.5 rounded-[8px] text-[13px] font-semibold transition-all disabled:opacity-40"
+                [ngClass]="activeTab === 'flashcards' ? 'bg-white text-[#2d3435] shadow-sm' : 'text-[#596061] hover:text-[#2d3435]'">
+          Flashcards
+        </button>
+        <button (click)="selectTab('quiz')" [disabled]="isProcessing && activeTab !== 'quiz' || !fileId"
+                class="px-5 py-1.5 rounded-[8px] text-[13px] font-semibold transition-all disabled:opacity-40"
+                [ngClass]="activeTab === 'quiz' ? 'bg-white text-[#2d3435] shadow-sm' : 'text-[#596061] hover:text-[#2d3435]'">
+          Quiz
+        </button>
       </div>
     </div>
 
-    <div class="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-100 p-1">
-      <button
-        type="button"
-        class="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition disabled:opacity-50"
-        [ngClass]="activeTab === 'summary' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'"
-        (click)="selectTab('summary')"
-        [disabled]="isProcessing || !fileId"
-      >
-        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+    <!-- Right: processing + share + chat toggle -->
+    <div class="flex items-center gap-2 shrink-0">
+      @if (isProcessing) {
+        <div class="flex items-center gap-2 text-[12px] text-[#596061] font-medium">
+          <div class="h-3.5 w-3.5 rounded-full border-2 border-[#4f46e5] border-t-transparent animate-spin"></div>
+          {{ processingAction }}
+        </div>
+      }
+
+      @if (activeTab === 'summary' && summaryState === 'ready') {
+        <button (click)="shareSummary()" [disabled]="shareLoading"
+                class="flex items-center gap-1.5 px-3 py-1.5 border border-[#e5e7eb] rounded-[8px] text-[12px] font-medium text-[#596061] hover:bg-gray-50 disabled:opacity-50 transition-colors">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+          </svg>
+          Share
+        </button>
+      }
+
+      <button (click)="showChatPanel = !showChatPanel"
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-[12px] font-semibold transition-all"
+              [ngClass]="showChatPanel ? 'bg-[#4f46e5] text-white' : 'border border-[#e5e7eb] text-[#596061] hover:bg-gray-50'">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
         </svg>
-        Summarize
-      </button>
-      <button
-        type="button"
-        class="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition disabled:opacity-50"
-        [ngClass]="activeTab === 'flashcards' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'"
-        (click)="selectTab('flashcards')"
-        [disabled]="isProcessing || !fileId"
-      >
-        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
-        </svg>
-        Flashcards
-      </button>
-      <button
-        type="button"
-        class="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition disabled:opacity-50"
-        [ngClass]="activeTab === 'quiz' ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'"
-        (click)="selectTab('quiz')"
-        [disabled]="isProcessing || !fileId"
-      >
-        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        Quiz Mode
+        AI Chat
       </button>
     </div>
-  </div>
+  </header>
 
-  <div class="flex flex-1 overflow-hidden">
-    <div class="w-[55%] border-r border-gray-200 bg-white flex flex-col overflow-hidden">
+
+  <!-- ══════════════════════════════════════════
+       MAIN BODY
+  ══════════════════════════════════════════ -->
+  <div class="flex-1 flex overflow-hidden">
+
+    <!-- ──────────────── CONTENT PANEL ──────────────── -->
+    <div class="flex-1 overflow-y-auto relative">
+
+      <!-- ── GLOBAL LOADING (file content) ── -->
       @if (loadingContent) {
-      <div class="flex-1 flex items-center justify-center">
-        <div class="text-center">
-          <div class="mx-auto h-8 w-8 rounded-full border-2 border-gray-300 border-t-gray-900 animate-spin"></div>
-          <p class="mt-3 text-sm text-gray-500">Loading content...</p>
-        </div>
-      </div>
-      } @else if (contentError) {
-      <div class="flex-1 flex items-center justify-center p-6">
-        <div class="text-center">
-          <p class="text-sm text-rose-600">{{ contentError }}</p>
-          <button type="button" class="mt-3 text-sm font-semibold text-gray-700 hover:text-gray-900" (click)="goBack()">
-            Go back to files
-          </button>
-        </div>
-      </div>
-      } @else {
-      <div class="border-b border-gray-200 px-6 py-4 shrink-0">
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <p class="text-xs font-bold uppercase tracking-[0.18em] text-gray-500">{{ activeTab === 'summary' ? 'Summary' : activeTab === 'flashcards' ? 'Flashcards' : 'Quiz Mode' }}</p>
-            <h2 class="mt-1 text-lg font-bold text-gray-900">{{ activeTab === 'summary' ? (summaryTitle || 'Document Summary') : activeTab === 'flashcards' ? (flashcardsTitle || 'Study Flashcards') : 'Practice Quiz' }}</h2>
-            <p class="mt-1 text-sm text-gray-500">
-              {{ activeTab === 'summary' ? 'The workspace opens here automatically and summarizes the selected PDF.' : activeTab === 'flashcards' ? 'Review AI-generated study cards for the current file.' : 'Quiz Mode now stays in the left workspace instead of opening in chat.' }}
-            </p>
+        <div class="flex items-center justify-center h-full">
+          <div class="text-center">
+            <div class="h-8 w-8 rounded-full border-2 border-[#4f46e5] border-t-transparent animate-spin mx-auto"></div>
+            <p class="mt-3 text-[14px] text-[#596061]">Loading document...</p>
           </div>
+        </div>
+      }
 
-          <div class="flex items-center gap-2">
-            <!-- Share button -->
-            @if (activeTab === 'summary' && summaryState === 'ready') {
-              <button
-                type="button"
-                class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100 transition disabled:opacity-50"
-                (click)="shareSummary()"
-                [disabled]="shareLoading"
-                title="Share this summary"
-              >
-                <svg class="inline h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.769-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
-                </svg>
-                {{ shareLoading ? 'Creating link...' : 'Share' }}
-              </button>
-            }
-            @if (activeTab === 'flashcards' && flashcardsState === 'ready') {
-              <button
-                type="button"
-                class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100 transition disabled:opacity-50"
-                (click)="shareFlashcards()"
-                [disabled]="shareLoading"
-                title="Share these flashcards"
-              >
-                <svg class="inline h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.769-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
-                </svg>
-                {{ shareLoading ? 'Creating link...' : 'Share' }}
-              </button>
-            }
-            @if (activeTab === 'quiz' && quizState === 'completed') {
-              <button
-                type="button"
-                class="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm font-semibold text-green-700 hover:bg-green-100 transition disabled:opacity-50"
-                (click)="shareQuizResults()"
-                [disabled]="shareLoading"
-                title="Share quiz results"
-              >
-                <svg class="inline h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.769-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
-                </svg>
-                {{ shareLoading ? 'Creating link...' : 'Share' }}
-              </button>
-            }
+      <!-- ── GLOBAL ERROR ── -->
+      @else if (contentError) {
+        <div class="flex items-center justify-center h-full p-8">
+          <div class="text-center max-w-[320px]">
+            <svg class="w-10 h-10 text-red-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <p class="text-[15px] font-semibold text-[#2d3435] mb-2">Failed to load file</p>
+            <p class="text-[13px] text-[#596061] mb-4">{{ contentError }}</p>
+            <button (click)="goBack()" class="text-[13px] font-semibold text-[#4f46e5] hover:underline">← Go back</button>
+          </div>
+        </div>
+      }
 
-            <!-- Regenerate button -->
-            <button
-              type="button"
-              class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
-              (click)="regenerateActiveTab()"
-              [disabled]="isProcessing || !fileId"
-            >
-              {{ isProcessing ? processingAction : 'Regenerate' }}
+      <!-- ════════════════════════════════════
+           SUMMARY TAB
+      ════════════════════════════════════ -->
+      @else if (activeTab === 'summary') {
+
+        <!-- Loading -->
+        @if (summaryState === 'loading') {
+          <div class="flex items-center justify-center h-full">
+            <div class="text-center">
+              <div class="h-8 w-8 rounded-full border-2 border-[#4f46e5] border-t-transparent animate-spin mx-auto"></div>
+              <p class="mt-3 text-[14px] text-[#596061] font-medium">Generating summary...</p>
+            </div>
+          </div>
+        }
+
+        <!-- Error -->
+        @else if (summaryState === 'error') {
+          <div class="flex items-center justify-center h-full p-8">
+            <div class="text-center max-w-[320px]">
+              <p class="text-[15px] font-semibold text-[#2d3435] mb-2">Could not generate summary</p>
+              <p class="text-[13px] text-[#596061] mb-4">{{ summaryError }}</p>
+              <button (click)="regenerateActiveTab()"
+                      class="px-5 py-2.5 bg-[#4f46e5] text-white text-[13px] font-semibold rounded-[8px] hover:bg-[#3d34d3] transition-colors">
+                Try Again
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- Ready: Figma Summary View layout -->
+        @else if (summaryState === 'ready') {
+          <div class="flex gap-6 max-w-[1000px] mx-auto py-10 px-6">
+
+            <!-- Left: Article -->
+            <div class="flex-1 min-w-0">
+              <!-- AI SUMMARY chip -->
+              <span class="inline-flex items-center px-3 py-1 rounded-full bg-[#ede9fe] text-[#4f46e5] text-[11px] font-bold uppercase tracking-wider mb-5">
+                AI Summary
+              </span>
+
+              <!-- Title -->
+              <h1 class="text-[32px] font-bold text-[#2d3435] leading-tight mb-6">{{ summaryTitle }}</h1>
+
+              <!-- Summary content -->
+              <div class="text-[15px] text-[#596061] leading-relaxed whitespace-pre-line">{{ summaryContent }}</div>
+
+              <!-- Footer -->
+              <div class="mt-10 pt-5 border-t border-[#f2f4f4] flex items-center justify-between text-[12px] text-[#596061]">
+                <div class="flex items-center gap-2">
+                  <svg class="w-3.5 h-3.5 text-[#4f46e5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
+                  </svg>
+                  Generated by Gemini AI
+                </div>
+                @if (fileTopic) {
+                  <span class="text-[#596061]">Topic: <strong class="text-[#2d3435]">{{ fileTopic }}</strong></span>
+                }
+              </div>
+            </div>
+
+            <!-- Right: Action sidebar -->
+            <div class="w-[220px] shrink-0 space-y-3 pt-1">
+              <p class="text-[11px] font-bold uppercase tracking-wider text-[#596061] mb-4">ACTIONS</p>
+
+              <button (click)="shareSummary()" [disabled]="shareLoading"
+                      class="w-full flex items-center gap-3 px-4 py-3 bg-[#4f46e5] hover:bg-[#3d34d3] text-white text-[13px] font-semibold rounded-[8px] transition-colors disabled:opacity-50">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                </svg>
+                Share Summary
+              </button>
+
+              <button (click)="regenerateActiveTab()" [disabled]="isProcessing"
+                      class="w-full flex items-center gap-3 px-4 py-3 border border-[#e5e7eb] bg-white hover:bg-gray-50 text-[#2d3435] text-[13px] font-semibold rounded-[8px] transition-colors disabled:opacity-50">
+                <svg class="w-4 h-4 shrink-0 text-[#596061]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                Regenerate
+              </button>
+
+              <!-- AI Insight card -->
+              <div class="mt-6 p-4 bg-[#f0f4ff] border border-[#c7d2fe] rounded-[10px]">
+                <div class="flex items-center gap-2 mb-2">
+                  <svg class="w-4 h-4 text-[#4f46e5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
+                  </svg>
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-[#4f46e5]">AI INSIGHT</span>
+                </div>
+                <p class="text-[12px] text-[#596061] leading-snug mb-3">
+                  Ready to test your knowledge? Generate a quiz based on this content.
+                </p>
+                <button (click)="selectTab('quiz')"
+                        class="text-[12px] font-semibold text-[#4f46e5] hover:underline">
+                  Generate Quiz →
+                </button>
+              </div>
+            </div>
+
+          </div>
+        }
+
+        <!-- Idle (shouldn't happen - summary auto-loads) -->
+        @else {
+          <div class="flex items-center justify-center h-full">
+            <div class="text-center">
+              <div class="h-8 w-8 rounded-full border-2 border-[#4f46e5] border-t-transparent animate-spin mx-auto"></div>
+            </div>
+          </div>
+        }
+      }
+
+
+      <!-- ════════════════════════════════════
+           FLASHCARDS TAB
+      ════════════════════════════════════ -->
+      @else if (activeTab === 'flashcards') {
+
+        <!-- Loading -->
+        @if (flashcardsState === 'loading') {
+          <div class="flex items-center justify-center h-full">
+            <div class="text-center">
+              <div class="h-8 w-8 rounded-full border-2 border-[#4f46e5] border-t-transparent animate-spin mx-auto"></div>
+              <p class="mt-3 text-[14px] text-[#596061] font-medium">Generating flashcards...</p>
+            </div>
+          </div>
+        }
+
+        <!-- Error -->
+        @else if (flashcardsState === 'error') {
+          <div class="flex items-center justify-center h-full p-8">
+            <div class="text-center max-w-[320px]">
+              <p class="text-[15px] font-semibold text-[#2d3435] mb-2">Could not generate flashcards</p>
+              <p class="text-[13px] text-[#596061] mb-4">{{ flashcardsError }}</p>
+              <button (click)="regenerateActiveTab()"
+                      class="px-5 py-2.5 bg-[#4f46e5] text-white text-[13px] font-semibold rounded-[8px] hover:bg-[#3d34d3] transition-colors">
+                Try Again
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- Ready: Figma Flashcards layout -->
+        @else if (flashcardsState === 'ready' && currentFlashcard) {
+          <div class="flex flex-col h-full">
+
+            <!-- Sub-header -->
+            <div class="flex items-center px-8 pt-8 pb-4">
+              <div class="flex-1 min-w-0">
+                <h2 class="text-[18px] font-bold text-[#2d3435] truncate">{{ flashcardsTitle || fileName }}</h2>
+                @if (fileTopic) {
+                  <p class="text-[11px] uppercase tracking-widest font-semibold text-[#596061] mt-0.5">{{ fileTopic }}</p>
+                }
+              </div>
+              <button (click)="shareFlashcards()" [disabled]="shareLoading"
+                      class="p-2 text-[#596061] hover:text-[#4f46e5] transition-colors rounded-[8px] hover:bg-[#f0f0fe]" title="Share flashcards">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Card area (centered, flex-1) -->
+            <div class="flex-1 flex flex-col items-center justify-center px-6 pb-4">
+
+              <!-- Card with stack decoration -->
+              <div class="relative w-full max-w-[580px] cursor-pointer select-none" (click)="toggleFlashcardSide()">
+                <!-- Stack decoration -->
+                <div class="absolute inset-0 translate-y-2.5 translate-x-2 bg-[#e5e7eb] rounded-[16px]"></div>
+                <div class="absolute inset-0 translate-y-1 translate-x-1 bg-[#f2f4f4] rounded-[16px]"></div>
+
+                <!-- Main card -->
+                <div class="relative bg-white border border-[#e5e7eb] rounded-[16px] shadow-sm px-10 py-12 min-h-[240px] flex flex-col items-center justify-center text-center transition-all duration-200 hover:shadow-md">
+                  <p class="text-[11px] uppercase tracking-[0.18em] font-bold text-[#596061] mb-5">
+                    {{ flashcardShowsBack ? 'BACK' : 'FRONT' }}
+                  </p>
+                  <p class="text-[26px] font-bold text-[#2d3435] leading-snug">
+                    {{ flashcardShowsBack ? currentFlashcard.back : currentFlashcard.front }}
+                  </p>
+
+                  @if (!flashcardShowsBack) {
+                    <div class="mt-6 flex flex-col items-center gap-1.5 text-[#596061]">
+                      <!-- Tap icon -->
+                      <svg class="w-6 h-6 text-[#4f46e5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                              d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zm-7.518-.267A8.25 8.25 0 1120.25 10.5M8.288 14.212A5.25 5.25 0 1117.25 10.5"/>
+                      </svg>
+                      <span class="text-[11px] uppercase tracking-widest font-semibold">TAP TO FLIP</span>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- Action buttons -->
+              <div class="flex items-center gap-4 mt-8">
+                <button (click)="goToPreviousFlashcard()" [disabled]="!canGoToPreviousFlashcard"
+                        class="flex items-center gap-2.5 px-8 py-3.5 border-2 border-red-400 text-red-500 text-[13px] font-bold uppercase tracking-wide rounded-[12px] hover:bg-red-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9"/>
+                  </svg>
+                  Review Again
+                </button>
+                <button (click)="goToNextFlashcard()" [disabled]="!canGoToNextFlashcard"
+                        class="flex items-center gap-2.5 px-8 py-3.5 border-2 border-green-400 text-green-600 text-[13px] font-bold uppercase tracking-wide rounded-[12px] hover:bg-green-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  Got It
+                </button>
+              </div>
+            </div>
+
+            <!-- Progress footer -->
+            <div class="shrink-0 px-8 pb-8">
+              <div class="max-w-[580px] mx-auto">
+                <div class="w-full bg-[#e5e7eb] h-[3px] rounded-full overflow-hidden mb-2">
+                  <div class="bg-[#4f46e5] h-full rounded-full transition-all duration-300"
+                       [style.width.%]="((flashcardIndex + 1) / flashcards.length) * 100"></div>
+                </div>
+                <p class="text-center text-[12px] uppercase tracking-widest font-semibold text-[#596061]">
+                  CARD {{ flashcardIndex + 1 }} OF {{ flashcards.length }}
+                </p>
+              </div>
+            </div>
+
+          </div>
+        }
+
+        <!-- Fallback raw content or empty -->
+        @else if (flashcardsState === 'ready' && flashcardsRawContent) {
+          <div class="max-w-[680px] mx-auto py-10 px-6">
+            <pre class="text-[13px] text-[#596061] whitespace-pre-wrap leading-relaxed">{{ flashcardsRawContent }}</pre>
+          </div>
+        }
+
+        @else {
+          <div class="flex items-center justify-center h-full">
+            <div class="h-8 w-8 rounded-full border-2 border-[#4f46e5] border-t-transparent animate-spin"></div>
+          </div>
+        }
+      }
+
+
+      <!-- ════════════════════════════════════
+           QUIZ TAB
+      ════════════════════════════════════ -->
+      @else if (activeTab === 'quiz') {
+
+        <!-- ── IDLE: Quiz Setup (Figma Quiz Setup layout) ── -->
+        @if (quizState === 'idle' || quizState === 'error') {
+          <div class="flex items-center justify-center min-h-full py-10 px-6">
+            <div class="bg-white rounded-[12px] border border-[#e5e7eb] shadow-sm w-full max-w-[580px] p-8">
+
+              <h2 class="text-[28px] font-bold text-[#2d3435] text-center mb-1">Generate Quiz</h2>
+              <p class="text-[14px] text-[#596061] text-center mb-8">Configure your intelligent study session</p>
+
+              <!-- Error -->
+              @if (quizState === 'error') {
+                <div class="mb-6 px-4 py-3 bg-red-50 border border-red-200 rounded-[8px] text-[13px] text-red-700">
+                  {{ quizError }} — adjust settings and try again.
+                </div>
+              }
+
+              <!-- Selected File -->
+              <div class="mb-6">
+                <h3 class="text-[15px] font-semibold text-[#2d3435] mb-3">Select Files</h3>
+                <div class="bg-[#f9f9f9] border border-[#e5e7eb] rounded-[10px] divide-y divide-[#f2f4f4]">
+                  <div class="flex items-center gap-3 px-4 py-3.5">
+                    <div class="w-5 h-5 rounded border-2 border-[#4f46e5] bg-[#4f46e5] flex items-center justify-center shrink-0">
+                      <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                      </svg>
+                    </div>
+                    <svg class="w-4 h-4 text-[#596061] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                    </svg>
+                    <span class="flex-1 text-[14px] font-medium text-[#2d3435] truncate">{{ fileName }}</span>
+                    <span class="text-[12px] text-[#596061] shrink-0">1 FILE SELECTED</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Difficulty -->
+              <div class="mb-6">
+                <h3 class="text-[15px] font-semibold text-[#2d3435] mb-3">Difficulty</h3>
+                <div class="flex gap-2">
+                  <button (click)="difficulty = 'Easy'"
+                          class="flex-1 py-2.5 rounded-full text-[14px] font-semibold border-2 transition-all"
+                          [ngClass]="difficulty === 'Easy' ? 'bg-[#4f46e5] text-white border-[#4f46e5]' : 'bg-[#f2f4f4] text-[#596061] border-transparent hover:border-[#e5e7eb]'">
+                    Easy
+                  </button>
+                  <button (click)="difficulty = 'Medium'"
+                          class="flex-1 py-2.5 rounded-full text-[14px] font-semibold border-2 transition-all"
+                          [ngClass]="difficulty === 'Medium' ? 'bg-[#4f46e5] text-white border-[#4f46e5]' : 'bg-[#f2f4f4] text-[#596061] border-transparent hover:border-[#e5e7eb]'">
+                    Medium
+                  </button>
+                  <button (click)="difficulty = 'Hard'"
+                          class="flex-1 py-2.5 rounded-full text-[14px] font-semibold border-2 transition-all"
+                          [ngClass]="difficulty === 'Hard' ? 'bg-[#4f46e5] text-white border-[#4f46e5]' : 'bg-[#f2f4f4] text-[#596061] border-transparent hover:border-[#e5e7eb]'">
+                    Hard
+                  </button>
+                </div>
+              </div>
+
+              <!-- Number of Questions -->
+              <div class="mb-8">
+                <div class="flex items-center justify-between mb-3">
+                  <h3 class="text-[15px] font-semibold text-[#2d3435]">Number of Questions</h3>
+                  <span class="text-[20px] font-bold text-[#4f46e5]">{{ questionCount }}</span>
+                </div>
+                <input type="range" [(ngModel)]="questionCount" min="5" max="20" step="1"
+                       class="w-full h-1.5 bg-[#e5e7eb] rounded-full appearance-none cursor-pointer accent-[#4f46e5]">
+                <div class="flex items-center justify-between text-[11px] text-[#596061] font-semibold mt-2">
+                  <span>5 QUESTIONS</span>
+                  <span>20 QUESTIONS</span>
+                </div>
+              </div>
+
+              <!-- Start Quiz button -->
+              <button (click)="generateQuiz()" [disabled]="isProcessing"
+                      class="w-full py-4 bg-[#4f46e5] hover:bg-[#3d34d3] text-white text-[16px] font-bold rounded-[10px] transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                @if (isProcessing) {
+                  <div class="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
+                  Generating...
+                } @else {
+                  Start Quiz
+                }
+              </button>
+              <p class="text-center text-[12px] text-[#596061] mt-3">
+                AI will generate a personalized quiz based on your selected materials.
+              </p>
+            </div>
+          </div>
+        }
+
+        <!-- ── LOADING ── -->
+        @else if (quizState === 'loading') {
+          <div class="flex items-center justify-center h-full">
+            <div class="text-center">
+              <div class="h-8 w-8 rounded-full border-2 border-[#4f46e5] border-t-transparent animate-spin mx-auto"></div>
+              <p class="mt-3 text-[14px] text-[#596061] font-medium">Generating quiz...</p>
+            </div>
+          </div>
+        }
+
+        <!-- ── READY: Start screen ── -->
+        @else if (quizState === 'ready') {
+          <div class="flex items-center justify-center h-full p-8">
+            <div class="text-center max-w-[380px]">
+              <div class="w-16 h-16 rounded-full bg-[#ede9fe] flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-[#4f46e5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                </svg>
+              </div>
+              <h2 class="text-[22px] font-bold text-[#2d3435] mb-2">Quiz Ready!</h2>
+              <p class="text-[14px] text-[#596061] mb-6">
+                {{ quizQuestions.length }} questions · {{ difficulty }} difficulty
+              </p>
+              <button (click)="startQuiz()"
+                      class="px-8 py-3 bg-[#4f46e5] hover:bg-[#3d34d3] text-white text-[15px] font-bold rounded-[10px] transition-colors">
+                Begin Quiz →
+              </button>
+              <button (click)="quizState = 'idle'" class="block w-full text-center text-[13px] text-[#596061] hover:text-[#4f46e5] mt-3 transition-colors">
+                Reconfigure settings
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- ── IN-PROGRESS: Figma Quiz Question layout ── -->
+        @else if (quizState === 'in-progress' && currentQuestion) {
+          <div class="flex flex-col h-full">
+
+            <!-- Progress header -->
+            <div class="px-8 pt-8 pb-6 shrink-0">
+              @if (fileTopic) {
+                <p class="text-[11px] uppercase tracking-widest font-bold text-[#596061] mb-0.5">{{ fileTopic }}</p>
+              }
+              <p class="text-[16px] font-bold text-[#2d3435]">
+                Question {{ currentIndex + 1 }} of {{ quizQuestions.length }}
+              </p>
+              <!-- Progress bar -->
+              <div class="mt-3 w-full bg-[#e5e7eb] h-[4px] rounded-full overflow-hidden">
+                <div class="bg-[#4f46e5] h-full rounded-full transition-all duration-500"
+                     [style.width.%]="((currentIndex) / quizQuestions.length) * 100"></div>
+              </div>
+            </div>
+
+            <!-- Question + Options (scrollable) -->
+            <div class="flex-1 overflow-y-auto px-8 pb-4">
+              <h2 class="text-[22px] font-bold text-[#2d3435] text-center max-w-[680px] mx-auto mb-10 leading-snug">
+                {{ currentQuestion.question }}
+              </h2>
+
+              <!-- 2×2 Options grid (Figma layout) -->
+              <div class="grid grid-cols-2 gap-4 max-w-[680px] mx-auto">
+                @for (option of currentQuestion.options; track $index; let i = $index) {
+                  <button (click)="selectAnswer(option)"
+                          [disabled]="currentQuestion.userAnswer !== null"
+                          class="flex items-start gap-4 p-5 bg-white border-2 rounded-[12px] text-left transition-all duration-150 disabled:cursor-default"
+                          [ngClass]="{
+                            'border-[#4f46e5] bg-[#f0f0fe] shadow-sm': currentQuestion.userAnswer === option && currentQuestion.isCorrect !== false,
+                            'border-red-400 bg-red-50': currentQuestion.userAnswer === option && currentQuestion.isCorrect === false,
+                            'border-green-400 bg-green-50': currentQuestion.userAnswer !== null && currentQuestion.userAnswer !== option && isCorrectOption(currentQuestion, option),
+                            'border-[#e5e7eb] hover:border-[#4f46e5] hover:bg-[#fafafa]': currentQuestion.userAnswer === null
+                          }">
+                    <span class="w-8 h-8 rounded-[8px] flex items-center justify-center text-[13px] font-bold shrink-0 transition-colors"
+                          [ngClass]="currentQuestion.userAnswer === option ? 'bg-[#4f46e5] text-white' : 'bg-[#f2f4f4] text-[#596061]'">
+                      {{ ['A','B','C','D'][i] }}
+                    </span>
+                    <span class="text-[14px] text-[#2d3435] font-medium leading-snug pt-1 flex-1">{{ option }}</span>
+                    @if (currentQuestion.userAnswer !== null && currentQuestion.userAnswer === option && currentQuestion.isCorrect) {
+                      <svg class="w-4 h-4 text-[#4f46e5] shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                      </svg>
+                    }
+                    @if (currentQuestion.userAnswer !== null && currentQuestion.userAnswer === option && currentQuestion.isCorrect === false) {
+                      <svg class="w-4 h-4 text-red-500 shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                      </svg>
+                    }
+                  </button>
+                }
+              </div>
+
+              <!-- Correct answer reveal -->
+              @if (currentQuestion.userAnswer !== null && currentQuestion.isCorrect === false) {
+                <div class="mt-4 max-w-[680px] mx-auto flex items-start gap-2 p-3 bg-green-50 border border-green-200 rounded-[8px]">
+                  <svg class="w-4 h-4 text-green-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  <p class="text-[12px] text-green-800">
+                    Correct answer: <strong>{{ getDisplayCorrectAnswer(currentQuestion) }}</strong>
+                  </p>
+                </div>
+              }
+            </div>
+
+            <!-- Footer: next button -->
+            <div class="h-[72px] border-t border-[#e5e7eb] bg-white flex items-center justify-between px-8 shrink-0">
+              <span class="text-[12px] text-[#596061]">{{ currentQuestion.tagName }}</span>
+              <button (click)="nextQuestion()" [disabled]="currentQuestion.userAnswer === null"
+                      class="flex items-center gap-2 px-6 py-3 bg-[#4f46e5] hover:bg-[#3d34d3] text-white text-[14px] font-semibold rounded-[10px] transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                {{ currentIndex === quizQuestions.length - 1 ? 'Finish Quiz' : 'Next Question' }}
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+              </button>
+            </div>
+
+          </div>
+        }
+
+        <!-- ── COMPLETED: Results ── -->
+        @else if (quizState === 'completed') {
+          <div class="flex items-center justify-center min-h-full py-10 px-6">
+            <div class="w-full max-w-[520px]">
+
+              <!-- Score card -->
+              <div class="bg-white rounded-[16px] border border-[#e5e7eb] shadow-sm p-8 text-center mb-6">
+                <div class="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center text-[28px] font-black text-white"
+                     [ngClass]="scorePercent >= 80 ? 'bg-[#4f46e5]' : scorePercent >= 50 ? 'bg-amber-500' : 'bg-red-400'">
+                  {{ scorePercent }}%
+                </div>
+                <h2 class="text-[24px] font-bold text-[#2d3435] mb-1">
+                  {{ scorePercent === 100 ? 'Perfect Score! 🎉' : scorePercent >= 80 ? 'Great Work!' : scorePercent >= 50 ? 'Keep Practicing' : 'Need More Study' }}
+                </h2>
+                <p class="text-[14px] text-[#596061]">
+                  You got <strong class="text-[#2d3435]">{{ score }}</strong> out of <strong class="text-[#2d3435]">{{ quizQuestions.length }}</strong> questions correct
+                </p>
+              </div>
+
+              <!-- Action buttons -->
+              <div class="space-y-3">
+                @if (getWeakTagsFromQuiz().length > 0 && !tagsQuizLoading) {
+                  <button (click)="practiceWeakTags()"
+                          class="w-full py-3.5 bg-amber-500 hover:bg-amber-600 text-white text-[14px] font-bold rounded-[10px] transition-colors">
+                    Practice Weak Topics ({{ getWeakTagsFromQuiz().length }} topics)
+                  </button>
+                }
+                <button (click)="shareQuizResults()" [disabled]="shareLoading"
+                        class="w-full py-3.5 border border-[#e5e7eb] bg-white hover:bg-gray-50 text-[#2d3435] text-[14px] font-semibold rounded-[10px] transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                  </svg>
+                  Share Results
+                </button>
+                <button (click)="retryQuiz()"
+                        class="w-full py-3.5 border border-[#e5e7eb] bg-white hover:bg-gray-50 text-[#596061] text-[14px] font-semibold rounded-[10px] transition-colors">
+                  Retry Quiz
+                </button>
+              </div>
+
+              <!-- Question review list -->
+              <div class="mt-8">
+                <h3 class="text-[15px] font-bold text-[#2d3435] mb-4">Review Answers</h3>
+                <div class="space-y-3">
+                  @for (q of quizQuestions; track $index; let i = $index) {
+                    <button (click)="reviewQuestion(i)"
+                            class="w-full flex items-start gap-3 p-4 bg-white border rounded-[10px] text-left hover:shadow-sm transition-all"
+                            [ngClass]="q.isCorrect ? 'border-green-200' : 'border-red-200'">
+                      <div class="w-6 h-6 rounded-full shrink-0 flex items-center justify-center mt-0.5"
+                           [ngClass]="q.isCorrect ? 'bg-green-100' : 'bg-red-100'">
+                        <svg class="w-3.5 h-3.5" [ngClass]="q.isCorrect ? 'text-green-600' : 'text-red-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          @if (q.isCorrect) {
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                          } @else {
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                          }
+                        </svg>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-[13px] font-semibold text-[#2d3435] truncate">Q{{ i+1 }}. {{ q.question }}</p>
+                        @if (!q.isCorrect && q.correctAnswer) {
+                          <p class="text-[12px] text-green-700 mt-0.5 truncate">✓ {{ q.correctAnswer }}</p>
+                        }
+                      </div>
+                    </button>
+                  }
+                </div>
+              </div>
+
+            </div>
+          </div>
+        }
+
+        <!-- ── REVIEW mode ── -->
+        @else if (quizState === 'review' && currentQuestion) {
+          <div class="flex flex-col h-full">
+            <div class="px-8 pt-8 pb-4 flex items-center gap-3">
+              <button (click)="backToResults()"
+                      class="text-[13px] text-[#596061] hover:text-[#4f46e5] flex items-center gap-1 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+                Back to Results
+              </button>
+              <span class="text-[#c4c9ca]">·</span>
+              <span class="text-[13px] text-[#596061]">Reviewing Q{{ currentIndex + 1 }}</span>
+            </div>
+
+            <div class="flex-1 overflow-y-auto px-8 pb-8">
+              <h2 class="text-[20px] font-bold text-[#2d3435] max-w-[640px] mx-auto mb-8 leading-snug text-center">
+                {{ currentQuestion.question }}
+              </h2>
+
+              <div class="grid grid-cols-2 gap-4 max-w-[680px] mx-auto">
+                @for (option of currentQuestion.options; track $index; let i = $index) {
+                  <div class="flex items-start gap-4 p-5 bg-white border-2 rounded-[12px]"
+                       [ngClass]="{
+                         'border-green-400 bg-green-50': isCorrectOption(currentQuestion, option),
+                         'border-red-400 bg-red-50': currentQuestion.userAnswer === option && !isCorrectOption(currentQuestion, option),
+                         'border-[#e5e7eb]': currentQuestion.userAnswer !== option && !isCorrectOption(currentQuestion, option)
+                       }">
+                    <span class="w-8 h-8 rounded-[8px] flex items-center justify-center text-[13px] font-bold shrink-0"
+                          [ngClass]="isCorrectOption(currentQuestion, option) ? 'bg-green-500 text-white' : 'bg-[#f2f4f4] text-[#596061]'">
+                      {{ ['A','B','C','D'][i] }}
+                    </span>
+                    <span class="text-[14px] text-[#2d3435] font-medium leading-snug pt-1">{{ option }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <div class="h-[64px] border-t border-[#e5e7eb] bg-white flex items-center justify-between px-8 shrink-0">
+              <button (click)="previousReviewQuestion()" [disabled]="currentIndex === 0"
+                      class="flex items-center gap-1.5 text-[13px] font-medium text-[#596061] hover:text-[#2d3435] disabled:opacity-30 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+                Previous
+              </button>
+              <button (click)="nextReviewQuestion()" [disabled]="currentIndex === quizQuestions.length - 1"
+                      class="flex items-center gap-1.5 text-[13px] font-medium text-[#596061] hover:text-[#2d3435] disabled:opacity-30 transition-colors">
+                Next
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        }
+
+      }
+
+    </div>
+    <!-- END CONTENT PANEL -->
+
+
+    <!-- ──────────────── AI CHAT PANEL (collapsible right) ──────────────── -->
+    @if (showChatPanel) {
+      <div class="w-[340px] border-l border-[#e5e7eb] bg-white flex flex-col shrink-0">
+
+        <!-- Chat header -->
+        <div class="h-[56px] border-b border-[#e5e7eb] px-4 flex items-center justify-between shrink-0">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-[#4f46e5] flex items-center justify-center">
+              <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
+              </svg>
+            </div>
+            <div>
+              <p class="text-[13px] font-bold text-[#2d3435] leading-none">Gemini AI</p>
+              <p class="text-[10px] uppercase tracking-wider font-semibold text-[#4f46e5] mt-0.5">Academic Assistant Active</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-1">
+            <button (click)="startNewChat()" title="New chat"
+                    class="p-1.5 text-[#596061] hover:text-[#2d3435] hover:bg-[#f2f4f4] rounded-[6px] transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+            </button>
+            <button (click)="loadChatSessions()" title="History"
+                    class="p-1.5 text-[#596061] hover:text-[#2d3435] hover:bg-[#f2f4f4] rounded-[6px] transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
             </button>
           </div>
         </div>
 
-        <!-- Share notifications -->
-        @if (shareSuccess) {
-          <div class="mb-3 rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-700">
-            {{ shareSuccess }}
+        <!-- Sessions list overlay -->
+        @if (showSessionsList) {
+          <div class="absolute right-0 top-[112px] w-[340px] bg-white border border-[#e5e7eb] rounded-[10px] shadow-xl z-20 max-h-[320px] overflow-y-auto">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-[#f2f4f4]">
+              <span class="text-[13px] font-bold text-[#2d3435]">Chat History</span>
+              <button (click)="showSessionsList = false" class="text-[#596061] hover:text-[#2d3435] transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+            @if (chatSessions.length === 0) {
+              <p class="text-[13px] text-[#596061] text-center py-6">No previous sessions</p>
+            } @else {
+              @for (session of chatSessions; track session.id) {
+                <div class="flex items-center gap-2 px-4 py-3 border-b border-[#f9f9f9] hover:bg-[#f9f9f9] group">
+                  <button (click)="openSession(session.id)" class="flex-1 text-left text-[13px] text-[#2d3435] font-medium truncate">
+                    {{ session.title || 'Chat session' }}
+                  </button>
+                  <button (click)="deleteSession(session.id)"
+                          class="text-[#596061] hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all shrink-0">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                  </button>
+                </div>
+              }
+            }
+          </div>
+        }
+
+        <!-- Messages area -->
+        <div #chatContainer class="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+          @if (messages.length === 0 && !chatLoading) {
+            <div class="text-center pt-8">
+              <div class="w-12 h-12 rounded-full bg-[#f0f0fe] flex items-center justify-center mx-auto mb-3">
+                <svg class="w-6 h-6 text-[#4f46e5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                </svg>
+              </div>
+              <p class="text-[13px] font-semibold text-[#2d3435]">Ask me about this document</p>
+              <p class="text-[12px] text-[#596061] mt-1 leading-relaxed px-4">
+                I can explain concepts, answer questions, and help you study the material.
+              </p>
+            </div>
+          }
+
+          @for (msg of messages; track $index) {
+            <div class="flex gap-2" [ngClass]="msg.role === 'user' ? 'justify-end' : 'justify-start'">
+              @if (msg.role === 'assistant') {
+                <div class="w-7 h-7 rounded-full bg-[#4f46e5] flex items-center justify-center shrink-0 mt-0.5">
+                  <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
+                  </svg>
+                </div>
+              }
+              <div class="max-w-[78%] px-3.5 py-2.5 rounded-[12px] text-[13px] leading-relaxed"
+                   [ngClass]="msg.role === 'user'
+                     ? 'bg-[#4f46e5] text-white rounded-br-[4px]'
+                     : 'bg-[#f2f4f4] text-[#2d3435] rounded-bl-[4px]'">
+                @if (msg.role === 'assistant') {
+                  <span [innerHTML]="renderMarkdown(msg.content)"></span>
+                } @else {
+                  {{ msg.content }}
+                }
+              </div>
+            </div>
+          }
+
+          @if (chatLoading) {
+            <div class="flex items-center gap-2 justify-start">
+              <div class="w-7 h-7 rounded-full bg-[#4f46e5] flex items-center justify-center shrink-0">
+                <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
+                </svg>
+              </div>
+              <div class="bg-[#f2f4f4] rounded-[12px] rounded-bl-[4px] px-4 py-3 flex items-center gap-1">
+                <span class="w-1.5 h-1.5 bg-[#596061] rounded-full animate-bounce" style="animation-delay:0ms"></span>
+                <span class="w-1.5 h-1.5 bg-[#596061] rounded-full animate-bounce" style="animation-delay:150ms"></span>
+                <span class="w-1.5 h-1.5 bg-[#596061] rounded-full animate-bounce" style="animation-delay:300ms"></span>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Error -->
+        @if (chatError) {
+          <div class="mx-4 mb-2 px-3 py-2 bg-red-50 border border-red-200 rounded-[8px] text-[12px] text-red-700">
+            {{ chatError }}
+          </div>
+        }
+
+        <!-- Quick Actions -->
+        <div class="px-4 pt-3 pb-2 border-t border-[#f2f4f4] flex flex-wrap gap-1.5">
+          <button (click)="selectTab('quiz')"
+                  class="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#f0f0fe] text-[#4f46e5] text-[11px] font-bold rounded-[6px] hover:bg-[#ede9fe] transition-colors uppercase tracking-wide">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Generate Quiz
+          </button>
+          <button (click)="selectTab('flashcards')"
+                  class="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#f2f4f4] text-[#596061] text-[11px] font-bold rounded-[6px] hover:bg-[#e5e7eb] transition-colors uppercase tracking-wide">
+            Flashcards
+          </button>
+          <button (click)="selectTab('summary')"
+                  class="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#f2f4f4] text-[#596061] text-[11px] font-bold rounded-[6px] hover:bg-[#e5e7eb] transition-colors uppercase tracking-wide">
+            Summary
+          </button>
+        </div>
+
+        <!-- Input area -->
+        <div class="px-4 pb-4">
+          <div class="flex items-end gap-2 bg-[#f9f9f9] border border-[#e5e7eb] rounded-[12px] px-3 py-2.5">
+            <textarea [(ngModel)]="chatInput" (keydown.enter)="handleChatEnter($event)"
+                      placeholder="Ask Gemini about the PDF..."
+                      rows="1"
+                      class="flex-1 bg-transparent text-[13px] text-[#2d3435] placeholder:text-[#9ca3af] outline-none resize-none leading-relaxed max-h-[100px]"></textarea>
+            <button (click)="onSendMessage()" [disabled]="!chatInput.trim() || chatLoading"
+                    class="w-8 h-8 bg-[#4f46e5] hover:bg-[#3d34d3] text-white rounded-[8px] flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </button>
+          </div>
+          <p class="text-[10px] text-[#9ca3af] text-center mt-1.5">Gemini may produce inaccurate info. Verify key facts.</p>
+        </div>
+
+      </div>
+    }
+
+  </div>
+  <!-- END MAIN BODY -->
+
+
+  <!-- ══════════════════════════════════════════
+       SHARE MODAL
+  ══════════════════════════════════════════ -->
+  @if (shareModal.show) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+         (click)="closeShareModal()">
+      <div class="bg-white rounded-[12px] w-full max-w-[420px] p-6 shadow-2xl" (click)="$event.stopPropagation()">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-[16px] font-bold text-[#2d3435]">Share {{ shareModal.type }}</h3>
+          <button (click)="closeShareModal()" class="text-[#596061] hover:text-[#2d3435] transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <p class="text-[13px] text-[#596061] mb-4">{{ shareModal.title }}</p>
+        @if (shareUrl) {
+          <div class="flex items-center gap-2 bg-[#f2f4f4] rounded-[8px] px-3 py-2.5 mb-4">
+            <span class="flex-1 text-[12px] text-[#2d3435] truncate font-mono">{{ shareUrl }}</span>
+            <button (click)="copyToClipboard(shareUrl)"
+                    class="shrink-0 text-[12px] font-semibold text-[#4f46e5] hover:underline">
+              {{ copiedToClipboard ? 'Copied!' : 'Copy' }}
+            </button>
           </div>
         }
         @if (shareError) {
-          <div class="mb-3 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700">
-            {{ shareError }}
-          </div>
+          <p class="text-[12px] text-red-600">{{ shareError }}</p>
         }
+        <button (click)="closeShareModal()"
+                class="w-full py-2.5 bg-[#4f46e5] hover:bg-[#3d34d3] text-white text-[14px] font-semibold rounded-[8px] transition-colors mt-2">
+          Done
+        </button>
       </div>
-
-      <div class="flex-1 overflow-y-auto p-6">
-        @if (activeTab === 'summary') {
-          @if (summaryState === 'loading') {
-          <div class="flex h-full items-center justify-center">
-            <div class="text-center">
-              <div class="mx-auto h-8 w-8 rounded-full border-2 border-gray-300 border-t-gray-900 animate-spin"></div>
-              <p class="mt-3 text-sm text-gray-500">Generating summary...</p>
-            </div>
-          </div>
-          }
-
-          @if (summaryState === 'error') {
-          <div class="rounded-2xl border border-rose-200 bg-rose-50 p-6">
-            <p class="text-sm font-semibold text-rose-700">{{ summaryError }}</p>
-            <button type="button" class="mt-4 rounded-lg border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-rose-50 transition" (click)="regenerateActiveTab()">
-              Try Again
-            </button>
-          </div>
-          }
-
-          @if (summaryState === 'ready') {
-          <div class="space-y-4">
-            @if (fileTopic) {
-            <div class="flex items-start gap-3 rounded-xl border border-violet-100 bg-violet-50 px-4 py-3.5">
-              <div class="mt-0.5 shrink-0 rounded-lg bg-violet-100 p-1.5 text-violet-600">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
-                </svg>
-              </div>
-              <div>
-                <p class="text-[10px] font-bold uppercase tracking-widest text-violet-400">Topic</p>
-                <p class="mt-0.5 text-sm font-semibold leading-snug text-violet-900">{{ fileTopic }}</p>
-              </div>
-            </div>
-            }
-
-            <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-              <div class="flex items-center gap-2 border-b border-gray-100 bg-gray-50 px-5 py-3">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.347.346a3.51 3.51 0 01-.527.607l-1.12 1.12"/>
-                </svg>
-                <span class="text-xs font-semibold uppercase tracking-widest text-gray-500">AI Summary</span>
-                @if (summaryContent) {
-                <span class="ml-auto rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-500">
-                  {{ summaryContent.split(' ').length }} words
-                </span>
-                }
-              </div>
-              <div class="px-6 py-5">
-                <p class="text-sm leading-[1.9] text-gray-700">{{ summaryContent }}</p>
-              </div>
-            </div>
-          </div>
-          }
-        }
-
-        @if (activeTab === 'flashcards') {
-          @if (flashcardsState === 'loading') {
-          <div class="flex h-full items-center justify-center">
-            <div class="text-center">
-              <div class="mx-auto h-8 w-8 rounded-full border-2 border-gray-300 border-t-gray-900 animate-spin"></div>
-              <p class="mt-3 text-sm text-gray-500">Generating flashcards...</p>
-            </div>
-          </div>
-          }
-
-          @if (flashcardsState === 'error') {
-          <div class="rounded-2xl border border-rose-200 bg-rose-50 p-6">
-            <p class="text-sm font-semibold text-rose-700">{{ flashcardsError }}</p>
-            <button type="button" class="mt-4 rounded-lg border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-rose-50 transition" (click)="regenerateActiveTab()">
-              Try Again
-            </button>
-          </div>
-          }
-
-          @if (flashcardsState === 'ready') {
-            @if (flashcards.length > 0) {
-            <div class="space-y-5">
-              <div class="flex items-center justify-between text-xs font-semibold text-gray-500">
-                <span>Card {{ flashcardIndex + 1 }} of {{ flashcards.length }}</span>
-                <span>{{ flashcardShowsBack ? 'Back Side' : 'Front Side' }}</span>
-              </div>
-
-              <button
-                type="button"
-                class="w-full rounded-2xl border border-gray-200 bg-white p-7 text-left shadow-sm transition hover:border-gray-300"
-                (click)="toggleFlashcardSide()"
-              >
-                <div class="text-xs font-bold uppercase tracking-[0.16em]" [ngClass]="flashcardShowsBack ? 'text-emerald-700' : 'text-gray-500'">
-                  {{ flashcardShowsBack ? 'Back' : 'Front' }}
-                </div>
-                <p class="mt-4 min-h-[220px] text-lg leading-8" [ngClass]="flashcardShowsBack ? 'text-emerald-950' : 'font-semibold text-gray-900'">
-                  {{ flashcardShowsBack ? currentFlashcard?.back : currentFlashcard?.front }}
-                </p>
-                <div class="mt-5 text-xs font-medium text-gray-400">Click card to flip</div>
-              </button>
-
-              <div class="flex items-center justify-center gap-4">
-                <button
-                  type="button"
-                  class="inline-flex h-12 w-12 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 transition hover:bg-gray-50 disabled:opacity-40"
-                  (click)="goToPreviousFlashcard()"
-                  [disabled]="!canGoToPreviousFlashcard"
-                >
-                  <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                  </svg>
-                </button>
-
-                <button
-                  type="button"
-                  class="inline-flex h-12 w-12 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 transition hover:bg-gray-50 disabled:opacity-40"
-                  (click)="goToNextFlashcard()"
-                  [disabled]="!canGoToNextFlashcard"
-                >
-                  <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-            } @else {
-            <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-              <pre class="whitespace-pre-wrap text-sm font-sans leading-7 text-gray-800">{{ flashcardsRawContent }}</pre>
-            </div>
-            }
-          }
-        }
-
-        @if (activeTab === 'quiz') {
-          @if (quizState === 'loading') {
-          <div class="rounded-2xl border border-gray-200 bg-white p-10 text-center shadow-sm">
-            <div class="mx-auto h-10 w-10 rounded-full border-2 border-gray-300 border-t-gray-900 animate-spin"></div>
-            <p class="mt-4 text-sm font-semibold text-gray-900">Generating your quiz...</p>
-            <p class="mt-1 text-xs text-gray-500">{{ questionCount }} questions • {{ difficulty }} difficulty</p>
-          </div>
-          }
-
-          @if (quizState === 'error') {
-          <div class="rounded-2xl border border-rose-200 bg-rose-50 p-8 text-center">
-            <p class="text-sm font-semibold text-rose-700">{{ quizError }}</p>
-            <button type="button" class="mt-4 rounded-lg border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-rose-50 transition" (click)="retryQuiz()">
-              Try Again
-            </button>
-          </div>
-          }
-
-          @if (quizState === 'ready') {
-          <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-            <div class="text-center">
-              <div class="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-full bg-indigo-50">
-                <svg class="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h3 class="mt-4 text-2xl font-bold text-gray-900">Ready to Test Your Knowledge?</h3>
-              <p class="mt-2 text-sm text-gray-500">{{ quizQuestions.length }} questions generated from this file</p>
-            </div>
-
-            <div class="mt-6 grid grid-cols-3 gap-4 rounded-xl border border-gray-100 bg-gray-50 p-4 text-center">
-              <div>
-                <div class="text-lg font-bold text-gray-900">{{ quizQuestions.length }}</div>
-                <div class="text-xs text-gray-500">Questions</div>
-              </div>
-              <div>
-                <div class="text-lg font-bold text-gray-900">{{ difficulty }}</div>
-                <div class="text-xs text-gray-500">Difficulty</div>
-              </div>
-              <div>
-                <div class="text-lg font-bold text-gray-900">80%</div>
-                <div class="text-xs text-gray-500">To Master</div>
-              </div>
-            </div>
-
-            <div class="mt-6 flex items-center justify-center gap-3">
-              <button type="button" class="rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition" (click)="selectTab('summary')">
-                Back to Summary
-              </button>
-              <button type="button" class="rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition" (click)="startQuiz()">
-                Start Quiz
-              </button>
-            </div>
-          </div>
-          }
-
-          @if (quizState === 'in-progress' && currentQuestion) {
-          <div>
-            <div class="mb-6">
-              <div class="mb-2 flex items-center justify-between">
-                <span class="text-xs font-semibold text-gray-500">Question {{ currentIndex + 1 }} of {{ quizQuestions.length }}</span>
-                <span class="text-xs font-semibold text-gray-500">{{ quizProgress }}% complete</span>
-              </div>
-              <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200">
-                <div class="h-full rounded-full bg-indigo-600 transition-all duration-300" [style.width.%]="quizProgress"></div>
-              </div>
-            </div>
-
-            <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-              <h3 class="text-lg font-bold leading-relaxed text-gray-900">{{ currentQuestion.question }}</h3>
-
-              <div class="mt-6 space-y-3">
-                @for (option of currentQuestion.options; track $index; let i = $index) {
-                <button
-                  type="button"
-                  class="w-full rounded-xl border-2 p-4 text-left text-sm transition"
-                  [ngClass]="{
-                    'border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300': currentQuestion.userAnswer === null,
-                    'border-green-600 bg-green-100': currentQuestion.userAnswer === option && currentQuestion.isCorrect,
-                    'border-red-400 bg-red-50': currentQuestion.userAnswer === option && currentQuestion.isCorrect === false,
-                    'border-green-500 bg-green-50': currentQuestion.userAnswer !== null && isCorrectOption(currentQuestion, option) && currentQuestion.userAnswer !== option,
-                    'border-gray-200 bg-gray-50 opacity-60': currentQuestion.userAnswer !== null && !isCorrectOption(currentQuestion, option) && currentQuestion.userAnswer !== option
-                  }"
-                  [disabled]="currentQuestion.userAnswer !== null"
-                  (click)="selectAnswer(option)"
-                >
-                  <div class="flex items-center gap-3">
-                    <span
-                      class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold"
-                      [ngClass]="{
-                        'border-gray-300 text-gray-500': currentQuestion.userAnswer === null,
-                        'border-green-600 text-green-700 bg-green-200': currentQuestion.userAnswer === option && currentQuestion.isCorrect,
-                        'border-red-400 text-red-500 bg-red-100': currentQuestion.userAnswer === option && currentQuestion.isCorrect === false,
-                        'border-green-500 text-green-600 bg-green-100': currentQuestion.userAnswer !== null && isCorrectOption(currentQuestion, option) && currentQuestion.userAnswer !== option,
-                        'border-gray-200 text-gray-400': currentQuestion.userAnswer !== null && !isCorrectOption(currentQuestion, option) && currentQuestion.userAnswer !== option
-                      }"
-                    >
-                      {{ 'ABCD'[i] }}
-                    </span>
-                    <span class="font-medium" [ngClass]="currentQuestion.userAnswer !== null && isCorrectOption(currentQuestion, option) ? 'text-green-700' : 'text-gray-900'">
-                      {{ option }}
-                    </span>
-                  </div>
-                </button>
-                }
-              </div>
-
-              @if (currentQuestion.userAnswer !== null) {
-              <div class="mt-6 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  @if (currentQuestion.isCorrect) {
-                  <span class="inline-flex items-center gap-1 text-sm font-semibold text-green-600">
-                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Correct!
-                  </span>
-                  } @else {
-                  <span class="inline-flex items-center gap-1 text-sm font-semibold text-red-600">
-                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Incorrect
-                  </span>
-                  }
-                </div>
-                <button type="button" class="rounded-lg bg-gray-900 px-5 py-2 text-sm font-semibold text-white hover:bg-gray-800 transition" (click)="nextQuestion()">
-                  {{ currentIndex < quizQuestions.length - 1 ? 'Next Question' : 'See Results' }}
-                </button>
-              </div>
-              }
-            </div>
-
-          </div>
-          }
-
-          @if (quizState === 'completed') {
-          <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-            <div class="text-center">
-              <div class="mx-auto inline-flex h-20 w-20 items-center justify-center rounded-full" [ngClass]="scorePercent >= 80 ? 'bg-green-50' : scorePercent >= 50 ? 'bg-amber-50' : 'bg-red-50'">
-                <span class="text-4xl">{{ scorePercent >= 80 ? '🏆' : scorePercent >= 50 ? '📚' : '💪' }}</span>
-              </div>
-              <h3 class="mt-4 text-2xl font-bold text-gray-900">{{ scorePercent >= 80 ? 'Excellent Work!' : scorePercent >= 50 ? 'Good Effort!' : 'Keep Going!' }}</h3>
-              <p class="mt-2 text-sm font-medium" [ngClass]="scorePercent >= 80 ? 'text-green-600' : scorePercent >= 50 ? 'text-amber-600' : 'text-red-600'">
-                {{ scorePercent >= 80 ? 'You have mastered this file.' : scorePercent >= 50 ? 'Review a bit more to reach mastery.' : 'Review the summary and flashcards, then try again.' }}
-              </p>
-            </div>
-
-            <div class="mt-6 rounded-xl border border-gray-100 bg-gray-50 p-6 text-center">
-              <div class="text-5xl font-extrabold" [ngClass]="{
-                'text-green-600': scorePercent >= 80,
-                'text-amber-600': scorePercent >= 50 && scorePercent < 80,
-                'text-red-600': scorePercent < 50
-              }">{{ scorePercent }}%</div>
-              <div class="mt-1 text-sm text-gray-500">{{ score }} out of {{ quizQuestions.length }} correct</div>
-            </div>
-
-            <div class="mt-6 space-y-3">
-              @for (question of quizQuestions; track $index; let i = $index) {
-              <div class="rounded-xl border p-4" [ngClass]="question.isCorrect ? 'border-green-200 bg-green-50/50' : 'border-red-200 bg-red-50/50'">
-                <p class="text-sm font-medium text-gray-900">{{ i + 1 }}. {{ question.question }}</p>
-                <p class="mt-1 text-xs text-gray-500">
-                  Your answer:
-                  <span class="font-semibold" [ngClass]="question.isCorrect ? 'text-green-600' : 'text-red-600'">{{ question.userAnswer }}</span>
-                  @if (!question.isCorrect) {
-                  • Correct: <span class="font-semibold text-green-600">{{ getDisplayCorrectAnswer(question) }}</span>
-                  }
-                </p>
-                <button
-                  type="button"
-                  class="mt-3 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition"
-                  (click)="reviewQuestion(i)"
-                >
-                  Review Question
-                </button>
-              </div>
-              }
-            </div>
-
-            <div class="mt-8 flex items-center justify-center gap-3">
-              <button type="button" class="rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition" (click)="selectTab('summary')">
-                Back to Summary
-              </button>
-              @if (getWeakTagsFromQuiz().length > 0) {
-              <button
-                type="button"
-                class="rounded-lg bg-amber-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-amber-600 transition disabled:opacity-50"
-                (click)="practiceWeakTags()"
-                [disabled]="tagsQuizLoading"
-              >
-                {{ tagsQuizLoading ? 'Loading...' : 'Practice Weak Topics' }}
-              </button>
-              }
-              <button type="button" class="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition" (click)="retryQuiz()">
-                Retry Quiz
-              </button>
-            </div>
-
-            <!-- Tags Quiz Error -->
-            @if (tagsQuizError) {
-            <div class="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-center text-sm text-red-600">
-              {{ tagsQuizError }}
-            </div>
-            }
-          </div>
-          }
-
-          @if (quizState === 'review' && currentQuestion) {
-          <div>
-            <div class="mb-6">
-              <div class="mb-2 flex items-center justify-between">
-                <span class="text-xs font-semibold text-gray-500">Reviewing Question {{ currentIndex + 1 }} of {{ quizQuestions.length }}</span>
-                <button
-                  type="button"
-                  class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition"
-                  (click)="backToResults()"
-                >
-                  Back to Results
-                </button>
-              </div>
-              <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200">
-                <div class="h-full rounded-full bg-indigo-600 transition-all duration-300" [style.width.%]="((currentIndex + 1) / quizQuestions.length) * 100"></div>
-              </div>
-            </div>
-
-            <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-              <h3 class="text-lg font-bold leading-relaxed text-gray-900">{{ currentQuestion.question }}</h3>
-
-              <div class="mt-6 space-y-3">
-                @for (option of currentQuestion.options; track $index; let i = $index) {
-                <div
-                  class="w-full rounded-xl border-2 p-4 text-left text-sm"
-                  [ngClass]="{
-                    'border-green-600 bg-green-100': currentQuestion.userAnswer === option && currentQuestion.isCorrect,
-                    'border-red-400 bg-red-50': currentQuestion.userAnswer === option && currentQuestion.isCorrect === false,
-                    'border-green-500 bg-green-50': isCorrectOption(currentQuestion, option) && currentQuestion.userAnswer !== option,
-                    'border-gray-200 bg-gray-50 opacity-75': !isCorrectOption(currentQuestion, option) && currentQuestion.userAnswer !== option
-                  }"
-                >
-                  <div class="flex items-center gap-3">
-                    <span
-                      class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold"
-                      [ngClass]="{
-                        'border-green-600 text-green-700 bg-green-200': currentQuestion.userAnswer === option && currentQuestion.isCorrect,
-                        'border-red-400 text-red-500 bg-red-100': currentQuestion.userAnswer === option && currentQuestion.isCorrect === false,
-                        'border-green-500 text-green-600 bg-green-100': isCorrectOption(currentQuestion, option) && currentQuestion.userAnswer !== option,
-                        'border-gray-200 text-gray-400': !isCorrectOption(currentQuestion, option) && currentQuestion.userAnswer !== option
-                      }"
-                    >
-                      {{ 'ABCD'[i] }}
-                    </span>
-                    <span class="font-medium" [ngClass]="isCorrectOption(currentQuestion, option) ? 'text-green-700' : currentQuestion.userAnswer === option && currentQuestion.isCorrect === false ? 'text-red-700' : 'text-gray-900'">
-                      {{ option }}
-                    </span>
-                  </div>
-                </div>
-                }
-              </div>
-
-              <p class="mt-4 text-sm text-gray-600">
-                Correct answer: <span class="font-semibold text-green-700">{{ getDisplayCorrectAnswer(currentQuestion) }}</span>
-              </p>
-
-              <div class="mt-6 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  @if (currentQuestion.isCorrect) {
-                  <span class="inline-flex items-center gap-1 text-sm font-semibold text-green-600">
-                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Correct
-                  </span>
-                  } @else {
-                  <span class="inline-flex items-center gap-1 text-sm font-semibold text-red-600">
-                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Incorrect
-                  </span>
-                  }
-                </div>
-
-                <div class="flex items-center gap-2">
-                  <button
-                    type="button"
-                    class="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
-                    (click)="previousReviewQuestion()"
-                    [disabled]="currentIndex === 0"
-                  >
-                    Previous
-                  </button>
-                  <button
-                    type="button"
-                    class="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800 transition disabled:opacity-50"
-                    (click)="nextReviewQuestion()"
-                    [disabled]="currentIndex === quizQuestions.length - 1"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-          }
-        }
-      </div>
-      }
     </div>
+  }
 
-    <div class="w-[45%] flex flex-col bg-white">
-      <div class="border-b border-gray-200 px-5 py-4 shrink-0">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <svg class="h-5 w-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-            </svg>
-            <h2 class="text-sm font-bold text-gray-900">AI Assistant</h2>
-          </div>
-          <div class="flex items-center gap-1">
-            <button type="button" class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition" title="Chat History" (click)="loadChatSessions()">
-              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </button>
-            <button type="button" class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition" title="New Chat" (click)="startNewChat()">
-              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
-            </button>
-          </div>
-        </div>
-        <p class="mt-0.5 ml-7 text-xs text-gray-500">Ask questions about this document</p>
-      </div>
-
-      <!-- Sessions List -->
-      @if (showSessionsList) {
-      <div class="flex-1 overflow-y-auto p-4 space-y-2">
-        <div class="flex items-center justify-between mb-3">
-          <h3 class="text-sm font-semibold text-gray-900">Chat History</h3>
-          <button type="button" class="text-xs text-indigo-600 hover:text-indigo-800 transition" (click)="showSessionsList = false">Back to Chat</button>
-        </div>
-        @if (chatSessions.length === 0) {
-        <p class="text-sm text-gray-400 text-center py-8">No previous conversations</p>
-        }
-        @for (session of chatSessions; track session.id) {
-        <div class="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 p-3 hover:bg-gray-100 transition cursor-pointer" (click)="openSession(session.id)">
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-gray-900 truncate">{{ session.title || 'Untitled' }}</p>
-            <p class="text-xs text-gray-400">{{ session.messageCount }} messages</p>
-          </div>
-          <button type="button" class="shrink-0 rounded-lg p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 transition" (click)="deleteSession(session.id); $event.stopPropagation()" title="Delete">
-            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-            </svg>
-          </button>
-        </div>
-        }
-      </div>
-      } @else {
-
-      <div #chatContainer class="flex-1 overflow-y-auto p-5 space-y-4">
-        @if (messages.length === 0) {
-        <div class="flex justify-start">
-          <div class="max-w-[90%] rounded-2xl rounded-bl-md bg-gray-100 px-4 py-3">
-            <p class="text-sm leading-relaxed text-gray-800">
-              Hello! I'm your AI study companion for <strong>{{ fileName }}</strong>. Ask me anything about this document — I'll help you understand it better.
-            </p>
-          </div>
-        </div>
-        }
-
-        @for (msg of messages; track $index) {
-        <div class="flex" [ngClass]="msg.role.toLowerCase() === 'user' ? 'justify-end' : 'justify-start'">
-          @if (msg.role.toLowerCase() === 'user') {
-          <div class="max-w-[80%] rounded-2xl rounded-br-md bg-indigo-600 px-4 py-2.5 text-sm text-white">{{ msg.content }}</div>
-          } @else {
-          <div class="max-w-[90%] rounded-2xl rounded-bl-md bg-gray-100 px-4 py-3">
-            <div class="text-sm leading-relaxed text-gray-800" [innerHTML]="renderMarkdown(msg.content)"></div>
-          </div>
-          }
-        </div>
-        }
-
-        @if (chatLoading) {
-        <div class="flex justify-start">
-          <div class="rounded-2xl rounded-bl-md border border-gray-200 bg-gray-50 px-4 py-3">
-            <div class="flex items-center gap-2 text-sm text-gray-400">
-              <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Thinking...
-            </div>
-          </div>
-        </div>
-        }
-      </div>
-
-      <div class="border-t border-gray-200 p-4 shrink-0">
-        @if (chatError) {
-        <div class="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
-          {{ chatError }}
-        </div>
-        }
-        <div class="flex items-center gap-2">
-          <input
-            type="text"
-            class="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            placeholder="Ask about the document..."
-            [(ngModel)]="chatInput"
-            (keydown.enter)="onSendMessage()"
-            [disabled]="chatLoading"
-          />
-          <button type="button" class="rounded-xl bg-gray-100 p-2.5 text-gray-400 hover:bg-gray-200 hover:text-gray-600 transition disabled:opacity-50" (click)="onSendMessage()" [disabled]="!chatInput.trim() || chatLoading">
-            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
-            </svg>
-          </button>
-        </div>
-
-        <div class="mt-3 flex items-center gap-4 border-t border-gray-100 pt-3">
-          <div class="flex items-center gap-2">
-            <label class="text-xs font-medium text-gray-400">Difficulty:</label>
-            <select class="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-400" [(ngModel)]="difficulty">
-              <option value="Easy">Easy</option>
-              <option value="Medium">Medium</option>
-              <option value="Hard">Hard</option>
-            </select>
-          </div>
-          <div class="flex items-center gap-2">
-            <label class="text-xs font-medium text-gray-400">Questions:</label>
-            <select class="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-400" [(ngModel)]="questionCount">
-              <option [ngValue]="3">3</option>
-              <option [ngValue]="5">5</option>
-              <option [ngValue]="10">10</option>
-              <option [ngValue]="15">15</option>
-            </select>
-          </div>
-        </div>
-      </div>
-      }
-    </div>
-  </div>
-</section>
+</div>
