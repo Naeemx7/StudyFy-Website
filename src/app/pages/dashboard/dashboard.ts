@@ -2,7 +2,7 @@ import { Component, inject, OnInit, OnDestroy, HostListener, ElementRef } from '
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
-import { combineLatest, Subscription } from 'rxjs';
+import { combineLatest, BehaviorSubject, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { AuthService } from '../../services/auth.service';
 import { SpaceService } from '../../services/space.service';
@@ -30,7 +30,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   currentUser$ = this.auth.currentUser$;
 
-  spaces$ = combineLatest([
+  private searchQuery$ = new BehaviorSubject<string>('');
+
+  private allSpaces$ = combineLatest([
     this.spaceService.spaces$,
     this.communityService.communities$
   ]).pipe(
@@ -43,6 +45,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
       });
     })
   );
+
+  spaces$ = combineLatest([this.allSpaces$, this.searchQuery$]).pipe(
+    map(([spaces, query]) => {
+      if (!query.trim()) return spaces;
+      const q = query.toLowerCase();
+      return spaces.filter(s =>
+        s.title?.toLowerCase().includes(q) ||
+        s.description?.toLowerCase().includes(q)
+      );
+    })
+  );
+
   spacesLoading$ = this.spaceService.loading$;
   spacesError$ = this.spaceService.error$;
 
@@ -150,6 +164,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (!date) return '';
     const d = typeof date === 'string' ? new Date(date) : date;
     return d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }).toUpperCase();
+  }
+
+  onSearch(event: Event): void {
+    this.searchQuery$.next((event.target as HTMLInputElement).value);
   }
 
   toggleAvatarDropdown(): void {

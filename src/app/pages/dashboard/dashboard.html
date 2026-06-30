@@ -58,6 +58,7 @@
         <img src="assets/settings/icon-search.svg" alt="Search" class="absolute left-[14.5px] top-[12.5px] w-[15px] h-[15px] pointer-events-none">
         <input
           type="text"
+          (input)="onSearch($event)"
           placeholder="Search across documents and AI chats..."
           class="bg-[#f2f4f4] rounded-full pl-10 pr-4 py-[10px] text-[12px] font-medium text-[#6b7280] w-full outline-none placeholder:text-[#6b7280]"
         />
@@ -255,6 +256,15 @@
                     <img src="assets/dashboard/icon-delete.svg" alt="Delete" class="w-full h-full block">
                   </div>
                 </button>
+              </div>
+            }
+
+            <!-- Empty search state -->
+            @if ((spaces$ | async)?.length === 0) {
+              <div class="col-span-3 flex flex-col items-center justify-center py-16 text-center">
+                <img src="assets/settings/icon-search.svg" alt="No results" class="w-8 h-8 mb-3 opacity-30">
+                <p class="text-[15px] font-semibold text-[#2d3435]">No spaces found</p>
+                <p class="text-[13px] text-[#596061] mt-1">Try a different search term</p>
               </div>
             }
 
