@@ -1,80 +1,48 @@
-<header class="border-b bg-white sticky top-0 z-50">
-  <div class="mx-auto w-full max-w-screen-2xl px-4 sm:px-6 lg:px-8">
-    <div class="h-20 flex items-center justify-center gap-4">
+<header class="bg-[#f8fafa] sticky top-0 z-50 border-b border-[#e5e7eb]/60">
+  <div class="mx-auto max-w-[1200px] px-6 lg:px-10">
+    <div class="h-[68px] flex items-center justify-between">
 
-      <!-- Left: Logo -->
-      <a routerLink="/" class="flex items-center gap-3 flex-shrink-0 absolute left-4 sm:left-6 lg:left-8">
-        <div class="grid h-12 w-12 place-items-center rounded-2xl bg-black text-white">
-          <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M9 4c-2 0-3.5 1.4-3.5 3.2c0 .7.2 1.4.6 2" />
-            <path d="M15 4c2 0 3.5 1.4 3.5 3.2c0 .7-.2 1.4-.6 2" />
-            <path d="M7 9c-1.7 0-3 1.3-3 3c0 1.3.8 2.4 2 2.8" />
-            <path d="M17 9c1.7 0 3 1.3 3 3c0 1.3-.8 2.4-2 2.8" />
-            <path d="M8 14c-.6.4-1 1.1-1 1.9C7 17.6 8.4 19 10 19h4c1.6 0 3-1.4 3-3.1c0-.8-.4-1.5-1-1.9" />
-            <path d="M12 7v10" />
-            <path d="M9.5 10.5h5" />
-          </svg>
-        </div>
-        <span class="text-lg font-semibold text-black hidden sm:inline">CodeName</span>
+      <!-- Logo -->
+      <a routerLink="/" class="flex items-center gap-2">
+        <img src="assets/settings/logo-cropped.png" alt="Studyfy" class="w-[38px] h-[38px] object-contain">
+        <span class="text-[20px] font-bold text-[#2d3435] tracking-tight">Studyfy</span>
       </a>
 
-      <!-- Center: Links (hidden on mobile and tablet, shows on desktop) -->
-      <nav class="hidden lg:flex items-center justify-center gap-8 text-sm text-gray-600">
-        <a href="#features" class="hover:text-black transition font-medium">Features</a>
-        <a href="#how-it-works" class="hover:text-black transition font-medium">How it works</a>
+      <!-- Center Nav -->
+      <nav class="hidden md:flex items-center gap-8">
+        <a href="#" class="text-[15px] font-semibold text-[#4f46e5] hover:opacity-80 transition">Home</a>
+        <a href="#features" class="text-[15px] font-medium text-[#596061] hover:text-[#2d3435] transition">Features</a>
+        <a routerLink="/login" class="text-[15px] font-medium text-[#596061] hover:text-[#2d3435] transition">Login</a>
       </nav>
 
-      <!-- Center Container: Login + Get Started (mobile and tablet) -->
-      <div class="flex lg:hidden items-center justify-center gap-3 sm:gap-4">
-        <a routerLink="/login" class="text-xs sm:text-sm font-medium text-gray-700 hover:text-black transition">
-          Login
-        </a>
-        <a routerLink="/signup" class="rounded-2xl bg-black px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-semibold text-white hover:opacity-90 transition whitespace-nowrap">
-          Get Started
-        </a>
-      </div>
+      <!-- CTA -->
+      <a routerLink="/signup"
+         class="hidden md:inline-flex items-center gap-2 bg-[#4f46e5] hover:bg-[#3d34d3] text-white text-[15px] font-bold px-6 py-[10px] rounded-full transition">
+        Get Started
+      </a>
 
-      <!-- Desktop: Login + Get Started (right side) -->
-      <div class="hidden lg:flex items-center gap-4 absolute right-4 sm:right-6 lg:right-8">
-        <a routerLink="/login" class="text-sm font-medium text-gray-700 hover:text-black transition">
-          Login
-        </a>
-        <a routerLink="/signup" class="rounded-2xl bg-black px-6 py-3 text-sm font-semibold text-white hover:opacity-90 transition whitespace-nowrap">
-          Get Started
-        </a>
-      </div>
-
-      <!-- Mobile Menu Button -->
-      <button
-        (click)="toggleMenu()"
-        class="lg:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:bg-gray-100 absolute right-4"
-        aria-label="Toggle menu"
-      >
+      <!-- Mobile menu button -->
+      <button (click)="toggleMenu()" class="md:hidden p-2 text-[#596061]">
         @if (!isMenuOpen()) {
-        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-        }
-        @if (isMenuOpen()) {
-        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        } @else {
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
         }
       </button>
     </div>
 
-    <!-- Mobile Menu (shown when toggled) -->
+    <!-- Mobile menu -->
     @if (isMenuOpen()) {
-    <div class="lg:hidden border-t border-gray-100 bg-white">
-      <nav class="space-y-3 px-4 py-4">
-        <a href="#features" (click)="closeMenu()" class="block px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
-          Features
-        </a>
-        <a href="#how-it-works" (click)="closeMenu()" class="block px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
-          How it works
-        </a>
-      </nav>
-    </div>
+      <div class="md:hidden border-t border-[#e5e7eb] py-4 flex flex-col gap-3">
+        <a href="#" (click)="closeMenu()" class="text-[15px] font-semibold text-[#4f46e5] px-2 py-1">Home</a>
+        <a href="#features" (click)="closeMenu()" class="text-[15px] font-medium text-[#596061] px-2 py-1">Features</a>
+        <a routerLink="/login" (click)="closeMenu()" class="text-[15px] font-medium text-[#596061] px-2 py-1">Login</a>
+        <a routerLink="/signup" class="mt-2 bg-[#4f46e5] text-white text-[15px] font-bold px-6 py-3 rounded-full text-center">Get Started</a>
+      </div>
     }
   </div>
 </header>
