@@ -4,29 +4,40 @@
   <aside class="fixed top-0 left-0 h-full w-[256px] bg-[#f2f4f4] flex flex-col px-4 py-8 z-20">
     <div class="px-4 mb-10">
       <div class="flex items-center gap-3 h-[38px]">
-        <img src="assets/settings/logo-cropped.png" alt="Studyfy" class="w-[47px] h-[46px] object-contain shrink-0">
-        <span class="text-[20px] font-bold text-[#2d3435]">Studyfy</span>
+        <img src="assets/settings/logo-cropped.png" alt="Studyfy Logo" class="w-[47px] h-[46px] object-contain shrink-0">
+        <span class="text-[20px] font-bold text-[#2d3435] leading-[22.5px]">Studyfy</span>
       </div>
     </div>
     <nav class="flex flex-col gap-1 flex-1">
-      <a routerLink="/dashboard" routerLinkActive="bg-white shadow-sm !text-[#2d3435]" [routerLinkActiveOptions]="{exact:true}"
-         class="flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-medium text-[#596061] hover:bg-white/60 transition-all">
-        <div class="w-[16px] h-[18px] shrink-0"><img src="assets/settings/icon-home.svg" alt="Home" class="w-full h-full block"></div>
+      <a routerLink="/dashboard" routerLinkActive="bg-white shadow-sm text-[#2d3435]"
+         class="flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-medium text-[#596061] tracking-[0.35px] hover:bg-white/60 transition-all">
+        <div class="w-[16px] h-[18px] flex items-center justify-center shrink-0">
+          <img src="assets/settings/icon-home.svg" alt="Home" class="w-full h-full block">
+        </div>
         Home
       </a>
-      <a routerLink="/analytics" routerLinkActive="bg-white shadow-sm !text-[#2d3435]"
-         class="flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-medium text-[#596061] hover:bg-white/60 transition-all">
-        <div class="w-[18px] h-[18px] shrink-0"><img src="assets/settings/icon-analytics.svg" alt="Analytics" class="w-full h-full block"></div>
+
+      <a routerLink="/analytics" routerLinkActive="bg-white shadow-sm text-[#2d3435]"
+         class="flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-medium text-[#596061] tracking-[0.35px] hover:bg-white/60 transition-all">
+        <div class="w-[18px] h-[18px] flex items-center justify-center shrink-0">
+          <img src="assets/settings/icon-analytics.svg" alt="Analytics" class="w-full h-full block">
+        </div>
         Analytics
       </a>
-      <a routerLink="/communities" routerLinkActive="bg-[#4f46e5] !text-white shadow-sm"
-         class="flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-medium text-[#596061] hover:bg-white/60 transition-all">
-        <div class="w-[22px] h-[16px] shrink-0"><img src="assets/settings/icon-community.svg" alt="Community" class="w-full h-full block"></div>
+
+      <a routerLink="/communities" routerLinkActive="bg-[rgba(78,69,228,0.05)] !text-[#4e45e4] !font-bold"
+         class="flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-medium text-[#596061] tracking-[0.35px] hover:bg-white/60 transition-all">
+        <div class="w-[22px] h-[16px] flex items-center justify-center shrink-0">
+          <img src="assets/settings/icon-community.svg" alt="Community" class="w-full h-full block">
+        </div>
         Community
       </a>
-      <a routerLink="/profile" routerLinkActive="bg-white shadow-sm !text-[#2d3435]"
-         class="flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-medium text-[#596061] hover:bg-white/60 transition-all">
-        <div class="w-[16px] h-[16px] shrink-0"><img src="assets/settings/icon-profile.svg" alt="Profile" class="w-full h-full block"></div>
+
+      <a routerLink="/profile" routerLinkActive="bg-white shadow-sm text-[#2d3435]"
+         class="flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-medium text-[#596061] tracking-[0.35px] hover:bg-white/60 transition-all">
+        <div class="w-[16px] h-[16px] flex items-center justify-center shrink-0">
+          <img src="assets/settings/icon-profile.svg" alt="Profile" class="w-full h-full block">
+        </div>
         Profile
       </a>
     </nav>
@@ -36,131 +47,229 @@
   <div class="flex-1 pl-[256px] flex flex-col min-h-screen">
 
     <!-- Top Bar -->
-    <header class="sticky top-0 z-10 bg-white border-b border-[#e5e7eb] h-[64px] flex items-center px-6 gap-4">
-      <div class="relative flex-1 max-w-[360px]">
-        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6b7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-        </svg>
-        <input type="text" [(ngModel)]="searchTerm" placeholder="Search communities..."
-               class="bg-[#f2f4f4] rounded-full pl-10 pr-4 py-[9px] text-[12px] font-medium text-[#2d3435] w-full outline-none placeholder:text-[#6b7280]">
+    <header class="sticky top-0 z-10 bg-[#f9f9f9]/80 backdrop-blur-[6px] border-b border-[rgba(172,179,180,0.15)] h-[64px] flex items-center justify-between px-6 gap-4">
+      <!-- Search -->
+      <div class="relative flex-1 max-w-[320px]">
+        <img src="assets/settings/icon-search.svg" alt="Search" class="absolute left-[14.5px] top-[12.5px] w-[15px] h-[15px] pointer-events-none">
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          placeholder="Search"
+          class="bg-[#f2f4f4] rounded-full pl-[40px] pr-4 h-[40px] text-[12px] font-medium text-[#2d3435] w-full outline-none placeholder:text-[#6b7280]">
+      </div>
+
+      <!-- Right section: streak + profile -->
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-[3.99px] bg-[rgba(0,110,47,0.1)] px-3 py-[6px] rounded-full">
+          <img src="assets/settings/icon-streak-flame.svg" alt="Streak" class="w-[9.3px] h-[10.5px]">
+          <span class="text-[12px] font-bold text-[#006e2f] tracking-wider uppercase">{{ streakDays }} DAY STREAK</span>
+        </div>
+        <!-- Notification bell -->
+        <button class="p-[8px] rounded-full hover:bg-[#f2f4f4] transition-colors h-[32px] w-[32px] flex items-center justify-center">
+          <div class="w-[13.33px] h-[16.67px] relative shrink-0">
+            <img src="assets/settings/icon-bell.svg" alt="Notifications" class="absolute inset-0 w-full h-full block">
+          </div>
+        </button>
+
+        <!-- Avatar Dropdown -->
+        @if (currentUser$ | async; as user) {
+          <div class="relative ml-1">
+            <button (click)="toggleAvatarDropdown(); $event.stopPropagation()"
+                    class="flex items-center gap-[6px] hover:bg-gray-50 rounded-full pr-[6px] py-[4px] pl-[4px] transition-all border border-transparent hover:border-gray-100">
+              <div class="w-8 h-8 rounded-full overflow-hidden border border-[rgba(172,179,180,0.3)] flex items-center justify-center bg-[#e2dfff] shrink-0">
+                @if (navPhotoUrl) {
+                  <img [src]="navPhotoUrl" alt="avatar" class="w-full h-full object-cover" />
+                } @else {
+                  <span class="text-[12px] font-bold text-[#4f46e5]">{{ getInitials(user.googleDisplayName || user.userName) }}</span>
+                }
+              </div>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-gray-400 mr-[4px]" [class.rotate-180]="avatarDropdownOpen">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+
+            @if (avatarDropdownOpen) {
+              <div (click)="$event.stopPropagation()" class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-gray-100 py-1 z-50">
+                <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/50 rounded-t-xl text-left">
+                  <p class="text-sm font-semibold text-gray-900">{{ getDisplayName(user.googleDisplayName || user.userName) }}</p>
+                  <p class="text-xs text-gray-500 truncate">{{ user.email }}</p>
+                </div>
+                <div class="p-1 text-left">
+                  <a routerLink="/profile" (click)="closeAvatarDropdown()" class="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg> Profile
+                  </a>
+                  <a routerLink="/settings" (click)="closeAvatarDropdown()" class="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg> Settings
+                  </a>
+                </div>
+                <div class="border-t border-gray-100 p-1 text-left">
+                  <button (click)="logout()" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-[#9e3f4e] hover:bg-[rgba(255,139,154,0.1)] rounded-lg transition-colors text-left">
+                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg> Log Out
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
       </div>
     </header>
 
-    <!-- Page Content -->
-    <main class="flex-1 px-8 py-8">
+    <!-- Toast -->
+    @if (toast.visible) {
+      <div class="fixed top-5 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-[10px] shadow-lg border text-[14px] font-medium min-w-[260px]"
+           [ngClass]="toast.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-700'">
+        {{ toast.message }}
+      </div>
+    }
 
-      <!-- Toast -->
-      @if (toast.visible) {
-        <div class="fixed top-5 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-[10px] shadow-lg border text-[14px] font-medium min-w-[260px] transition-all"
-             [ngClass]="toast.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-700'">
-          {{ toast.message }}
-        </div>
-      }
+    <!-- ===================== -->
+    <!-- VIEW 1: COMMUNITY HUB -->
+    <!-- ===================== -->
+    @if (!activeCommunityId) {
 
-      <!-- ===================== -->
-      <!-- VIEW 1: LIST / HUB    -->
-      <!-- ===================== -->
-      @if (!activeCommunityId) {
+      <main class="flex-1 px-8 pb-20 pt-[48px]">
 
-        <!-- Page header -->
-        <div class="flex items-start justify-between mb-8">
-          <div>
-            <h1 class="text-[40px] font-bold text-[#2d3435] leading-tight">Communities</h1>
-            <p class="text-[15px] text-[#596061] mt-2 max-w-[420px] leading-snug">Join peer-led research collectives and study groups curated for deep focus and collaborative mastery.</p>
+        <!-- Page Header -->
+        <div class="flex items-end justify-between mb-12">
+          <div class="flex flex-col gap-4">
+            <h1 class="text-[56px] font-bold text-[#2d3435] leading-[56px] tracking-[-1.4px]">Communities</h1>
+            <p class="text-[16px] text-[#596061] leading-[24px] max-w-[524px]">Join peer-led research collectives and study groups curated for deep focus and collaborative mastery.</p>
           </div>
-          <div class="flex items-center gap-3 mt-3 shrink-0">
+
+          <!-- Buttons -->
+          <div class="flex items-center gap-4 shrink-0">
+            <!-- Join with Code — matches Figma node 238:1701 -->
             <button (click)="showJoinModal = true"
-                    class="flex items-center gap-2 px-5 py-2.5 border border-[#e5e7eb] rounded-[8px] text-[14px] font-medium text-[#2d3435] bg-white hover:bg-gray-50 transition-colors shadow-sm">
-              <svg class="w-4 h-4 text-[#596061]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
-              </svg>
-              Join with Code
+                    class="flex items-center gap-[8px] bg-[#e4e9ea] hover:bg-[#d5dde0] transition-colors px-[24px] py-[12px] rounded-[12px]">
+              <!-- Key icon container: Figma 238:1702 → w=19.167px h=10px -->
+              <div class="shrink-0" style="width:19px; height:10px; overflow:hidden;">
+                <img src="assets/communities/icon-join-code.svg" alt="Key"
+                     style="width:19px; height:10px; display:block; object-fit:contain;">
+              </div>
+              <span class="text-[16px] font-semibold text-[#2d3435] text-center leading-[24px]">Join with<br>Code</span>
             </button>
+
+            <!-- Create Community — matches Figma node 238:1706 -->
             <button (click)="showCreateModal = true"
-                    class="flex items-center gap-2 px-5 py-2.5 bg-[#4f46e5] hover:bg-[#3d34d3] text-white rounded-[8px] text-[14px] font-semibold transition-colors shadow-sm">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-              </svg>
-              Create Community
+                    class="flex items-center gap-[8px] bg-[#4f46e5] hover:bg-[#3d34d3] transition-colors px-[24px] py-[12px] rounded-[12px] shadow-[0_10px_15px_-3px_rgba(79,70,229,0.2)]">
+              <!-- Plus icon container: Figma 238:1707 → size 11.667px -->
+              <div class="shrink-0" style="width:12px; height:12px;">
+                <img src="assets/communities/icon-create-plus.svg" alt="Plus"
+                     style="width:12px; height:12px; display:block; object-fit:contain;">
+              </div>
+              <span class="text-[16px] font-semibold text-[#fbf7ff] text-center leading-[24px]">Create<br>Community</span>
             </button>
           </div>
         </div>
 
-        <!-- Loading -->
-        @if (loading) {
-          <div class="flex items-center justify-center py-32">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4f46e5]"></div>
-          </div>
-        } @else {
+        <!-- Section Container -->
+        <div class="bg-[rgba(242,244,244,0.5)] border border-[rgba(172,179,180,0.2)] rounded-[40px] px-8 pt-[65px] pb-8 w-full">
+
+          <!-- Loading -->
+          @if (loading) {
+            <div class="grid grid-cols-3 gap-6">
+              @for (_ of [1,2,3]; track $index) {
+                <div class="bg-white border border-[rgba(172,179,180,0.3)] rounded-[12px] p-6 animate-pulse h-[426px]"></div>
+              }
+            </div>
 
           <!-- Empty State -->
-          @if ((filteredCommunities(communities$ | async)).length === 0) {
-            <div class="bg-white border border-[#e5e7eb] rounded-[8px] flex flex-col items-center justify-center py-28 min-h-[400px]">
-              <svg class="w-16 h-16 text-[#c4c9ca] mb-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-              </svg>
-              <p class="text-[18px] font-bold text-[#2d3435] mb-2">No Communities Yet</p>
-              <p class="text-[14px] text-[#596061]">Create your own study group or join one with a code to get started.</p>
+          } @else if ((filteredCommunities(communities$ | async)).length === 0) {
+            <div class="flex flex-col items-center justify-center py-24 gap-6">
+              <div class="w-[56px] h-[28px] shrink-0">
+                <img src="assets/communities/icon-community-empty.svg" alt="Empty" class="w-full h-full block">
+              </div>
+              <div class="flex flex-col items-center gap-2 text-center">
+                <h2 class="text-[20px] font-bold text-[#2d3435] leading-[28px]">No Communities Yet</h2>
+                <p class="text-[16px] text-[#596061] leading-[24px]">Create your own study group or join one with a code to get started.</p>
+              </div>
             </div>
-          } @else {
 
-            <!-- Cards Grid -->
-            <div class="grid grid-cols-3 gap-6">
+          <!-- Community Cards Grid -->
+          } @else {
+            <div class="grid grid-cols-3 gap-6 items-start">
               @for (community of filteredCommunities(communities$ | async); track community.id) {
-                <div class="bg-white border border-[#e5e7eb] rounded-[8px] overflow-hidden hover:shadow-md transition-all cursor-pointer group"
+                <div class="bg-white border border-[rgba(172,179,180,0.3)] rounded-[12px] p-[25px] flex flex-col justify-between cursor-pointer hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] transition-all group"
                      (click)="viewDetail(community.id)">
-                  <!-- Cover image -->
-                  <div class="h-[150px] bg-gradient-to-br from-[#1a1a2e] to-[#4a1a6b] overflow-hidden">
+
+                  <div class="mb-0">
+                    <!-- Cover Image / Colored Banner fallback -->
                     @if (community.photoUrl) {
-                      <img [src]="resolvePhotoUrl(community.photoUrl)" alt="{{ community.name }}"
-                           class="w-full h-full object-cover object-center">
+                      <div class="bg-[#ebeeef] rounded-[12px] h-[176px] overflow-hidden mb-5 w-full">
+                        <img [src]="resolvePhotoUrl(community.photoUrl)" alt="{{ community.name }}"
+                             class="w-full h-full object-cover object-center">
+                      </div>
+                    } @else {
+                      <!-- No-cover banner: full-width colored gradient strip with initial -->
+                      <div class="rounded-[12px] h-[176px] mb-5 w-full flex items-center justify-center relative overflow-hidden"
+                           [style.backgroundColor]="getCommunityColor(community.name)">
+                        <!-- Subtle pattern overlay -->
+                        <div class="absolute inset-0 opacity-10"
+                             style="background-image: radial-gradient(circle at 20% 80%, rgba(255,255,255,0.4) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.3) 0%, transparent 50%);">
+                        </div>
+                        <span class="text-[64px] font-bold text-white opacity-40 select-none leading-none z-10">
+                          {{ getCommunityInitial(community.name) }}
+                        </span>
+                      </div>
                     }
-                  </div>
-                  <!-- Body -->
-                  <div class="p-5">
-                    <div class="flex items-center gap-1.5 text-[10px] text-[#596061] mb-2">
-                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                      </svg>
-                      Created {{ formatDate(community.createdAt) }}
+
+                    <!-- Date -->
+                    <div class="flex items-center gap-1 mb-2">
+                      <div class="w-[12px] h-[12px] shrink-0">
+                        <img src="assets/communities/icon-card-date.svg" alt="Date" class="w-full h-full block">
+                      </div>
+                      <span class="text-[11px] font-medium text-[#596061]">Created {{ formatDate(community.createdAt) }}</span>
                     </div>
-                    <h3 class="text-[17px] font-bold text-[#2d3435] mb-1.5 group-hover:text-[#4f46e5] transition-colors line-clamp-1">
-                      {{ community.name }}
-                    </h3>
-                    <p class="text-[13px] text-[#596061] line-clamp-2 mb-4 leading-snug">
+
+                    <!-- Name -->
+                    <h3 class="text-[18px] font-bold text-[#2d3435] leading-[28px] mb-2 line-clamp-2">{{ community.name }}</h3>
+
+                    <!-- Description -->
+                    <p class="text-[14px] text-[#596061] leading-[20px] line-clamp-2 mb-6">
                       {{ community.description || 'No description provided.' }}
                     </p>
-                    <!-- Footer -->
-                    <div class="flex items-center justify-between border-t border-[#f2f4f4] pt-3">
-                      <div class="flex items-center gap-2">
-                        <div class="flex -space-x-1.5">
-                          <div class="w-5 h-5 rounded-full bg-[#4f46e5] border-2 border-white"></div>
-                          <div class="w-5 h-5 rounded-full bg-[#10b981] border-2 border-white"></div>
-                          <div class="w-5 h-5 rounded-full bg-[#f59e0b] border-2 border-white"></div>
-                        </div>
-                        @if (community.isAdmin) {
-                          <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700">Admin</span>
-                        }
+                  </div>
+
+                  <!-- Footer -->
+                  <div class="flex items-center justify-between">
+                    <!-- Member Avatars -->
+                    <div class="flex items-center gap-2">
+                      <div class="flex -space-x-2">
+                        <div class="w-[28px] h-[28px] rounded-full bg-[#d3dbdd] border-2 border-white"></div>
+                        <div class="w-[28px] h-[28px] rounded-full bg-[#e2dfff] border-2 border-white"></div>
+                        <div class="w-[28px] h-[28px] rounded-full bg-[#6bff8f] border-2 border-white"></div>
                       </div>
-                      <span class="text-[13px] font-medium text-[#596061] group-hover:text-[#4f46e5] transition-colors">View →</span>
+                      <span class="text-[12px] font-semibold text-[#596061]">{{ community.memberCount ?? '—' }} Members</span>
+                    </div>
+
+                    <!-- View Button -->
+                    <div class="flex items-center gap-1 text-[#4f46e5]">
+                      <span class="text-[14px] font-bold">View</span>
+                      <div class="w-[9px] h-[9px] shrink-0">
+                        <img src="assets/communities/icon-card-arrow.svg" alt="Arrow" class="w-full h-full block">
+                      </div>
                     </div>
                   </div>
                 </div>
               }
             </div>
           }
-        }
-      }
+        </div>
+      </main>
+    }
 
-      <!-- ========================== -->
-      <!-- VIEW 2: COMMUNITY DETAIL   -->
-      <!-- ========================== -->
-      @else if (!selectedPost) {
+    <!-- ============================ -->
+    <!-- VIEW 2: COMMUNITY DETAIL     -->
+    <!-- ============================ -->
+    @else if (!selectedPost) {
 
-        <!-- Breadcrumb -->
-        <div class="flex items-center gap-2 text-[14px] text-[#596061] mb-6">
-          <button (click)="clearSelected()" class="hover:text-[#4f46e5] transition-colors">Community</button>
-          <span class="text-[#c4c9ca]">›</span>
+      <main class="flex-1 px-10 pb-20 pt-[80px]">
+        <!-- Breadcrumb (Matches Roadmap Style) -->
+        <div class="flex items-center gap-2 text-[14px] text-[#596061] mb-8">
+          <button (click)="clearSelected()" class="hover:text-[#2d3435] transition-colors cursor-pointer">Community</button>
+          <svg width="6" height="10" viewBox="0 0 6 10" fill="none" stroke="#596061" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 1l4 4-4 4"/>
+          </svg>
           <span class="text-[#2d3435] font-medium">{{ selectedDetail?.name ?? '' }}</span>
         </div>
 
@@ -170,858 +279,967 @@
           </div>
         } @else if (selectedDetail) {
 
-          <!-- Hero -->
-          <div class="flex items-start gap-6 mb-8">
-            <!-- Cover photo -->
-            <div class="w-[180px] h-[145px] rounded-[8px] overflow-hidden shrink-0 bg-gradient-to-br from-[#1a1a2e] to-[#4a1a6b]">
-              @if (selectedDetail.photoUrl) {
+          <!-- ==== HERO SECTION ==== -->
+          <div class="flex gap-10 items-start mb-16">
+
+            <!-- Cover Photo -->
+            @if (selectedDetail.photoUrl) {
+              <div class="aspect-[4/3] w-[380px] shrink-0 bg-[#dde4e5] rounded-[24px] overflow-hidden relative border border-[rgba(172,179,180,0.1)]">
                 <img [src]="resolvePhotoUrl(selectedDetail.photoUrl)" alt="{{ selectedDetail.name }}"
                      class="w-full h-full object-cover object-center">
-              }
-            </div>
+              </div>
+            }
 
-            <!-- Info -->
-            <div class="flex-1 min-w-0">
-              <h1 class="text-[28px] font-bold text-[#2d3435] leading-tight mb-2">{{ selectedDetail.name }}</h1>
-              <p class="text-[14px] text-[#596061] mb-4 leading-relaxed max-w-[500px]">{{ selectedDetail.description }}</p>
-              <div class="flex flex-wrap items-center gap-3 text-[12px]">
-                <div class="flex items-center gap-2 bg-white border border-[#e5e7eb] rounded-[6px] px-3 py-1.5">
-                  <span class="font-semibold text-[#596061] uppercase tracking-wider text-[11px]">JOIN CODE</span>
-                  <span class="font-bold text-[#2d3435] font-mono">{{ selectedDetail.joinCode }}</span>
-                  <button (click)="copyJoinCode(selectedDetail.joinCode)" class="text-[#4f46e5] hover:opacity-70 transition-opacity" title="Copy">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                    </svg>
+            <!-- Info Panel -->
+            <div class="flex-1 flex flex-col gap-6">
+              <!-- Title + Description -->
+              <div class="flex flex-col gap-2">
+                <h1 class="text-[40px] font-bold text-[#2d3435] leading-[50px]">{{ selectedDetail.name }}</h1>
+                <p class="text-[16px] text-[#596061] leading-[26px]">{{ selectedDetail.description || 'No description provided.' }}</p>
+              </div>
+
+              <!-- Meta Row -->
+              <div class="relative h-[126px]">
+                <!-- Join Code -->
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 flex items-center gap-3 bg-[#f2f4f4] border border-[rgba(172,179,180,0.1)] rounded-[16px] px-[17px] py-[13px]">
+                  <span class="text-[16px] font-medium text-[#596061] uppercase tracking-[1.6px]">JOIN CODE</span>
+                  <span class="text-[16px] font-bold text-[#4e45e4]">{{ selectedDetail.joinCode }}</span>
+                  <button (click)="copyJoinCode(selectedDetail.joinCode)" class="p-1.5 rounded-[8px] hover:bg-[#e5e7eb] transition-colors" title="Copy code">
+                    <img src="assets/communities/icon-copy.svg" alt="Copy" class="w-[14px] h-[17px]">
                   </button>
                 </div>
-                <div class="flex items-center gap-1.5 text-[#596061]">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                  </svg>
-                  Created {{ formatDate(selectedDetail.createdAt) }}
-                </div>
-              </div>
-            </div>
 
-            <!-- Actions -->
-            <div class="flex items-center gap-2 shrink-0 mt-1">
-              <button (click)="leave(selectedDetail.id)" [disabled]="leaveLoadingId === selectedDetail.id"
-                      class="px-4 py-2 border border-[#e5e7eb] rounded-[8px] text-[13px] font-medium text-[#2d3435] bg-white hover:bg-gray-50 disabled:opacity-50 transition-colors">
-                {{ leaveLoadingId === selectedDetail.id ? 'Leaving...' : 'Leave Community' }}
-              </button>
-              @if (selectedDetail.isAdmin) {
-                <button (click)="showSettingsModal = true"
-                        class="p-2 border border-[#e5e7eb] rounded-[8px] text-[#596061] bg-white hover:bg-gray-50 transition-colors" title="Settings">
-                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
-                  </svg>
-                </button>
-              }
-            </div>
-          </div>
-
-          <!-- Stats Row -->
-          <div class="flex gap-4 mb-8 max-w-[480px]">
-            <div class="bg-white border border-[#e5e7eb] rounded-[8px] p-5 flex-1">
-              <p class="text-[26px] font-bold text-[#2d3435]">
-                {{ selectedDetail!.memberCount ?? '—' }}
-              </p>
-              <p class="text-[13px] text-[#596061]">Active Members</p>
-            </div>
-            <div class="bg-white border border-[#e5e7eb] rounded-[8px] p-5 flex-1">
-              <p class="text-[26px] font-bold text-[#2d3435]">
-                {{ totalCommunityXp > 0 ? (totalCommunityXp | number) : '—' }}
-              </p>
-              <p class="text-[13px] text-[#596061]">XP Earned</p>
-            </div>
-          </div>
-
-          <!-- Tabs -->
-          <div class="flex border-b border-[#e5e7eb] mb-6 gap-1">
-            <button (click)="switchTab('overview'); activeOverviewTab = 'members'"
-                    class="px-4 pb-3 border-b-2 text-[14px] font-medium transition-colors -mb-px"
-                    [ngClass]="activeTab === 'overview' && activeOverviewTab === 'members'
-                      ? 'border-[#4f46e5] text-[#4f46e5]'
-                      : 'border-transparent text-[#596061] hover:text-[#2d3435]'">
-              Members
-            </button>
-            <button (click)="switchTab('overview'); activeOverviewTab = 'leaderboard'"
-                    class="px-4 pb-3 border-b-2 text-[14px] font-medium transition-colors -mb-px"
-                    [ngClass]="activeTab === 'overview' && activeOverviewTab === 'leaderboard'
-                      ? 'border-[#4f46e5] text-[#4f46e5]'
-                      : 'border-transparent text-[#596061] hover:text-[#2d3435]'">
-              Leaderboard
-            </button>
-            <button (click)="switchTab('files')"
-                    class="px-4 pb-3 border-b-2 text-[14px] font-medium transition-colors -mb-px"
-                    [ngClass]="activeTab === 'files'
-                      ? 'border-[#4f46e5] text-[#4f46e5]'
-                      : 'border-transparent text-[#596061] hover:text-[#2d3435]'">
-              Files
-            </button>
-            <button (click)="switchTab('posts')"
-                    class="px-4 pb-3 border-b-2 text-[14px] font-medium transition-colors -mb-px"
-                    [ngClass]="activeTab === 'posts'
-                      ? 'border-[#4f46e5] text-[#4f46e5]'
-                      : 'border-transparent text-[#596061] hover:text-[#2d3435]'">
-              Discussion
-            </button>
-          </div>
-
-          <!-- ── MEMBERS TAB ── -->
-          @if (activeTab === 'overview' && activeOverviewTab === 'members') {
-            <div>
-              <div class="flex items-center justify-between mb-5">
-                <h2 class="text-[20px] font-bold text-[#2d3435]">Members</h2>
-                @if (selectedDetail!.memberCount) {
-                  <span class="text-[13px] text-[#596061]">{{ selectedDetail!.memberCount }} Total</span>
-                }
-              </div>
-              @if (leaderboardLoadingId === activeCommunityId && leaderboard.length === 0) {
-                <div class="flex justify-center py-12">
-                  <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-[#4f46e5]"></div>
+                <!-- Created At -->
+                <div class="absolute left-[290px] top-1/2 -translate-y-1/2 flex items-center gap-2">
+                  <img src="assets/communities/icon-calendar.svg" alt="Date" class="w-[13px] h-[15px]">
+                  <span class="text-[16px] text-[#596061]">{{ formatDate(selectedDetail.createdAt) }}</span>
                 </div>
-              } @else {
-                <div class="grid grid-cols-3 gap-3">
-                  @for (entry of leaderboard; track entry.rank) {
-                    <div class="bg-white border border-[#e5e7eb] rounded-[8px] p-4 flex items-center gap-3">
-                      <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-[14px] shrink-0"
-                           [style.backgroundColor]="getMemberColor(entry.rank)">
-                        {{ entry.userName.substring(0, 1).toUpperCase() }}
-                      </div>
-                      <div class="min-w-0">
-                        <p class="text-[14px] font-semibold text-[#2d3435] truncate">{{ entry.userName }}</p>
-                        <p class="text-[12px] text-[#596061]">{{ entry.rank === 1 && selectedDetail.isAdmin ? 'Admin' : 'Member' }}</p>
-                      </div>
-                    </div>
-                  }
-                  <!-- Add more card -->
-                  <div class="bg-white border border-[#e5e7eb] rounded-[8px] p-4 flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-[#f2f4f4] flex items-center justify-center shrink-0">
-                      <svg class="w-5 h-5 text-[#596061]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-                      </svg>
-                    </div>
-                    <div>
-                      <p class="text-[12px] font-semibold text-[#2d3435]">Add more members</p>
-                      <p class="text-[11px] text-[#596061]">By sharing the code</p>
-                    </div>
-                  </div>
-                </div>
-              }
-            </div>
-          }
 
-          <!-- ── LEADERBOARD TAB ── -->
-          @if (activeTab === 'overview' && activeOverviewTab === 'leaderboard') {
-            <div>
-              <h2 class="text-[20px] font-bold text-[#2d3435] mb-5">Leaderboard</h2>
-              @if (leaderboardLoadingId === activeCommunityId && leaderboard.length === 0) {
-                <div class="flex justify-center py-12">
-                  <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-[#4f46e5]"></div>
-                </div>
-              } @else if (leaderboard.length === 0) {
-                <div class="text-center py-12 border-2 border-dashed border-[#e5e7eb] rounded-[8px]">
-                  <p class="text-[14px] font-semibold text-[#596061]">No leaderboard entries yet</p>
-                  <p class="text-[12px] text-[#596061] mt-1">Study and complete quizzes to populate the rankings!</p>
-                </div>
-              } @else {
-                <div class="bg-white border border-[#e5e7eb] rounded-[8px] overflow-hidden">
-                  <!-- Header row -->
-                  <div class="grid grid-cols-[100px_1fr_160px] px-5 py-3 border-b border-[#f2f4f4] bg-[#f9f9f9]">
-                    <span class="text-[11px] font-bold uppercase tracking-wider text-[#596061]">RANK</span>
-                    <span class="text-[11px] font-bold uppercase tracking-wider text-[#596061]">SCHOLAR</span>
-                    <span class="text-[11px] font-bold uppercase tracking-wider text-[#596061] text-right">MASTERY XP</span>
-                  </div>
-                  <!-- Rows -->
-                  @for (entry of leaderboard; track entry.rank) {
-                    <div class="grid grid-cols-[100px_1fr_160px] px-5 py-4 border-b border-[#f9f9f9] hover:bg-[#f9f9f9] transition-colors last:border-0">
-                      <span class="text-[15px] font-bold self-center"
-                            [ngClass]="entry.rank === 1 ? 'text-[#4f46e5]' : 'text-[#596061]'">
-                        {{ entry.rank | number:'2.0-0' }}
-                      </span>
-                      <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-[12px] font-bold shrink-0"
-                             [style.backgroundColor]="getMemberColor(entry.rank)">
-                          {{ entry.userName.substring(0, 1).toUpperCase() }}
+                <!-- Action Buttons (right) -->
+                <div class="absolute right-0 top-[80px] flex items-center gap-3">
+                  <button (click)="leave(selectedDetail.id)"
+                          [disabled]="leaveLoadingId === selectedDetail.id"
+                          class="border border-[#757c7d] rounded-[12px] px-[17px] py-[13px] text-[14px] font-semibold text-[#596061] hover:bg-[#f2f4f4] transition-colors disabled:opacity-50">
+                    @if (leaveLoadingId === selectedDetail.id) {
+                      <div class="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-[#596061] inline-block mr-1"></div>
+                    }
+                    Leave Community
+                  </button>
+                  @if (selectedDetail.isAdmin) {
+                    <div class="relative">
+                      <button (click)="settingsDropdownOpen = !settingsDropdownOpen; $event.stopPropagation()"
+                              class="border border-[rgba(172,179,180,0.3)] rounded-[12px] p-[11px] hover:bg-[#f2f4f4] transition-colors" title="Settings">
+                        <img src="assets/communities/icon-dots.svg" alt="Settings" class="w-[4px] h-[16px]">
+                      </button>
+                      @if (settingsDropdownOpen) {
+                        <div class="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] z-50 overflow-hidden">
+                          <button (click)="showSettingsModal = true; settingsDropdownOpen = false"
+                                  class="w-full flex items-center gap-3 px-4 py-3 text-[14px] font-medium text-[#2d3435] hover:bg-[#f2f4f4] transition-colors">
+                            <svg class="w-4 h-4 text-[#596061]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                              <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            Community Settings
+                          </button>
                         </div>
-                        <span class="text-[14px] font-medium text-[#2d3435]">{{ entry.userName }}</span>
-                      </div>
-                      <span class="text-[13px] font-semibold text-[#596061] text-right self-center">
-                        {{ entry.xp | number }} XP
-                      </span>
-                    </div>
-                  }
-                  <!-- Footer -->
-                  @if (leaderboardMeta) {
-                    <div class="flex items-center justify-between px-5 py-3 bg-[#f9f9f9]">
-                      <span class="text-[12px] text-[#596061]">
-                        Showing {{ leaderboard.length }} of {{ leaderboardMeta.totalCount }} scholars
-                      </span>
-                      <div class="flex items-center gap-1">
-                        <button (click)="viewLeaderboard(activeCommunityId!, leaderboardMeta.currentPage - 1)"
-                                [disabled]="leaderboardMeta.currentPage === 1"
-                                class="p-1.5 border border-[#e5e7eb] rounded-[6px] disabled:opacity-40 hover:bg-white transition-colors">
-                          <svg class="w-3.5 h-3.5 text-[#596061]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                          </svg>
-                        </button>
-                        <button (click)="viewLeaderboard(activeCommunityId!, leaderboardMeta.currentPage + 1)"
-                                [disabled]="leaderboardMeta.currentPage === leaderboardMeta.totalPages"
-                                class="p-1.5 border border-[#e5e7eb] rounded-[6px] disabled:opacity-40 hover:bg-white transition-colors">
-                          <svg class="w-3.5 h-3.5 text-[#596061]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                          </svg>
-                        </button>
-                      </div>
+                      }
                     </div>
                   }
                 </div>
-              }
-            </div>
-          }
-
-          <!-- ── FILES TAB ── -->
-          @if (activeTab === 'files') {
-            <div>
-              <div class="flex items-center justify-between mb-5">
-                <h2 class="text-[20px] font-bold text-[#2d3435]">Files</h2>
-                @if (selectedDetail.allowMembersToAddFiles || selectedDetail.isAdmin) {
-                  <label class="flex items-center gap-2 px-4 py-2 bg-[#4f46e5] hover:bg-[#3d34d3] text-white rounded-[8px] text-[13px] font-semibold transition-colors cursor-pointer shadow-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Upload File
-                    <input type="file" #fileInput (change)="onFileSelected($event)" class="hidden">
-                  </label>
-                }
               </div>
 
-              @if (uploadingFile) {
-                <div class="bg-white border border-[#e5e7eb] rounded-[8px] p-4 mb-4">
-                  <div class="flex items-center justify-between text-[12px] font-semibold text-[#596061] mb-2">
-                    <span>{{ uploadStatusText }}</span>
-                    <span>{{ uploadProgress }}%</span>
-                  </div>
-                  <div class="w-full bg-[#f2f4f4] h-1.5 rounded-full overflow-hidden">
-                    <div class="bg-[#4f46e5] h-full transition-all duration-300" [style.width.%]="uploadProgress"></div>
-                  </div>
+              <!-- Stats Row -->
+              <div class="flex gap-6 items-start pt-4">
+                <div class="bg-white border border-[rgba(172,179,180,0.1)] rounded-[16px] p-[25px] flex-1 shadow-[0_1px_1px_rgba(0,0,0,0.05)]">
+                  <p class="text-[16px] font-bold text-[#2d3435]">{{ selectedDetail.memberCount ?? '—' }}</p>
+                  <p class="text-[16px] text-[#757c7d]">Active Members</p>
                 </div>
-              }
-
-              @if (filesLoading) {
-                <div class="flex justify-center py-12">
-                  <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-[#4f46e5]"></div>
+                <div class="bg-white border border-[rgba(172,179,180,0.1)] rounded-[16px] p-[25px] flex-1 shadow-[0_1px_1px_rgba(0,0,0,0.05)]">
+                  <p class="text-[16px] font-bold text-[#2d3435]">{{ totalCommunityXp | number }}</p>
+                  <p class="text-[16px] text-[#757c7d]">XP Earned</p>
                 </div>
-              } @else if (files.length === 0) {
-                <div class="border-2 border-dashed border-[#e5e7eb] rounded-[8px] p-14 flex flex-col items-center justify-center text-center">
-                  <svg class="w-10 h-10 text-[#c4c9ca] mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                  </svg>
-                  <p class="text-[14px] font-semibold text-[#596061]">No files yet</p>
-                  <p class="text-[12px] text-[#596061] mt-1">Upload study materials to share with the community.</p>
-                </div>
-              } @else {
-                <div class="bg-white border border-[#e5e7eb] rounded-[8px] overflow-hidden">
-                  @for (file of files; track file.id) {
-                    <div class="flex items-center gap-4 px-5 py-4 border-b border-[#f9f9f9] last:border-0 hover:bg-[#f9f9f9] transition-colors">
-                      <div class="w-8 h-8 rounded-[6px] flex items-center justify-center shrink-0" [ngClass]="getFileIconBg(file.fileName)">
-                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                      </div>
-                      <div class="flex-1 min-w-0">
-                        <p class="text-[14px] font-semibold text-[#2d3435] truncate">{{ file.fileName }}</p>
-                        <p class="text-[12px] text-[#596061]">{{ formatDate(file.uploadedAt) }} · {{ formatSize(file.size) }}</p>
-                      </div>
-                      <div class="flex items-center gap-1 shrink-0">
-                        <button (click)="downloadFile(file)" title="Download"
-                                class="p-2 text-[#596061] hover:text-[#4f46e5] hover:bg-[#f0f0fe] rounded-[6px] transition-colors">
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                          </svg>
-                        </button>
-                        <button (click)="deleteFile(file)" title="Delete"
-                                class="p-2 text-[#596061] hover:text-red-500 hover:bg-red-50 rounded-[6px] transition-colors">
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  }
-                </div>
-              }
+              </div>
             </div>
-          }
+          </div>
 
-          <!-- ── DISCUSSION TAB ── -->
-          @if (activeTab === 'posts') {
-            <div>
-              <div class="flex items-center justify-between mb-5">
-                <h2 class="text-[20px] font-bold text-[#2d3435]">Discussion</h2>
-                <button (click)="showNewPostModal = true"
-                        class="flex items-center gap-2 px-4 py-2 bg-[#4f46e5] hover:bg-[#3d34d3] text-white rounded-[8px] text-[13px] font-semibold transition-colors shadow-sm">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                  </svg>
-                  New Post
+          <!-- ==== TAB NAVIGATION ==== -->
+          <div class="flex flex-col gap-12">
+
+            <!-- Tabs (matches Figma exactly: Members, Leaderboard, Files, Discussion) -->
+            <div class="border-b border-[rgba(172,179,180,0.2)] flex gap-8">
+              @for (tab of [
+                { key: 'members', label: 'Members' },
+                { key: 'leaderboard', label: 'Leaderboard' },
+                { key: 'files', label: 'Files' },
+                { key: 'posts', label: 'Discussion' }
+              ]; track tab.key) {
+                <button (click)="switchTab($any(tab.key))"
+                        class="text-[14px] font-medium pb-[16px] -mb-px border-b-2 transition-all"
+                        [ngClass]="activeTab === tab.key
+                          ? 'text-[#4e45e4] border-[#4e45e4] font-semibold'
+                          : 'text-[#757c7d] border-transparent hover:text-[#2d3435]'">
+                  {{ tab.label }}
                 </button>
-              </div>
+              }
+            </div>
 
-              @if (postsLoading) {
-                <div class="flex justify-center py-12">
-                  <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-[#4f46e5]"></div>
+            <!-- ── MEMBERS TAB ── -->
+            @if (activeTab === 'members') {
+              <div class="flex flex-col gap-8">
+                <div class="flex items-center justify-between">
+                  <h2 class="text-[24px] font-bold text-[#2d3435]">Members</h2>
+                  <span class="text-[14px] font-medium text-[#757c7d]">{{ selectedDetail.memberCount ?? 0 }} Total</span>
                 </div>
-              } @else if (posts.length === 0) {
-                <div class="border-2 border-dashed border-[#e5e7eb] rounded-[8px] p-14 text-center">
-                  <p class="text-[14px] font-semibold text-[#596061]">No discussions yet</p>
-                  <p class="text-[12px] text-[#596061] mt-1">Start the first discussion with your community!</p>
-                </div>
-              } @else {
-                <div class="space-y-4">
-                  @for (post of posts; track post.id) {
-                    @if (!isSharedFilePost(post)) {
-                      <div class="bg-white border border-[#e5e7eb] rounded-[8px] p-5 hover:shadow-sm transition-all cursor-pointer"
-                           (click)="viewPost(post)">
-                        <!-- Author -->
-                        <div class="flex items-center gap-3 mb-3">
-                          <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-[13px] font-bold shrink-0 overflow-hidden"
-                               [style.backgroundColor]="getMemberColor((post.authorName.charCodeAt(0) % 7) + 1)">
-                            @if (post.authorPhotoUrl) {
-                              <img [src]="resolvePhotoUrl(post.authorPhotoUrl)" class="w-full h-full object-cover">
-                            } @else {
-                              {{ post.authorName.substring(0, 1).toUpperCase() }}
-                            }
-                          </div>
-                          <div class="flex-1 min-w-0">
-                            <p class="text-[13px] font-semibold text-[#2d3435]">{{ post.authorName }}</p>
-                            <p class="text-[11px] text-[#596061]">{{ formatDate(post.createdAt) }}</p>
-                          </div>
-                          @if (selectedDetail!.isAdmin || post.authorUserId === currentUserId) {
-                            <button (click)="$event.stopPropagation(); removePost(post)"
-                                    [disabled]="deletePostLoadingId === post.id"
-                                    class="text-[12px] text-red-500 hover:text-red-700 font-medium disabled:opacity-50 px-2 py-1 rounded hover:bg-red-50 transition-colors shrink-0">
-                              Delete
-                            </button>
+
+                @if (leaderboardLoadingId) {
+                  <div class="flex justify-center py-12">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4f46e5]"></div>
+                  </div>
+                } @else if (leaderboard.length === 0) {
+                  <div class="bg-white border border-[rgba(172,179,180,0.1)] rounded-[20px] py-16 text-center">
+                    <p class="text-[16px] font-bold text-[#2d3435] mb-2">No member data yet</p>
+                    <p class="text-[14px] text-[#757c7d]">Members will appear here once the leaderboard loads.</p>
+                  </div>
+                } @else {
+                  <!-- Member Cards Grid (3 columns, matching Figma) -->
+                  <div class="grid grid-cols-3 gap-6">
+                    @for (entry of leaderboard; track entry.userName; let i = $index) {
+                      <div class="bg-white border border-[rgba(172,179,180,0.1)] rounded-[16px] p-[21px] flex items-center gap-4 h-[98px]">
+                        <!-- Avatar: show actual photo if this entry is the current user -->
+                        <div class="w-[56px] h-[56px] rounded-full flex items-center justify-center text-[20px] font-bold text-[#f9f9f9] shrink-0 overflow-hidden"
+                             [style.background]="(entry.userName === currentUserName && navPhotoUrl) ? 'transparent' : getMemberColor(i + 1)">
+                          @if (entry.userName === currentUserName && navPhotoUrl) {
+                            <img [src]="navPhotoUrl" alt="avatar" class="w-full h-full object-cover">
+                          } @else {
+                            {{ (entry.userName || '?')[0].toUpperCase() }}
                           }
                         </div>
-
-                        <!-- Title & content -->
-                        <h3 class="text-[16px] font-bold text-[#2d3435] mb-1.5">{{ post.title }}</h3>
-                        @if (post.photoUrl) {
-                          <div class="mb-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#f2f4f4] rounded-[6px] text-[12px] text-[#596061]">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                            Attached image
-                          </div>
-                        }
-                        <p class="text-[13px] text-[#596061] line-clamp-3 leading-relaxed mb-3">{{ post.content }}</p>
-
-                        <!-- Footer -->
-                        <div class="flex items-center justify-between border-t border-[#f2f4f4] pt-3">
-                          <div class="flex items-center gap-1.5 text-[12px] text-[#596061]">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                            </svg>
-                            {{ post.replyCount }} replies
-                          </div>
-                          <span class="text-[12px] font-medium text-[#4f46e5]">View Discussion →</span>
+                        <div class="flex-1 min-w-0">
+                          <p class="text-[16px] font-semibold text-[#2d3435] truncate">{{ entry.userName }}</p>
+                          <p class="text-[16px] text-[#757c7d]">{{ entry.rank === 1 ? 'Admin' : 'Member' }}</p>
                         </div>
                       </div>
                     }
+                    <!-- Add more members prompt card (dashed) -->
+                    <div class="border-2 border-dashed border-[rgba(172,179,180,0.3)] rounded-[16px] p-[22px] flex items-center justify-center gap-3 h-[98px]">
+                      <img src="assets/communities/icon-invite-add.svg" alt="Add" class="w-[22px] h-[16px]">
+                      <span class="text-[16px] font-medium text-[#757c7d] text-center">Add more members<br>By sharing the code</span>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- ── LEADERBOARD TAB ── -->
+            @if (activeTab === 'leaderboard') {
+              <div class="flex flex-col gap-6">
+                <div class="flex items-center justify-between">
+                  <h2 class="text-[24px] font-bold text-[#2d3435]">Leaderboard</h2>
+                </div>
+
+                @if (leaderboardLoadingId) {
+                  <div class="flex justify-center py-12">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4f46e5]"></div>
+                  </div>
+                } @else if (leaderboard.length === 0) {
+                  <div class="bg-white border border-[rgba(172,179,180,0.1)] rounded-[20px] py-16 text-center">
+                    <p class="text-[16px] font-bold text-[#2d3435] mb-2">No leaderboard data yet</p>
+                    <p class="text-[14px] text-[#757c7d]">Start studying to earn XP and appear on the leaderboard.</p>
+                  </div>
+                } @else {
+                  <!-- Leaderboard Table -->
+                  <div class="bg-white border border-[rgba(172,179,180,0.1)] rounded-[24px] overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+                    <!-- Header -->
+                    <div class="bg-[#f2f4f4] flex">
+                      <div class="px-8 py-4 w-[192px]">
+                        <span class="text-[16px] font-bold text-[#596061] tracking-[0.8px] uppercase">RANK</span>
+                      </div>
+                      <div class="px-8 py-4 flex-1">
+                        <span class="text-[16px] font-bold text-[#596061] tracking-[0.8px] uppercase">SCHOLAR</span>
+                      </div>
+                      <div class="px-8 py-4 w-[280px]">
+                        <span class="text-[16px] font-bold text-[#596061] tracking-[0.8px] uppercase">MASTERY XP</span>
+                      </div>
+                    </div>
+                    <!-- Rows -->
+                    @for (entry of leaderboard; track entry.userName; let i = $index) {
+                      <div class="flex items-center border-t border-[rgba(172,179,180,0.1)] pr-8"
+                           [ngClass]="i === 0 ? 'bg-[rgba(78,69,228,0.05)]' : ''">
+                        <div class="px-8 py-7 w-[192px]">
+                          <span class="text-[16px] font-bold"
+                                [ngClass]="i === 0 ? 'text-[#4e45e4]' : 'text-[#757c7d]'">
+                            {{ (i + 1).toString().padStart(2, '0') }}
+                          </span>
+                        </div>
+                        <div class="flex items-center gap-3 flex-1 py-7">
+                          <div class="w-[32px] h-[32px] rounded-full flex items-center justify-center text-[10px] font-bold text-[#f9f9f9] shrink-0 overflow-hidden"
+                               [style.background]="(entry.userName === currentUserName && navPhotoUrl) ? 'transparent' : getMemberColor(i + 1)">
+                            @if (entry.userName === currentUserName && navPhotoUrl) {
+                              <img [src]="navPhotoUrl" alt="avatar" class="w-full h-full object-cover">
+                            } @else {
+                              {{ (entry.userName || '?')[0].toUpperCase() }}
+                            }
+                          </div>
+                          <span class="text-[16px] font-semibold text-[#2d3435]">{{ entry.userName }}</span>
+                        </div>
+                        <div class="w-[280px] px-8 py-7">
+                          <span class="text-[10px] font-bold text-[#757c7d]">{{ entry.xp | number }} XP</span>
+                        </div>
+                      </div>
+                    }
+                    <!-- Footer -->
+                    <div class="bg-[#f2f4f4] border-t border-[rgba(172,179,180,0.1)] px-8 py-4 flex items-center justify-between">
+                      <span class="text-[14px] text-[#757c7d]">Showing {{ leaderboard.length }} of {{ leaderboardMeta?.totalCount ?? leaderboard.length }} scholars</span>
+                      <div class="flex items-center gap-2">
+                        <button class="border border-[rgba(172,179,180,0.3)] rounded-[8px] px-2 py-2 opacity-50 cursor-not-allowed">
+                          <img src="assets/communities/icon-chevron-left.svg" alt="Prev" class="w-[4px] h-[7px]">
+                        </button>
+                        <button class="border border-[rgba(172,179,180,0.3)] rounded-[8px] px-2 py-2">
+                          <img src="assets/communities/icon-chevron-right.svg" alt="Next" class="w-[4px] h-[7px]">
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- ── FILES TAB ── -->
+            @if (activeTab === 'files') {
+              <div class="flex flex-col gap-6">
+                <div class="flex items-center justify-between">
+                  <h2 class="text-[24px] font-bold text-[#2d3435]">Files</h2>
+                  @if (selectedDetail.isAdmin || selectedDetail.allowMembersToAddFiles) {
+                    <label class="flex items-center gap-2 bg-[#4e45e4] text-[#fbf7ff] text-[14px] font-semibold px-4 py-2 rounded-[12px] cursor-pointer hover:bg-[#3d34d3] transition-colors">
+                      <input type="file" class="hidden" (change)="onFileSelected($event)">
+                      <img src="assets/communities/icon-create.svg" alt="+" class="w-[12px] h-[12px] brightness-0 invert">
+                      Upload File
+                    </label>
                   }
                 </div>
-              }
-            </div>
-          }
 
-        }
-      }
+                @if (uploadingFile) {
+                  <div class="bg-[#f2f4f4] rounded-[10px] p-4">
+                    <div class="flex items-center justify-between mb-2 text-[13px] font-medium text-[#596061]">
+                      <span>{{ uploadStatusText }}</span>
+                      <span>{{ uploadProgress }}%</span>
+                    </div>
+                    <div class="h-1.5 bg-[#e5e7eb] rounded-full overflow-hidden">
+                      <div class="h-full bg-[#4f46e5] transition-all rounded-full" [style.width.%]="uploadProgress"></div>
+                    </div>
+                  </div>
+                }
 
-      <!-- ======================== -->
-      <!-- VIEW 3: POST DETAIL      -->
-      <!-- ======================== -->
-      @else if (selectedPost) {
-
-        <!-- Breadcrumb -->
-        <div class="flex items-center gap-2 text-[14px] text-[#596061] mb-6">
-          <button (click)="clearSelected()" class="hover:text-[#4f46e5] transition-colors">Community</button>
-          <span class="text-[#c4c9ca]">›</span>
-          <button (click)="closePostDetail()" class="hover:text-[#4f46e5] transition-colors">{{ selectedDetail?.name }}</button>
-          <span class="text-[#c4c9ca]">›</span>
-          <span class="text-[#2d3435] font-medium">Discussion</span>
-        </div>
-
-        <div class="max-w-[720px]">
-
-          <!-- Author -->
-          <div class="flex items-center gap-3 mb-5">
-            <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shrink-0 overflow-hidden"
-                 [style.backgroundColor]="getMemberColor((selectedPost.authorName.charCodeAt(0) % 7) + 1)">
-              @if (selectedPost.authorPhotoUrl) {
-                <img [src]="resolvePhotoUrl(selectedPost.authorPhotoUrl)" class="w-full h-full object-cover">
-              } @else {
-                {{ selectedPost.authorName.substring(0, 1).toUpperCase() }}
-              }
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-[14px] font-semibold text-[#2d3435]">{{ selectedPost.authorName }}</p>
-              <p class="text-[12px] text-[#596061]">posted {{ formatDate(selectedPost.createdAt) }}</p>
-            </div>
-            @if (selectedDetail?.isAdmin || selectedPost.authorUserId === currentUserId) {
-              <button (click)="removePost(selectedPost)" [disabled]="deletePostLoadingId === selectedPost.id"
-                      class="text-[13px] text-red-500 hover:text-red-700 font-medium border border-red-100 hover:bg-red-50 px-3 py-1.5 rounded-[6px] transition-colors disabled:opacity-50 shrink-0">
-                Delete Post
-              </button>
-            }
-          </div>
-
-          <!-- Title -->
-          <h1 class="text-[26px] font-bold text-[#2d3435] mb-4 leading-tight">{{ selectedPost.title }}</h1>
-
-          <!-- Content -->
-          @if (!isSharedFilePost(selectedPost)) {
-            <p class="text-[15px] text-[#2d3435] leading-relaxed mb-4 whitespace-pre-line">{{ selectedPost.content }}</p>
-          } @else {
-            <div class="flex items-center justify-between p-4 bg-[#f9f9fb] border border-[#e5e7eb] rounded-[8px] mb-4 max-w-sm">
-              <div class="flex items-center gap-3">
-                <svg class="w-8 h-8 text-[#4f46e5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                </svg>
-                <div>
-                  <p class="text-[14px] font-bold text-[#2d3435]">{{ parseFilePostContent(selectedPost.content)?.fileName }}</p>
-                  <p class="text-[12px] text-[#596061]">{{ formatSize(parseFilePostContent(selectedPost.content)?.size) }}</p>
-                </div>
-              </div>
-              <button (click)="downloadFileFromPost(selectedPost)"
-                      class="px-4 py-2 bg-[#4f46e5] hover:bg-[#3d34d3] text-white text-[13px] font-semibold rounded-[6px] transition-colors">
-                Download
-              </button>
-            </div>
-          }
-
-          <!-- Post image -->
-          @if (selectedPost.photoUrl) {
-            <div class="rounded-[8px] overflow-hidden border border-[#e5e7eb] mb-5">
-              <img [src]="resolvePhotoUrl(selectedPost.photoUrl)" alt="Post image" class="w-full h-auto max-h-[400px] object-contain">
-            </div>
-          }
-
-          <!-- Reply count -->
-          <div class="flex items-center gap-1.5 text-[13px] text-[#596061] mb-6">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-            </svg>
-            {{ selectedPost.replyCount }}
-          </div>
-
-          <!-- Reply form -->
-          <div class="mb-8">
-            <h3 class="text-[16px] font-bold text-[#2d3435] mb-3">Post a Reply</h3>
-            <form [formGroup]="replyForm" (ngSubmit)="createReply()">
-              <textarea formControlName="content" rows="4"
-                        placeholder="Join the scholarly discussion... (type @ai <question> to ask AI about a shared file)"
-                        class="w-full px-4 py-3 border border-[#e5e7eb] rounded-[8px] text-[14px] text-[#2d3435] placeholder:text-[#9ca3af] outline-none focus:border-[#4f46e5] resize-none transition-colors"></textarea>
-              @if (aiReplyLoading) {
-                <div class="flex items-center gap-2 text-[12px] text-[#4f46e5] font-medium mt-2">
-                  <div class="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-[#4f46e5]"></div>
-                  AI is thinking…
-                </div>
-              }
-              <div class="flex justify-end mt-3">
-                <button type="submit" [disabled]="createReplyLoading || replyForm.invalid"
-                        class="px-6 py-2.5 bg-[#4f46e5] hover:bg-[#3d34d3] text-white text-[14px] font-semibold rounded-[8px] disabled:opacity-50 transition-colors">
-                  {{ createReplyLoading ? 'Posting...' : 'Post Reply' }}
-                </button>
-              </div>
-            </form>
-          </div>
-
-          <!-- Replies -->
-          @if (postDetailLoading && (!selectedPost.replies || selectedPost.replies.length === 0)) {
-            <div class="flex justify-center py-8">
-              <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-[#4f46e5]"></div>
-            </div>
-          } @else {
-            <div>
-              <h3 class="text-[16px] font-bold text-[#2d3435] mb-4">
-                Discussion ({{ selectedPost.replyCount }})
-              </h3>
-              @if (!selectedPost.replies || selectedPost.replies.length === 0) {
-                <p class="text-[13px] text-[#596061] py-4">No replies yet. Be the first to share your thoughts!</p>
-              } @else {
-                <div class="space-y-5">
-                  @for (reply of selectedPost.replies; track reply.id) {
-                    <div class="flex items-start gap-3 group">
-                      <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-[13px] font-bold shrink-0 overflow-hidden"
-                           [style.backgroundColor]="getMemberColor((reply.authorName.charCodeAt(0) % 7) + 1)">
-                        @if (reply.authorPhotoUrl) {
-                          <img [src]="resolvePhotoUrl(reply.authorPhotoUrl)" class="w-full h-full object-cover">
-                        } @else {
-                          {{ reply.authorName.substring(0, 1).toUpperCase() }}
-                        }
-                      </div>
-                      <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2 mb-1 flex-wrap">
-                          <span class="text-[13px] font-semibold text-[#2d3435]">{{ reply.authorName }}</span>
-                          @if (reply.authorUserId === selectedPost.authorUserId) {
-                            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-[#f2f4f4] text-[#596061] rounded uppercase tracking-wider">AUTHOR</span>
-                          }
-                          <span class="text-[11px] text-[#596061]">· {{ formatDate(reply.createdAt) }}</span>
-                          @if (selectedDetail?.isAdmin || reply.authorUserId === currentUserId) {
-                            <button (click)="removeReply(reply.id)" [disabled]="deleteReplyLoadingId === reply.id"
-                                    class="ml-auto text-[11px] text-red-400 hover:text-red-600 disabled:opacity-50 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                              Delete
+                @if (filesLoading) {
+                  <div class="flex justify-center py-12">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4f46e5]"></div>
+                  </div>
+                } @else if (files.length === 0) {
+                  <div class="bg-white border border-[rgba(172,179,180,0.1)] rounded-[20px] py-16 text-center">
+                    <p class="text-[16px] font-bold text-[#2d3435] mb-2">No shared files yet</p>
+                    <p class="text-[14px] text-[#757c7d]">Upload files to share with your community.</p>
+                  </div>
+                } @else {
+                  <!-- File list (matches Figma: full-width rows with type icon, name, date, actions) -->
+                  <div class="flex flex-col gap-3">
+                    @for (file of files; track file.id) {
+                      <div class="bg-white border border-[rgba(172,179,180,0.1)] rounded-[12px] p-[17px] flex items-center gap-4">
+                        <!-- File type icon: colored badge with extension text (roadmap style) -->
+                        <div class="w-[40px] h-[40px] rounded-[8px] flex items-center justify-center shrink-0"
+                             [ngClass]="getFileIconBgLight(file.fileName)">
+                          <span class="text-[9px] font-bold tracking-wide leading-none" [ngClass]="getFileIconColor(file.fileName)">
+                            {{ (file.fileName.split('.').pop() ?? 'FILE').toUpperCase() }}
+                          </span>
+                        </div>
+                        <!-- File info -->
+                        <div class="flex-1 min-w-0">
+                          <p class="text-[16px] font-semibold text-[#2d3435] truncate">{{ file.fileName }}</p>
+                          <p class="text-[12px] text-[#757c7d]">{{ formatDate(file.uploadedAt ?? '') }}</p>
+                        </div>
+                        <!-- Actions -->
+                        <div class="flex items-center gap-1 shrink-0">
+                          <button (click)="downloadFile(file)"
+                             class="p-2 rounded-[8px] hover:bg-[#f2f4f4] transition-colors" title="Download">
+                            <img src="assets/communities/icon-file-download.svg" alt="Download" class="w-4 h-4">
+                          </button>
+                          @if (selectedDetail.isAdmin) {
+                            <button (click)="deleteFile(file)"
+                                    class="p-2 rounded-[8px] hover:bg-red-50 transition-colors" title="Delete">
+                              <img src="assets/communities/icon-file-delete.svg" alt="Delete" class="w-[16px] h-[18px]">
                             </button>
                           }
                         </div>
-                        <p class="text-[14px] text-[#596061] leading-relaxed">{{ reply.content }}</p>
                       </div>
-                    </div>
-                  }
+                    }
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- ── DISCUSSION (POSTS) TAB ── -->
+            @if (activeTab === 'posts') {
+              <div class="flex flex-col gap-6">
+                <div class="flex items-center justify-between">
+                  <h2 class="text-[24px] font-bold text-[#2d3435]">Discussion</h2>
+                  <button (click)="showNewPostModal = true"
+                          class="flex items-center gap-2 bg-[#4e45e4] text-[#fbf7ff] text-[14px] font-semibold px-4 py-2 rounded-[12px] hover:bg-[#3d34d3] transition-colors">
+                    <img src="assets/communities/icon-create.svg" alt="+" class="w-[12px] h-[12px] brightness-0 invert">
+                    New Post
+                  </button>
+                </div>
+
+                @if (postsLoading) {
+                  <div class="flex justify-center py-12">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4f46e5]"></div>
+                  </div>
+                } @else if (posts.length === 0) {
+                  <div class="bg-white border border-[rgba(172,179,180,0.1)] rounded-[20px] py-16 text-center">
+                    <p class="text-[16px] font-bold text-[#2d3435] mb-2">No discussions yet</p>
+                    <p class="text-[14px] text-[#757c7d]">Start a conversation with your community.</p>
+                  </div>
+                } @else {
+                  <div class="flex flex-col gap-6 pt-2">
+                    @for (post of posts; track post.id; let postIdx = $index) {
+                      <!-- Post Card (Figma style: author row + title + excerpt + footer) -->
+                      <div class="bg-white border border-[rgba(172,179,180,0.1)] rounded-[12px] p-[25px] flex flex-col gap-[15px] cursor-pointer hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all"
+                           (click)="viewPost(post)">
+                        <!-- Author Row -->
+                        <div class="flex items-center gap-3">
+                          <div class="w-[32px] h-[32px] rounded-full flex items-center justify-center text-[10px] font-bold text-[#f9f9f9] shrink-0 overflow-hidden"
+                               [style.background]="post.authorPhotoUrl ? 'transparent' : getMemberColor(postIdx + 1)">
+                            @if (post.authorPhotoUrl) {
+                              <img [src]="resolvePhotoUrl(post.authorPhotoUrl)" alt="avatar" class="w-full h-full object-cover">
+                            } @else {
+                              {{ (post.authorName || '?')[0].toUpperCase() }}
+                            }
+                          </div>
+                          <div>
+                            <p class="text-[14px] font-semibold text-[#2d3435]">{{ post.authorName }}</p>
+                            <p class="text-[12px] text-[#757c7d]">{{ formatDate(post.createdAt) }}</p>
+                          </div>
+                        </div>
+
+                        <!-- Title (strip [Shared File] prefix for display) -->
+                        <h3 class="text-[18px] font-bold text-[#2d3435] line-clamp-2">
+                          {{ post.title.replace('[Shared File] ', '') }}
+                        </h3>
+
+                        <!-- Attached image preview (constrained as a thumbnail) -->
+                        @if (post.photoUrl) {
+                          <div class="rounded-[12px] overflow-hidden border border-[rgba(172,179,180,0.15)] bg-[#f8fafc]">
+                            <img [src]="resolvePhotoUrl(post.photoUrl)" alt="Attached Photo"
+                                 class="w-full object-cover h-[180px]">
+                          </div>
+                        }
+
+                        <!-- Content: shared file card OR text excerpt -->
+                        @if (isSharedFilePost(post.content)) {
+                          <!-- Shared file card -->
+                          @let fileData = parseSharedFileContent(post.content);
+                          @if (fileData) {
+                            <div class="flex items-center gap-3 bg-[#f8f9fa] border border-[rgba(172,179,180,0.2)] rounded-[10px] px-4 py-3">
+                              <div class="w-[36px] h-[36px] rounded-[8px] flex items-center justify-center shrink-0"
+                                   [ngClass]="getFileIconBgLight(fileData.fileName)">
+                                <span class="text-[8px] font-bold tracking-wide" [ngClass]="getFileIconColor(fileData.fileName)">
+                                  {{ (fileData.fileName.split('.').pop() ?? 'FILE').toUpperCase() }}
+                                </span>
+                              </div>
+                              <div class="flex-1 min-w-0">
+                                <p class="text-[13px] font-semibold text-[#2d3435] truncate">{{ fileData.fileName }}</p>
+                                @if (fileData.size) {
+                                  <p class="text-[11px] text-[#757c7d]">{{ formatFileSize(fileData.size) }}</p>
+                                }
+                              </div>
+                            </div>
+                          }
+                        } @else {
+                          <p class="text-[14px] text-[#596061] leading-[22px] line-clamp-2">{{ post.content }}</p>
+                        }
+
+                        <!-- Footer -->
+                        <div class="border-t border-[rgba(172,179,180,0.1)] pt-2.5 flex items-center justify-between">
+                          <span class="text-[12px] font-medium text-[#757c7d]">{{ post.replyCount || post.replies.length }} replies</span>
+                          <span class="text-[14px] font-semibold text-[#4e45e4]">View Discussion</span>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </main>
+    }
+
+
+    <!-- ============================ -->
+    <!-- VIEW 3: POST DETAIL          -->
+    <!-- ============================ -->
+    @else {
+      <main class="flex-1 px-[40px] pb-[48px] pt-[80px] flex flex-col gap-[32px]">
+
+        <!-- Breadcrumb nav (Matches Roadmap Style) -->
+        <div class="flex items-center gap-2 text-[14px] text-[#596061] mb-8">
+          <button (click)="clearSelected()" class="hover:text-[#2d3435] transition-colors cursor-pointer">Community</button>
+          <svg width="6" height="10" viewBox="0 0 6 10" fill="none" stroke="#596061" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 1l4 4-4 4"/>
+          </svg>
+          <button (click)="backToDetail()" class="hover:text-[#2d3435] transition-colors cursor-pointer">{{ selectedDetail?.name ?? '' }}</button>
+          <svg width="6" height="10" viewBox="0 0 6 10" fill="none" stroke="#596061" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 1l4 4-4 4"/>
+          </svg>
+          <span class="text-[#2d3435] font-medium">Discussion</span>
+        </div>
+
+        @if (postDetailLoading) {
+          <div class="flex items-center justify-center py-32">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4f46e5]"></div>
+          </div>
+        } @else {
+
+          <!-- ── ORIGINAL POST CARD — Figma 238:1959 ── -->
+          <div class="bg-white rounded-[12px] p-[32px] flex flex-col gap-[24px]">
+
+            <!-- Author row -->
+            <div class="flex items-center gap-[16px]">
+              <!-- 48px avatar -->
+              <div class="w-[48px] h-[48px] rounded-full flex items-center justify-center text-[16px] font-bold text-[#f9f9f9] shrink-0 overflow-hidden"
+                   [style.background]="selectedPost.authorPhotoUrl ? 'transparent' : getMemberColor(1)">
+                @if (selectedPost.authorPhotoUrl) {
+                  <img [src]="resolvePhotoUrl(selectedPost.authorPhotoUrl)" alt="avatar" class="w-full h-full object-cover">
+                } @else {
+                  {{ (selectedPost.authorName || '?')[0].toUpperCase() }}
+                }
+              </div>
+              <!-- Name + date -->
+              <div class="flex flex-col">
+                <span class="text-[16px] font-semibold text-[#2d3435]">{{ selectedPost.authorName }}</span>
+                <span class="text-[16px] text-[#596061]">posted {{ formatDate(selectedPost.createdAt) }}</span>
+              </div>
+              <!-- Spacer + 3-dot menu -->
+              <div class="flex-1"></div>
+              @if (selectedDetail?.isAdmin || selectedPost.authorUserId === currentUserId) {
+                <div class="relative" (click)="$event.stopPropagation()">
+                  <button (click)="deletePost(selectedPost.id)"
+                          [disabled]="deletePostLoadingId === selectedPost.id"
+                          class="text-[14px] font-medium text-red-500 hover:text-red-700 transition-colors disabled:opacity-50 border border-red-200 hover:border-red-300 rounded-[8px] px-3 py-1.5">
+                    @if (deletePostLoadingId === selectedPost.id) {
+                      <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
+                    } @else {
+                      Delete Post
+                    }
+                  </button>
                 </div>
               }
             </div>
-          }
 
-        </div>
-      }
+            <!-- Post title — Figma 238:1979: text-[32px] font-bold tracking-[-0.8px] -->
+            <h1 class="text-[32px] font-bold text-[#2d3435] leading-[40px] tracking-[-0.8px]">
+              {{ selectedPost.title.replace('[Shared File] ', '') }}
+            </h1>
 
-    </main>
-  </div>
+            <!-- Post body — Figma 238:1980 -->
+            <div class="flex flex-col gap-[16px]">
+              <!-- Shared file card -->
+              @if (isSharedFilePost(selectedPost.content)) {
+                @let fileData = parseSharedFileContent(selectedPost.content);
+                @if (fileData) {
+                  <div class="flex items-center gap-4 bg-[#f8f9fa] border border-[rgba(172,179,180,0.2)] rounded-[12px] p-4">
+                    <div class="w-[44px] h-[44px] rounded-[10px] flex items-center justify-center shrink-0"
+                         [ngClass]="getFileIconBgLight(fileData.fileName)">
+                      <span class="text-[9px] font-bold tracking-wide" [ngClass]="getFileIconColor(fileData.fileName)">
+                        {{ (fileData.fileName.split('.').pop() ?? 'FILE').toUpperCase() }}
+                      </span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-[15px] font-semibold text-[#2d3435] truncate">{{ fileData.fileName }}</p>
+                      @if (fileData.size) {
+                        <p class="text-[12px] text-[#757c7d]">{{ formatFileSize(fileData.size) }}</p>
+                      }
+                    </div>
+                  </div>
+                }
+              } @else {
+                <!-- Normal text content -->
+                <p class="text-[16px] text-[#2d3435] leading-[26px] whitespace-pre-wrap">{{ selectedPost.content }}</p>
+              }
 
+              <!-- Attached image — Figma 238:1985: full width, aspect-auto, border, rounded -->
+              @if (selectedPost.photoUrl) {
+                <div class="w-full border border-[rgba(172,179,180,0.2)] rounded-[12px] overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.05)] bg-[#f8fafc] flex justify-center">
+                  <img [src]="resolvePhotoUrl(selectedPost.photoUrl)" alt="Post image"
+                       class="max-w-full object-contain max-h-[500px]">
+                </div>
+              }
+            </div>
 
-  <!-- ================================================ -->
-  <!-- MODAL: Create Community                          -->
-  <!-- ================================================ -->
-  @if (showCreateModal) {
-    <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-         (click)="showCreateModal = false">
-      <div class="bg-white rounded-[12px] w-full max-w-[400px] p-6 shadow-2xl" (click)="$event.stopPropagation()">
-        <h2 class="text-[16px] font-bold text-[#2d3435] mb-1">Create Community</h2>
-        <p class="text-[13px] text-[#596061] mb-5">Define a new collective workspace for your academic group.</p>
-
-        <form [formGroup]="createForm" (ngSubmit)="create()" class="space-y-4">
-          <!-- Photo -->
-          <div>
-            <label class="text-[11px] font-bold uppercase tracking-wider text-[#596061] block mb-2">COMMUNITY PHOTO</label>
-            <div class="flex flex-col items-center gap-2">
-              <label class="w-[72px] h-[72px] rounded-[8px] bg-[#f2f4f4] border border-[#e5e7eb] flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors">
-                <svg class="w-6 h-6 text-[#596061]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
-                <input type="file" accept="image/*" class="hidden">
-              </label>
-              <span class="text-[12px] text-[#596061]">Upload a cover photo (optional)</span>
+            <!-- Footer: reply count — Figma 238:1988 -->
+            <div class="border-t border-[rgba(172,179,180,0.1)] pt-[25px] flex items-center gap-[8px]">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#596061" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+              <span class="text-[16px] font-semibold text-[#596061]">{{ selectedPost.replies.length }}</span>
             </div>
           </div>
 
-          <!-- Name -->
-          <div>
-            <label class="text-[11px] font-bold uppercase tracking-wider text-[#596061] block mb-1.5">COMMUNITY NAME</label>
-            <input formControlName="name" type="text" placeholder="e.g. Quantum Computing 101"
-                   class="w-full h-[44px] px-4 border border-[#e5e7eb] rounded-[8px] text-[14px] text-[#2d3435] placeholder:text-[#c4c9ca] outline-none focus:border-[#4f46e5] transition-colors">
-            @if (createForm.get('name')?.touched && createForm.get('name')?.invalid) {
-              <p class="text-[11px] text-red-500 mt-1">Name is required (min 3 characters)</p>
+          <!-- ── REPLY INPUT SECTION — Figma 238:1994 ── -->
+          <div class="flex flex-col gap-[16px]">
+            <h3 class="text-[16px] font-semibold text-[#2d3435]">Post a Reply</h3>
+            <div class="bg-white rounded-[12px] p-[24px] flex flex-col gap-[6px]">
+              <form [formGroup]="replyForm" (ngSubmit)="createReply()" class="flex flex-col gap-0">
+                <textarea formControlName="content"
+                          placeholder="Join the scholarly discussion..."
+                          rows="4"
+                          class="w-full min-h-[120px] text-[16px] text-[#2d3435] placeholder:text-[#6b7280] outline-none resize-none bg-transparent leading-[24px]"></textarea>
+                <div class="flex justify-end pt-[16px]">
+                  <button type="submit"
+                          [disabled]="replyForm.invalid || createReplyLoading"
+                          class="bg-[#4e45e4] hover:bg-[#3d34d3] text-[#fbf7ff] text-[16px] font-semibold px-[32px] py-[10px] rounded-[12px] transition-colors disabled:opacity-50 flex items-center gap-2">
+                    @if (createReplyLoading) {
+                      <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    } @else {
+                      Post Reply
+                    }
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- ── THREADED COMMENTS SECTION — Figma 238:2004 ── -->
+          <div class="flex flex-col gap-[24px]">
+            <p class="text-[16px] font-semibold text-[#596061] px-[8px]">
+              Discussion ({{ selectedPost.replies.length }})
+            </p>
+
+            @if (selectedPost.replies.length === 0) {
+              <div class="bg-white rounded-[12px] p-[24px] text-center text-[14px] text-[#acb3b4]">
+                No replies yet. Be the first to join the discussion!
+              </div>
+            } @else {
+              <div class="flex flex-col gap-[16px]">
+                @for (reply of getTopLevelReplies(selectedPost.replies); track reply.id) {
+                  <!-- Top-level comment: white bg — Figma 238:2009 -->
+                  <div class="flex flex-col gap-[16px] relative">
+                    <!-- Vertical thread line -->
+                    @let children = getChildReplies(selectedPost.replies, reply.id);
+                    @if (children.length > 0) {
+                      <div class="absolute bg-[#acb3b4] opacity-30 top-[56px] bottom-0 left-[24px] w-px"></div>
+                    }
+
+                    <div class="bg-white rounded-[12px] p-[24px] flex flex-col gap-[12px]">
+                      <!-- Author header -->
+                      <div class="flex items-center gap-[12px]">
+                        <div class="w-[32px] h-[32px] rounded-full flex items-center justify-center text-[16px] font-bold text-[#f9f9f9] shrink-0 overflow-hidden"
+                             [style.background]="reply.authorPhotoUrl ? 'transparent' : getMemberColor(3)">
+                          @if (reply.authorPhotoUrl) {
+                            <img [src]="resolvePhotoUrl(reply.authorPhotoUrl)" alt="avatar" class="w-full h-full object-cover">
+                          } @else {
+                            {{ (reply.authorName || '?')[0].toUpperCase() }}
+                          }
+                        </div>
+                        <span class="text-[16px] font-bold text-[#2d3435]">{{ reply.authorName }}</span>
+                        <span class="text-[12px] text-[#757c7d]">• {{ formatDate(reply.createdAt) }}</span>
+                        <div class="flex-1"></div>
+                        @if (selectedDetail?.isAdmin || reply.authorUserId === currentUserId) {
+                          <button (click)="deleteReply(selectedPost!.id, reply.id)"
+                                  [disabled]="deleteReplyLoadingId === reply.id"
+                                  class="text-[11px] text-[#acb3b4] hover:text-red-500 transition-colors disabled:opacity-50">
+                            Delete
+                          </button>
+                        }
+                      </div>
+                      <!-- Content -->
+                      <p class="text-[16px] text-[#2d3435] leading-[24px]">{{ reply.content }}</p>
+                      <!-- Reply button -->
+                      <div class="pt-[4px]">
+                        <button class="text-[16px] font-semibold text-[#596061] hover:text-[#4e45e4] transition-colors">Reply</button>
+                      </div>
+                    </div>
+
+                    <!-- Nested child replies -->
+                    @if (children.length > 0) {
+                      <div class="flex flex-col gap-[16px] pl-[48px]">
+                        @for (child of children; track child.id) {
+                          @if (isPostAuthor(child)) {
+                            <!-- Author's reply: purple left border — Figma 238:2048 -->
+                            <div class="bg-[rgba(226,223,255,0.3)] border-l-4 border-[#4e45e4] pl-[28px] pr-[24px] py-[24px] rounded-[12px] flex flex-col gap-[12px]">
+                              <div class="flex items-center gap-[12px]">
+                                <div class="w-[32px] h-[32px] rounded-full flex items-center justify-center text-[16px] font-bold text-[#f9f9f9] shrink-0 overflow-hidden"
+                                     [style.background]="child.authorPhotoUrl ? 'transparent' : '#4e45e4'">
+                                  @if (child.authorPhotoUrl) {
+                                    <img [src]="resolvePhotoUrl(child.authorPhotoUrl)" alt="avatar" class="w-full h-full object-cover">
+                                  } @else {
+                                    {{ (child.authorName || '?')[0].toUpperCase() }}
+                                  }
+                                </div>
+                                <span class="text-[16px] font-semibold text-[#2d3435]">{{ child.authorName }}</span>
+                                <!-- AUTHOR badge -->
+                                <span class="bg-[rgba(78,69,228,0.1)] text-[#4e45e4] text-[10px] font-bold tracking-[1px] uppercase px-[8px] py-[2px] rounded-[4px]">AUTHOR</span>
+                                <span class="text-[12px] text-[#757c7d]">• {{ formatDate(child.createdAt) }}</span>
+                                <div class="flex-1"></div>
+                                @if (selectedDetail?.isAdmin || child.authorUserId === currentUserId) {
+                                  <button (click)="deleteReply(selectedPost!.id, child.id)"
+                                          [disabled]="deleteReplyLoadingId === child.id"
+                                          class="text-[11px] text-[#acb3b4] hover:text-red-500 transition-colors disabled:opacity-50">
+                                    Delete
+                                  </button>
+                                }
+                              </div>
+                              <p class="text-[16px] text-[#2d3435] leading-[24px]">{{ child.content }}</p>
+                              <div class="pt-[4px]">
+                                <button class="text-[16px] font-semibold text-[#596061] hover:text-[#4e45e4] transition-colors">Reply</button>
+                              </div>
+                            </div>
+                          } @else {
+                            <!-- Regular nested reply: gray bg — Figma 238:2029 -->
+                            <div class="bg-[#f2f4f4] rounded-[12px] p-[24px] flex flex-col gap-[12px]">
+                              <div class="flex items-center gap-[12px]">
+                                <div class="w-[32px] h-[32px] rounded-full flex items-center justify-center text-[16px] font-bold text-[#f9f9f9] shrink-0 overflow-hidden"
+                                     [style.background]="child.authorPhotoUrl ? 'transparent' : getMemberColor(4)">
+                                  @if (child.authorPhotoUrl) {
+                                    <img [src]="resolvePhotoUrl(child.authorPhotoUrl)" alt="avatar" class="w-full h-full object-cover">
+                                  } @else {
+                                    {{ (child.authorName || '?')[0].toUpperCase() }}
+                                  }
+                                </div>
+                                <span class="text-[16px] font-bold text-[#2d3435]">{{ child.authorName }}</span>
+                                <span class="text-[12px] text-[#757c7d]">• {{ formatDate(child.createdAt) }}</span>
+                                <div class="flex-1"></div>
+                                @if (selectedDetail?.isAdmin || child.authorUserId === currentUserId) {
+                                  <button (click)="deleteReply(selectedPost!.id, child.id)"
+                                          [disabled]="deleteReplyLoadingId === child.id"
+                                          class="text-[11px] text-[#acb3b4] hover:text-red-500 transition-colors disabled:opacity-50">
+                                    Delete
+                                  </button>
+                                }
+                              </div>
+                              <p class="text-[16px] text-[#2d3435] leading-[24px]">{{ child.content }}</p>
+                              <div class="pt-[4px]">
+                                <button class="text-[16px] font-semibold text-[#596061] hover:text-[#4e45e4] transition-colors">Reply</button>
+                              </div>
+                            </div>
+                          }
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
             }
           </div>
 
-          <!-- Description -->
-          <div>
-            <label class="text-[11px] font-bold uppercase tracking-wider text-[#596061] block mb-1.5">DESCRIPTION</label>
-            <textarea formControlName="description" rows="3" placeholder="Briefly describe the focus of this community..."
-                      class="w-full px-4 py-3 border border-[#e5e7eb] rounded-[8px] text-[14px] text-[#2d3435] placeholder:text-[#c4c9ca] outline-none focus:border-[#4f46e5] resize-none transition-colors"></textarea>
-          </div>
+        }<!-- end @else postDetailLoading -->
+      </main>
+    }
 
-          <!-- Buttons -->
-          <div class="flex items-center justify-end gap-3 pt-1">
-            <button type="button" (click)="showCreateModal = false"
-                    class="px-5 py-2.5 text-[14px] font-medium text-[#596061] hover:text-[#2d3435] transition-colors">
-              Cancel
-            </button>
-            <button type="submit" [disabled]="createLoading || createForm.invalid"
-                    class="px-6 py-2.5 bg-[#4f46e5] hover:bg-[#3d34d3] text-white text-[14px] font-semibold rounded-[8px] disabled:opacity-50 transition-colors flex items-center gap-2">
-              @if (createLoading) {
-                <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                </svg>
-              }
-              {{ createLoading ? 'Creating...' : 'Create Community' }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  }
+  </div><!-- end main -->
 
-
-  <!-- ================================================ -->
-  <!-- MODAL: Join Community                            -->
-  <!-- ================================================ -->
+  <!-- ======================== -->
+  <!-- MODAL: Join with Code    -->
+  <!-- ======================== -->
   @if (showJoinModal) {
-    <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(249,249,249,0.8)] backdrop-blur-[10px]"
          (click)="showJoinModal = false">
-      <div class="bg-white rounded-[12px] w-full max-w-[380px] p-6 shadow-2xl" (click)="$event.stopPropagation()">
+      <div class="bg-white rounded-[12px] shadow-[0_40px_100px_-20px_rgba(45,52,53,0.04)] w-[512px] max-w-[95vw] p-[48px] relative flex flex-col gap-10"
+           (click)="$event.stopPropagation()">
+
+        <!-- Back button -->
         <button (click)="showJoinModal = false"
-                class="flex items-center gap-1.5 text-[13px] text-[#596061] hover:text-[#2d3435] mb-5 transition-colors">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-          </svg>
+                class="flex items-center gap-2 text-[16px] font-medium text-[#596061] hover:text-[#2d3435] transition-colors tracking-[0.4px]">
+          <img src="assets/communities/icon-join-code.svg" alt="Back" class="w-[13px] h-[13px]">
           Back
         </button>
 
-        <h2 class="text-[16px] font-bold text-[#2d3435] mb-1">Join a Community</h2>
-        <p class="text-[13px] text-[#596061] mb-5">Enter the 6-digit code provided by your study group leader.</p>
-
-        <form [formGroup]="joinForm" (ngSubmit)="join()" class="space-y-4">
-          <div>
-            <label class="text-[11px] font-bold uppercase tracking-wider text-[#596061] block mb-1.5">ACCESS CODE</label>
-            <input formControlName="joinCode" type="text" placeholder="000-000"
-                   class="w-full h-[48px] px-4 border border-[#e5e7eb] rounded-[8px] text-[18px] text-[#2d3435] placeholder:text-[#c4c9ca] outline-none focus:border-[#4f46e5] text-center font-mono tracking-[0.3em] transition-colors">
-            @if (joinForm.get('joinCode')?.touched && joinForm.get('joinCode')?.invalid) {
-              <p class="text-[11px] text-red-500 mt-1">Access code is required</p>
-            }
+        <!-- Content -->
+        <div class="flex flex-col gap-8">
+          <!-- Header -->
+          <div class="flex flex-col gap-3">
+            <h2 class="text-[16px] font-bold text-[#2d3435] tracking-[-0.4px]">Join a Community</h2>
+            <p class="text-[16px] text-[#596061] leading-[26px] max-w-[320px]">Enter the 6-digit code provided by your study group leader.</p>
           </div>
 
-          <button type="submit" [disabled]="joinLoading || joinForm.invalid"
-                  class="w-full py-3 bg-[#4f46e5] hover:bg-[#3d34d3] text-white text-[15px] font-semibold rounded-[8px] disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
-            @if (joinLoading) {
-              <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-              </svg>
-              Joining...
-            } @else {
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-              </svg>
-              Join Group
-            }
-          </button>
-        </form>
+          <!-- Form -->
+          <form [formGroup]="joinForm" (ngSubmit)="join()" class="flex flex-col gap-10">
+            <div class="flex flex-col gap-4">
+              <label class="text-[16px] font-medium text-[#596061] tracking-[0.4px] uppercase opacity-70">ACCESS CODE</label>
+              <input formControlName="joinCode"
+                     placeholder="000-000"
+                     maxlength="10"
+                     class="bg-[#f2f4f4] rounded-[8px] h-[64px] px-6 text-[16px] font-bold text-[#2d3435] text-center tracking-[4px] outline-none placeholder:text-[rgba(172,179,180,0.3)] placeholder:tracking-[4px]">
+            </div>
 
-        <!-- Info note -->
-        <div class="mt-4 flex items-start gap-2 p-3 bg-[#f0f4ff] rounded-[8px]">
-          <svg class="w-4 h-4 text-[#4f46e5] mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-          <p class="text-[12px] text-[#596061]">
-            Codes are case-sensitive and expire after 24 hours. If you don't have a code, contact your administrator.
-          </p>
+            <button type="submit"
+                    [disabled]="joinForm.invalid || joinLoading"
+                    class="w-full h-[56px] bg-[#4e45e4] hover:bg-[#3d34d3] text-[#fbf7ff] text-[16px] font-bold rounded-[8px] flex items-center justify-center gap-3 transition-colors disabled:opacity-50">
+              @if (joinLoading) {
+                <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              } @else {
+                Join Group
+                <img src="assets/communities/icon-join-arrow.svg" alt="Arrow" class="w-[24px] h-[16px]">
+              }
+            </button>
+          </form>
         </div>
       </div>
     </div>
   }
 
+  <!-- ========================== -->
+  <!-- MODAL: Create Community    -->
+  <!-- ========================== -->
+  @if (showCreateModal) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(249,249,249,0.8)] backdrop-blur-[10px]"
+         (click)="showCreateModal = false">
+      <div class="bg-white rounded-[12px] shadow-[0_40px_100px_-20px_rgba(45,52,53,0.04)] w-[576px] max-w-[95vw] p-8 relative flex flex-col gap-8"
+           (click)="$event.stopPropagation()">
 
-  <!-- ================================================ -->
-  <!-- MODAL: Community Settings (Admin)                -->
-  <!-- ================================================ -->
-  @if (showSettingsModal && selectedDetail) {
-    <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+        <!-- Header -->
+        <div class="flex flex-col gap-1">
+          <h2 class="text-[16px] font-bold text-[#2d3435] tracking-[-0.4px]">Create Community</h2>
+          <p class="text-[16px] text-[#596061] leading-[24px]">Define a new collective workspace for your academic group.</p>
+        </div>
+
+        <form [formGroup]="createForm" (ngSubmit)="create()" class="flex flex-col gap-6">
+
+          <!-- Photo Upload -->
+          <div class="flex flex-col gap-3">
+            <label class="text-[16px] font-medium text-[#596061] tracking-[0.4px] uppercase">COMMUNITY PHOTO</label>
+            <div class="flex flex-col items-center gap-3">
+              <div class="w-[80px] h-[80px] rounded-[12px] bg-[#f2f4f4] flex items-center justify-center overflow-hidden cursor-pointer hover:bg-[#e5e7eb] transition-colors"
+                   (click)="photoFileInput.click()">
+                @if (communityPhotoPreview) {
+                  <img [src]="communityPhotoPreview" alt="Preview" class="w-full h-full object-cover">
+                } @else {
+                  <img src="assets/communities/icon-community-photo.svg" alt="Upload" class="w-[22px] h-[20px]">
+                }
+              </div>
+              <input #photoFileInput type="file" accept="image/*" class="hidden" (change)="onCommunityPhotoSelected($event)">
+              <p class="text-[16px] text-[#596061] leading-[24px]">Upload a cover photo (optional)</p>
+            </div>
+          </div>
+
+          <!-- Community Name -->
+          <div class="flex flex-col gap-2">
+            <label class="text-[16px] font-medium text-[#596061] tracking-[0.4px] uppercase">COMMUNITY NAME</label>
+            <input formControlName="name"
+                   placeholder="e.g. Quantum Computing 101"
+                   class="bg-[#f2f4f4] rounded-[12px] px-4 py-3.5 text-[16px] text-[#2d3435] outline-none placeholder:text-[#acb3b4]">
+          </div>
+
+          <!-- Description -->
+          <div class="flex flex-col gap-2">
+            <label class="text-[16px] font-medium text-[#596061] tracking-[0.4px] uppercase">DESCRIPTION</label>
+            <textarea formControlName="description"
+                      placeholder="Briefly describe the focus of this community..."
+                      rows="4"
+                      class="bg-[#f2f4f4] rounded-[12px] px-4 py-3 text-[16px] text-[#2d3435] outline-none resize-none placeholder:text-[#acb3b4]"></textarea>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex items-center justify-end gap-4 pt-4">
+            <button type="button" (click)="showCreateModal = false"
+                    class="px-6 py-3 rounded-[12px] text-[16px] font-bold text-[#4e45e4] hover:bg-[#f2f4f4] transition-colors">
+              Cancel
+            </button>
+            <button type="submit"
+                    [disabled]="createForm.invalid || createLoading"
+                    class="px-8 py-3 bg-[#4e45e4] hover:bg-[#3d34d3] text-[#fbf7ff] text-[16px] font-bold rounded-[12px] shadow-[0_10px_15px_-3px_rgba(78,69,228,0.2)] transition-colors disabled:opacity-50">
+              @if (createLoading) {
+                <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mx-auto"></div>
+              } @else {
+                Create Community
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- ======================= -->
+  <!-- MODAL: New Post         -->
+  <!-- ======================= -->
+  @if (showNewPostModal) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(249,249,249,0.8)] backdrop-blur-[10px]"
+         (click)="showNewPostModal = false">
+      <div class="bg-white rounded-[12px] shadow-[0_40px_100px_-20px_rgba(45,52,53,0.04)] w-[576px] max-w-[95vw] p-8 flex flex-col gap-6"
+           (click)="$event.stopPropagation()">
+        <h2 class="text-[16px] font-bold text-[#2d3435]">New Discussion Post</h2>
+
+        <form [formGroup]="postForm" (ngSubmit)="createPost()" class="flex flex-col gap-4">
+          <div class="flex flex-col gap-2">
+            <label class="text-[13px] font-semibold text-[#596061] uppercase tracking-wider">TITLE</label>
+            <input formControlName="title"
+                   placeholder="What's the topic?"
+                   class="bg-[#f2f4f4] rounded-[12px] px-4 py-3.5 text-[15px] text-[#2d3435] outline-none placeholder:text-[#acb3b4]">
+          </div>
+          <div class="flex flex-col gap-2">
+            <label class="text-[13px] font-semibold text-[#596061] uppercase tracking-wider">CONTENT</label>
+            <textarea formControlName="content"
+                      placeholder="Share your thoughts, questions, or ideas..."
+                      rows="5"
+                      class="bg-[#f2f4f4] rounded-[12px] px-4 py-3 text-[15px] text-[#2d3435] outline-none resize-none placeholder:text-[#acb3b4]"></textarea>
+          </div>
+          <!-- Photo upload -->
+          <div>
+            <label class="text-[13px] font-semibold text-[#596061] uppercase tracking-wider mb-2 block">ATTACH PHOTO (OPTIONAL)</label>
+            <label class="flex items-center gap-2 text-[13px] text-[#4f46e5] font-medium cursor-pointer hover:opacity-80 transition-opacity">
+              <input type="file" accept="image/*" class="hidden" (change)="onPostPhotoSelected($event)">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+              {{ selectedPostPhoto ? selectedPostPhoto.name : 'Choose image' }}
+            </label>
+          </div>
+          <div class="flex items-center justify-end gap-4 pt-2">
+            <button type="button" (click)="showNewPostModal = false"
+                    class="px-6 py-3 rounded-[12px] text-[15px] font-bold text-[#4e45e4] hover:bg-[#f2f4f4] transition-colors">
+              Cancel
+            </button>
+            <button type="submit"
+                    [disabled]="postForm.invalid || createPostLoading"
+                    class="px-8 py-3 bg-[#4e45e4] hover:bg-[#3d34d3] text-white text-[15px] font-bold rounded-[12px] shadow-[0_10px_15px_-3px_rgba(78,69,228,0.2)] transition-colors disabled:opacity-50">
+              @if (createPostLoading) {
+                <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mx-auto"></div>
+              } @else {
+                Post
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- ========================== -->
+  <!-- MODAL: Settings (Admin)    -->
+  <!-- ========================== -->
+  @if (showSettingsModal && selectedDetail && selectedDetail.isAdmin) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity p-4"
          (click)="showSettingsModal = false">
-      <div class="bg-white rounded-[12px] w-full max-w-[420px] p-6 shadow-2xl" (click)="$event.stopPropagation()">
-        <div class="flex items-center justify-between mb-5">
-          <h2 class="text-[16px] font-bold text-[#2d3435]">Community Settings</h2>
-          <button (click)="showSettingsModal = false"
-                  class="p-1.5 hover:bg-[#f2f4f4] rounded-[6px] text-[#596061] transition-colors">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+      <div class="bg-white rounded-[24px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] w-[512px] max-w-full p-6 flex flex-col gap-5 relative transform transition-all max-h-[95vh] overflow-y-auto"
+           (click)="$event.stopPropagation()">
+        <!-- Header -->
+        <div class="flex items-center justify-between shrink-0">
+          <h2 class="text-[20px] font-bold text-[#2d3435]">Community Settings</h2>
+          <button (click)="showSettingsModal = false" class="text-[#596061] hover:text-[#2d3435] transition-colors">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
           </button>
         </div>
 
-        <!-- Cover photo -->
-        <div class="flex flex-col items-center mb-5">
-          <div class="relative w-[80px] h-[80px] mb-2">
-            <div class="w-full h-full rounded-[8px] overflow-hidden bg-[#f2f4f4] border border-[#e5e7eb] flex items-center justify-center">
-              @if (selectedDetail.photoUrl && !photoUploading) {
-                <img [src]="resolvePhotoUrl(selectedDetail.photoUrl)" class="w-full h-full object-cover">
-              } @else if (photoUploading) {
-                <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-[#4f46e5]"></div>
-              } @else {
-                <svg class="w-8 h-8 text-[#596061]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
-              }
-            </div>
+        <!-- Update Photo (Centered like Figma) -->
+        <div class="flex flex-col items-center gap-2 shrink-0">
+          <div class="w-[80px] h-[80px] rounded-[16px] bg-[#e5e7eb] flex items-center justify-center overflow-hidden relative cursor-pointer hover:opacity-90 transition-opacity"
+               (click)="settingsPhotoInput.click()">
+            @if (selectedDetail.photoUrl) {
+              <img [src]="resolvePhotoUrl(selectedDetail.photoUrl)" alt="Cover" class="w-full h-full object-cover">
+              <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              </div>
+            } @else {
+              <svg class="w-8 h-8 text-[#596061]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m3-3H9"/>
+              </svg>
+            }
           </div>
-          <label class="text-[13px] font-medium text-[#4f46e5] hover:text-[#3d34d3] cursor-pointer transition-colors">
-            Change cover photo
-            <input type="file" accept="image/*" (change)="onPhotoSelected($event)" class="hidden">
-          </label>
-          @if (selectedDetail.photoUrl) {
-            <button (click)="deletePhoto()" class="text-[12px] text-red-400 hover:text-red-600 mt-1 transition-colors">
-              Remove photo
+          <input #settingsPhotoInput type="file" accept="image/*" class="hidden" (change)="onPhotoSelected($event)">
+          <div class="flex flex-col items-center">
+            @if (photoUploading) {
+              <span class="text-[14px] font-medium text-[#4f46e5] flex items-center gap-2">
+                <div class="animate-spin rounded-full h-3 w-3 border-b-2 border-[#4f46e5]"></div>
+                Uploading...
+              </span>
+            } @else {
+              <button (click)="settingsPhotoInput.click()" class="text-[14px] font-medium text-[#4f46e5] hover:underline">Change cover photo</button>
+            }
+            @if (selectedDetail.photoUrl && !photoUploading) {
+              <button (click)="deletePhoto()" class="text-[12px] text-red-500 hover:underline mt-1">Remove photo</button>
+            }
+          </div>
+        </div>
+
+        <!-- Readonly Fields -->
+        <div class="flex flex-col gap-4 shrink-0">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[12px] font-semibold text-[#596061] tracking-[0.4px] uppercase">COMMUNITY NAME</label>
+            <input type="text" readonly [value]="selectedDetail.name"
+                   class="bg-[#f9fafb] border border-transparent rounded-[12px] px-3.5 py-3 text-[14px] text-[#2d3435] outline-none cursor-not-allowed opacity-80">
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[12px] font-semibold text-[#596061] tracking-[0.4px] uppercase">DESCRIPTION</label>
+            <textarea readonly rows="2"
+                      class="bg-[#f9fafb] border border-transparent rounded-[12px] px-3.5 py-3 text-[14px] text-[#2d3435] outline-none resize-none cursor-not-allowed opacity-80">{{ selectedDetail.description }}</textarea>
+          </div>
+        </div>
+
+        <!-- Allow Files Toggle -->
+        <div class="flex items-center justify-between mt-2">
+          <div class="flex flex-col">
+            <span class="text-[16px] font-bold text-[#2d3435]">Allow members to add files</span>
+            <span class="text-[14px] text-[#596061]">Members can share files in this community</span>
+          </div>
+          <button (click)="toggleAllowFiles()"
+                  [disabled]="allowFilesLoading"
+                  class="w-[48px] h-[26px] rounded-full transition-colors relative shrink-0 disabled:opacity-50"
+                  [ngClass]="selectedDetail.allowMembersToAddFiles ? 'bg-[#4e45e4]' : 'bg-[#c4c9ca]'">
+            <div class="absolute top-[2px] left-[2px] w-[22px] h-[22px] bg-white rounded-full shadow-sm transition-transform"
+                 [ngClass]="selectedDetail.allowMembersToAddFiles ? 'translate-x-[22px]' : 'translate-x-0'"></div>
+          </button>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="flex items-center justify-between pt-2 shrink-0">
+          <!-- Left side: Delete Community -->
+          <button (click)="delete(selectedDetail.id || '')"
+                  class="text-[14px] font-bold text-red-500 hover:text-red-700 hover:underline transition-colors">
+            Delete Community
+          </button>
+          
+          <!-- Right side: Cancel / Save -->
+          <div class="flex items-center gap-3">
+            <button (click)="showSettingsModal = false" class="text-[14px] font-medium text-[#596061] hover:text-[#2d3435] transition-colors">
+              Cancel
             </button>
-          }
-        </div>
-
-        <!-- Name (display only) -->
-        <div class="mb-4">
-          <label class="text-[11px] font-bold uppercase tracking-wider text-[#596061] block mb-1.5">COMMUNITY NAME</label>
-          <div class="w-full h-[44px] px-4 border border-[#e5e7eb] rounded-[8px] flex items-center text-[14px] text-[#2d3435] bg-[#f9f9f9]">
-            {{ selectedDetail.name }}
+            <button (click)="showSettingsModal = false" class="px-5 py-2.5 bg-[#4e45e4] hover:bg-[#3d34d3] text-white text-[14px] font-bold rounded-[12px] transition-colors shadow-sm">
+              Save Changes
+            </button>
           </div>
-        </div>
-
-        <!-- Description (display only) -->
-        <div class="mb-5">
-          <label class="text-[11px] font-bold uppercase tracking-wider text-[#596061] block mb-1.5">DESCRIPTION</label>
-          <div class="w-full px-4 py-3 border border-[#e5e7eb] rounded-[8px] text-[14px] text-[#2d3435] bg-[#f9f9f9] min-h-[72px] leading-relaxed">
-            {{ selectedDetail.description || 'No description provided.' }}
-          </div>
-        </div>
-
-        <!-- Allow files toggle -->
-        <div class="flex items-start justify-between gap-4 p-4 border border-[#e5e7eb] rounded-[8px] mb-5">
-          <div class="flex-1 min-w-0">
-            <p class="text-[14px] font-semibold text-[#2d3435] mb-1">Allow members to add files</p>
-            <p class="text-[12px] text-[#596061] leading-snug">
-              When enabled, all members can upload files to the Files tab. When disabled, only admins will have the authority to upload.
-            </p>
-          </div>
-          <button (click)="toggleAllowFiles()" [disabled]="allowFilesLoading"
-                  class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 focus:outline-none mt-0.5"
-                  [ngClass]="selectedDetail.allowMembersToAddFiles ? 'bg-[#4f46e5]' : 'bg-gray-300'">
-            <span class="inline-block h-4 w-4 rounded-full bg-white transition-transform shadow"
-                  [ngClass]="selectedDetail.allowMembersToAddFiles ? 'translate-x-6' : 'translate-x-1'"></span>
-          </button>
-        </div>
-
-        <!-- Danger zone -->
-        <div class="border-t border-[#fde8e8] pt-4 mb-5">
-          <p class="text-[11px] font-bold uppercase tracking-wider text-red-400 mb-3">Danger Zone</p>
-          <button (click)="showSettingsModal = false; delete(selectedDetail.id)"
-                  [disabled]="deleteLoadingId === selectedDetail.id"
-                  class="w-full py-2.5 border border-red-300 text-red-500 text-[13px] font-semibold rounded-[8px] hover:bg-red-50 disabled:opacity-50 transition-colors">
-            {{ deleteLoadingId === selectedDetail.id ? 'Deleting...' : 'Delete Community' }}
-          </button>
-        </div>
-
-        <!-- Buttons -->
-        <div class="flex items-center justify-end gap-3">
-          <button (click)="showSettingsModal = false"
-                  class="px-5 py-2.5 text-[14px] font-medium text-[#596061] hover:text-[#2d3435] transition-colors">
-            Cancel
-          </button>
-          <button (click)="showSettingsModal = false"
-                  class="px-6 py-2.5 bg-[#4f46e5] hover:bg-[#3d34d3] text-white text-[14px] font-semibold rounded-[8px] transition-colors">
-            Done
-          </button>
         </div>
       </div>
     </div>
   }
 
-  <!-- ── Delete Community Confirm Modal ── -->
+  <!-- ========================== -->
+  <!-- MODAL: Delete Confirm      -->
+  <!-- ========================== -->
   @if (showDeleteConfirmModal && communityToDelete) {
-    <div class="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-         (click)="showDeleteConfirmModal = false; communityToDelete = null">
-      <div class="bg-white rounded-[16px] w-full max-w-[400px] p-7 shadow-2xl" (click)="$event.stopPropagation()">
-
-        <!-- Icon -->
-        <div class="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-5">
-          <svg class="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-          </svg>
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(249,249,249,0.8)] backdrop-blur-[10px]"
+         (click)="showDeleteConfirmModal = false">
+      <div class="bg-white rounded-[12px] shadow-[0_40px_100px_-20px_rgba(45,52,53,0.04)] w-[420px] max-w-[95vw] p-8 flex flex-col gap-6"
+           (click)="$event.stopPropagation()">
+        <div class="flex flex-col gap-2">
+          <h2 class="text-[16px] font-bold text-[#2d3435]">Delete Community?</h2>
+          <p class="text-[14px] text-[#596061] leading-relaxed">
+            Are you sure you want to delete <strong class="text-[#2d3435]">{{ communityToDelete.name }}</strong>? This action cannot be undone.
+          </p>
         </div>
-
-        <h3 class="text-[20px] font-bold text-[#2d3435] text-center mb-2">Delete Community?</h3>
-        <p class="text-[14px] text-[#596061] text-center leading-relaxed mb-1">
-          You're about to permanently delete
-        </p>
-        <p class="text-[15px] font-bold text-[#2d3435] text-center mb-2">"{{ communityToDelete.name }}"</p>
-        <p class="text-[13px] text-[#596061] text-center leading-relaxed mb-7">
-          All members, posts, files, and progress will be lost forever. This cannot be undone.
-        </p>
-
-        <div class="flex gap-3">
+        <div class="flex items-center justify-end gap-3">
           <button (click)="showDeleteConfirmModal = false; communityToDelete = null"
-                  class="flex-1 py-3 border-2 border-[#e5e7eb] text-[#596061] text-[14px] font-semibold rounded-[10px] hover:bg-[#f9f9f9] transition-colors">
+                  class="px-6 py-2.5 rounded-[10px] text-[14px] font-bold text-[#4e45e4] hover:bg-[#f2f4f4] transition-colors">
             Cancel
           </button>
           <button (click)="confirmDelete()"
-                  [disabled]="deleteLoadingId === communityToDelete.id"
-                  class="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white text-[14px] font-bold rounded-[10px] transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
-            @if (deleteLoadingId === communityToDelete.id) {
-              <div class="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
-              Deleting...
-            } @else {
-              Yes, Delete
-            }
+                  class="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-[10px] text-[14px] font-bold transition-colors">
+            Delete
           </button>
         </div>
-      </div>
-    </div>
-  }
-
-
-  <!-- ================================================ -->
-  <!-- MODAL: New Post                                  -->
-  <!-- ================================================ -->
-  @if (showNewPostModal) {
-    <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-         (click)="showNewPostModal = false">
-      <div class="bg-white rounded-[12px] w-full max-w-[480px] p-6 shadow-2xl" (click)="$event.stopPropagation()">
-        <div class="flex items-center justify-between mb-5">
-          <h2 class="text-[16px] font-bold text-[#2d3435]">New Post</h2>
-          <button (click)="showNewPostModal = false"
-                  class="p-1.5 hover:bg-[#f2f4f4] rounded-[6px] text-[#596061] transition-colors">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-          </button>
-        </div>
-
-        <form [formGroup]="postForm" (ngSubmit)="createPost()" class="space-y-4">
-          <div>
-            <label class="text-[11px] font-bold uppercase tracking-wider text-[#596061] block mb-1.5">TITLE</label>
-            <input formControlName="title" type="text" placeholder="What's your post about?"
-                   class="w-full h-[44px] px-4 border border-[#e5e7eb] rounded-[8px] text-[14px] text-[#2d3435] placeholder:text-[#c4c9ca] outline-none focus:border-[#4f46e5] transition-colors">
-          </div>
-          <div>
-            <label class="text-[11px] font-bold uppercase tracking-wider text-[#596061] block mb-1.5">CONTENT</label>
-            <textarea formControlName="content" rows="4" placeholder="Share your thoughts..."
-                      class="w-full px-4 py-3 border border-[#e5e7eb] rounded-[8px] text-[14px] text-[#2d3435] placeholder:text-[#c4c9ca] outline-none focus:border-[#4f46e5] resize-none transition-colors"></textarea>
-          </div>
-          <div class="flex items-center gap-3">
-            <input type="file" accept="image/*" #postPhotoInput (change)="onPostPhotoSelected($event)" class="hidden">
-            <button type="button" (click)="postPhotoInput.click()"
-                    class="flex items-center gap-1.5 px-3 py-1.5 border border-[#e5e7eb] rounded-[6px] text-[12px] text-[#596061] hover:bg-gray-50 transition-colors">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-              </svg>
-              Attach Image
-            </button>
-            @if (selectedPostPhoto) {
-              <span class="text-[12px] text-[#596061] truncate max-w-[160px]">{{ selectedPostPhoto.name }}</span>
-              <button type="button" (click)="removePostPhoto()" class="text-red-400 hover:text-red-600 text-[12px]">✕</button>
-            }
-          </div>
-          <div class="flex items-center justify-end gap-3 pt-1">
-            <button type="button" (click)="showNewPostModal = false"
-                    class="px-5 py-2.5 text-[14px] font-medium text-[#596061] hover:text-[#2d3435] transition-colors">
-              Cancel
-            </button>
-            <button type="submit" [disabled]="createPostLoading || postForm.invalid"
-                    class="px-6 py-2.5 bg-[#4f46e5] hover:bg-[#3d34d3] text-white text-[14px] font-semibold rounded-[8px] disabled:opacity-50 transition-colors flex items-center gap-2">
-              @if (createPostLoading) {
-                <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                </svg>
-              }
-              {{ createPostLoading ? 'Publishing...' : 'Publish Post' }}
-            </button>
-          </div>
-        </form>
       </div>
     </div>
   }

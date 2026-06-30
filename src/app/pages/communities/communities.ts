@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { Component, DestroyRef, OnInit, OnDestroy, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CommunityService } from '../../services/community.service';
 import { StorageService } from '../../services/storage.service';
@@ -7,7 +7,7 @@ import { SpaceService } from '../../services/space.service';
 import { ChatService } from '../../services/chat.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import {
   Community,
@@ -26,7 +26,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   templateUrl: './communities.html',
   styleUrls: ['./communities.css']
 })
-export class CommunitiesComponent implements OnInit {
+export class CommunitiesComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private communityService = inject(CommunityService);
   private storageService = inject(StorageService);
@@ -35,6 +35,15 @@ export class CommunitiesComponent implements OnInit {
   private chatService = inject(ChatService);
   private http = inject(HttpClient);
   private destroyRef = inject(DestroyRef);
+  private router = inject(Router);
+
+  // Profile Dropdown state
+  currentUser$ = this.authService.currentUser$;
+  navPhotoUrl: string | null = null;
+  lastPhotoId?: string;
+  settingsDropdownOpen = false;
+  avatarDropdownOpen = false;
+  currentUserName: string | null = null;
 
   // AI reply state
   aiReplyLoading = false;
@@ -45,8 +54,13 @@ export class CommunitiesComponent implements OnInit {
   activeCommunityId: string | null = null;
   communitiesCache: Community[] = [];
 
+  // UI helper properties
+  streakDays = 0;
+  userInitial = '?';
+  communityPhotoPreview: string | null = null;
+
   // Tab management
-  activeTab: 'overview' | 'posts' | 'files' = 'overview';
+  activeTab: 'members' | 'leaderboard' | 'posts' | 'files' = 'members';
 
   // Toast messages for endpoint feedback
   toast: { type: 'success' | 'error'; message: string; visible: boolean } = {
@@ -123,8 +137,92 @@ export class CommunitiesComponent implements OnInit {
     return map[ext] ?? 'bg-gray-400';
   }
 
+  getFileIconBgLight(fileName: string): string {
+    const ext = (fileName.split('.').pop() ?? '').toLowerCase();
+    const map: Record<string, string> = {
+      pdf: 'bg-[#fef2f2]', doc: 'bg-[#eff6ff]', docx: 'bg-[#eff6ff]',
+      xls: 'bg-[#f0fdf4]', xlsx: 'bg-[#f0fdf4]', csv: 'bg-[#f0fdf4]',
+      ppt: 'bg-[#fff7ed]', pptx: 'bg-[#fff7ed]',
+      png: 'bg-[#f3e8ff]', jpg: 'bg-[#f3e8ff]', jpeg: 'bg-[#f3e8ff]', gif: 'bg-[#f3e8ff]',
+    };
+    return map[ext] ?? 'bg-[#f2f4f4]';
+  }
+
+  getFileIconColor(fileName: string): string {
+    const ext = (fileName.split('.').pop() ?? '').toLowerCase();
+    const map: Record<string, string> = {
+      pdf: 'text-red-500', doc: 'text-blue-500', docx: 'text-blue-500',
+      xls: 'text-green-600', xlsx: 'text-green-600', csv: 'text-green-600',
+      ppt: 'text-orange-500', pptx: 'text-orange-500',
+      png: 'text-purple-500', jpg: 'text-purple-500', jpeg: 'text-purple-500', gif: 'text-purple-500',
+    };
+    return map[ext] ?? 'text-gray-500';
+  }
+
+  getFileIconPath(fileName: string): string {
+    const ext = (fileName.split('.').pop() ?? '').toLowerCase();
+    const map: Record<string, string> = {
+      pdf: 'assets/communities/icon-file-pdf.svg',
+      doc: 'assets/communities/icon-file-doc.svg',
+      docx: 'assets/communities/icon-file-doc.svg',
+      xls: 'assets/communities/icon-file-csv.svg',
+      xlsx: 'assets/communities/icon-file-csv.svg',
+      csv: 'assets/communities/icon-file-csv.svg',
+      png: 'assets/communities/icon-file-png.svg',
+      jpg: 'assets/communities/icon-file-png.svg',
+      jpeg: 'assets/communities/icon-file-png.svg',
+      gif: 'assets/communities/icon-file-png.svg',
+    };
+    return map[ext] ?? 'assets/communities/icon-file-doc.svg';
+  }
+
+
   get currentUserId(): string | null {
     return this.authService.getCurrentUserId();
+  }
+
+  /** True when post content is a JSON file-metadata blob from a [Shared File] post */
+  isSharedFilePost(input: string | any): boolean {
+    // Accept either a raw content string or a Post object
+    const content: string = typeof input === 'string' ? input : (input?.content ?? '');
+    if (typeof input !== 'string' && input?.title) {
+      // Legacy check: post object — check title prefix too
+      if ((input.title as string).startsWith('[Shared File]')) return true;
+    }
+    const trimmed = (content ?? '').trim();
+    return trimmed.startsWith('{') && trimmed.includes('"fileName"');
+  }
+
+  /** Parse the JSON file metadata from a shared-file post content string */
+  parseSharedFileContent(content: string): { fileName: string; size?: number; contentType?: string } | null {
+    try {
+      return JSON.parse(content);
+    } catch {
+      return null;
+    }
+  }
+
+  /** Format bytes into human-readable size string */
+  formatFileSize(bytes?: number): string {
+    if (!bytes) return '';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  /** True if this reply is from the post author */
+  isPostAuthor(reply: any): boolean {
+    return !!this.selectedPost && reply.authorUserId === this.selectedPost.authorUserId;
+  }
+
+  /** Get top-level replies (no parent) */
+  getTopLevelReplies(replies: any[]): any[] {
+    return replies.filter(r => !r.parentReplyId);
+  }
+
+  /** Get child replies of a given parent */
+  getChildReplies(replies: any[], parentId: string): any[] {
+    return replies.filter(r => r.parentReplyId === parentId);
   }
 
   // Forms
@@ -152,7 +250,83 @@ export class CommunitiesComponent implements OnInit {
       .subscribe(communities => {
         this.communitiesCache = communities ?? [];
       });
+
+    // Load streak + user initial from AuthService
+    const user = this.authService.getCurrentUser?.();
+    if (user) {
+      this.streakDays = 0;
+      this.userInitial = (user.userName ?? user.email ?? '?')[0].toUpperCase();
+      this.currentUserName = user.userName ?? null;
+    }
+
+    // Handle current user profile photo subscription
+    this.authService.currentUser$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(u => {
+        if (u?.photoId && u.photoId !== this.lastPhotoId) {
+          this.lastPhotoId = u.photoId;
+          this.authService.fetchProfilePhoto().subscribe({
+            next: url => { this.navPhotoUrl = url; },
+            error: () => { this.navPhotoUrl = null; }
+          });
+        } else if (!u?.photoId && this.lastPhotoId) {
+          this.lastPhotoId = undefined;
+          if (this.navPhotoUrl) URL.revokeObjectURL(this.navPhotoUrl);
+          this.navPhotoUrl = null;
+        }
+      });
+
     this.load();
+  }
+
+  ngOnDestroy(): void {
+    if (this.navPhotoUrl) {
+      URL.revokeObjectURL(this.navPhotoUrl);
+    }
+  }
+
+  toggleAvatarDropdown(): void {
+    this.avatarDropdownOpen = !this.avatarDropdownOpen;
+  }
+
+  closeAvatarDropdown(): void {
+    this.avatarDropdownOpen = false;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (this.avatarDropdownOpen) {
+      this.closeAvatarDropdown();
+    }
+    if (this.settingsDropdownOpen) {
+      this.settingsDropdownOpen = false;
+    }
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
+  }
+
+  getDisplayName(name: string | undefined): string {
+    if (!name) return 'User';
+    if (name.includes('@')) return name.split('@')[0];
+    return name;
+  }
+
+  getInitials(name: string | undefined): string {
+    return name ? name.charAt(0).toUpperCase() : 'U';
+  }
+
+  getCommunityColor(name: string): string {
+    const colors = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#007184'];
+    if (!name) return colors[0];
+    const idx = name.charCodeAt(0) % colors.length;
+    return colors[idx];
+  }
+
+  getCommunityInitial(name: string): string {
+    return name ? name.charAt(0).toUpperCase() : '?';
   }
 
   load() {
@@ -168,28 +342,28 @@ export class CommunitiesComponent implements OnInit {
   }
 
   filteredCommunities(communities: Community[] | null | undefined): Community[] {
-    const list = communities ?? [];
+    let list = communities ?? [];
     const term = this.searchTerm.trim().toLowerCase();
 
-    if (!term) {
-      return list;
+    if (term) {
+      list = list.filter(community =>
+        (community.name ?? '').toLowerCase().includes(term) ||
+        (community.description ?? '').toLowerCase().includes(term) ||
+        (community.joinCode ?? '').toLowerCase().includes(term)
+      );
     }
 
-    return list.filter(community =>
-      (community.name ?? '').toLowerCase().includes(term) ||
-      (community.description ?? '').toLowerCase().includes(term) ||
-      (community.joinCode ?? '').toLowerCase().includes(term)
-    );
+    return list;
   }
 
   // ─── TABS ──────────────────────────────────────────
 
-  switchTab(tab: 'overview' | 'posts' | 'files') {
+  switchTab(tab: 'members' | 'leaderboard' | 'posts' | 'files') {
     this.activeTab = tab;
     const communityId = this.activeCommunityId;
     if (!communityId) return;
 
-    if (tab === 'overview') {
+    if (tab === 'members' || tab === 'leaderboard') {
       this.viewLeaderboard(communityId);
     } else if (tab === 'posts') {
       this.loadPosts(communityId);
@@ -319,7 +493,7 @@ export class CommunitiesComponent implements OnInit {
     this.detailLoadingId = id;
     this.activeCommunityId = id;
     this.selectedDetail = null;
-    this.activeTab = 'overview';
+    this.activeTab = 'members';
     this.selectedPost = null;
     this.posts = [];
     this.files = [];
@@ -386,7 +560,7 @@ export class CommunitiesComponent implements OnInit {
     this.posts = [];
     this.selectedPost = null;
     this.files = [];
-    this.activeTab = 'overview';
+    this.activeTab = 'members';
   }
 
   copyJoinCode(code?: string) {
@@ -445,6 +619,12 @@ export class CommunitiesComponent implements OnInit {
     });
   }
 
+  /** Template-friendly wrapper: delete post by ID */
+  deletePost(postId: string) {
+    const post = this.posts.find(p => p.id === postId) || this.selectedPost;
+    if (post) this.removePost(post);
+  }
+
   removeReply(replyId: string) {
     if (!this.activeCommunityId || !this.selectedPost) return;
     if (!confirm('Delete this reply?')) return;
@@ -463,6 +643,11 @@ export class CommunitiesComponent implements OnInit {
         this.showToast('error', `Failed to delete reply: ${err.message}`);
       }
     });
+  }
+
+  /** Template-friendly wrapper: delete reply by postId + replyId */
+  deleteReply(postId: string, replyId: string) {
+    this.removeReply(replyId);
   }
 
   // ─── POSTS & DISCUSSIONS ───────────────────────────
@@ -506,11 +691,23 @@ export class CommunitiesComponent implements OnInit {
     }
   }
 
+  onCommunityPhotoSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.communityPhotoPreview = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
   removePostPhoto() {
     this.selectedPostPhoto = null;
   }
 
-  createPost() {
+  createPost(communityId?: string) {
     if (this.postForm.invalid || !this.activeCommunityId) return;
 
     this.createPostLoading = true;
@@ -547,7 +744,12 @@ export class CommunitiesComponent implements OnInit {
 
   // ─── REPLIES ───────────────────────────────────────
 
-  createReply() {
+  backToDetail() {
+    this.selectedPost = null;
+    this.activeTab = 'posts';
+  }
+
+  createReply(postId?: string) {
     if (this.replyForm.invalid || !this.activeCommunityId || !this.selectedPost) return;
 
     const { content } = this.replyForm.value;
@@ -874,10 +1076,7 @@ export class CommunitiesComponent implements OnInit {
     this.saveTrackedFiles(communityId, tracked);
   }
 
-  isSharedFilePost(post: Post | null): boolean {
-    if (!post) return false;
-    return (post.title || '').startsWith('[Shared File]');
-  }
+  // isSharedFilePost is defined above (unified method accepting string | Post)
 
   parseFilePostContent(content: string): any {
     try {

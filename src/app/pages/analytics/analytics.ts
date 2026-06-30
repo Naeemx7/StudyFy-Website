@@ -71,7 +71,7 @@ export class AnalyticsComponent implements OnInit {
         this.currentStreak = data.currentStreak ?? 0;
         this.longestStreak = data.longestStreak  ?? 0;
         this.totalXp       = data.totalXp        ?? 0;
-        this.spaceDetails  = data.spaceDetails   ?? [];
+        this.spaceDetails  = (data.spaceDetails ?? []).filter(s => !s.name.startsWith('CommunityWorkSpaceGlobalName_'));
 
         // Avg score across all spaces weighted by quiz count
         const totalQ = this.spaceDetails.reduce((s, d) => s + (d.totalQuizzes ?? 0), 0);
