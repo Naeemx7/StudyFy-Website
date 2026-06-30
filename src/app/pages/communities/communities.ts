@@ -47,6 +47,7 @@ export class CommunitiesComponent implements OnInit, OnDestroy {
 
   // AI reply state
   aiReplyLoading = false;
+  aiQuestion = '';
 
   communities$ = this.communityService.communities$;
   loading = false;
@@ -794,6 +795,24 @@ export class CommunitiesComponent implements OnInit, OnDestroy {
         this.showToast('error', `Failed to post reply: ${err.message}`);
       }
     });
+  }
+
+  /** Send the aiQuestion input as an @ai reply on the current shared-file post. */
+  submitAiQuestion() {
+    if (!this.aiQuestion.trim() || !this.selectedPost) return;
+    const question = `@ai ${this.aiQuestion.trim()}`;
+    this.aiQuestion = '';
+    this.handleAiReply(question);
+  }
+
+  /** Switch to Discussion tab and open the file's associated post. */
+  goToFileDiscussion(file: CommunityFile & { postId?: string }) {
+    this.activeTab = 'posts';
+    if (!file.postId) return;
+    const post = this.posts.find(p => p.id === file.postId);
+    if (post) {
+      this.viewPost(post);
+    }
   }
 
   /**
