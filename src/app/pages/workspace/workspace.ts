@@ -1768,6 +1768,11 @@ export class WorkspaceComponent implements OnInit, AfterViewChecked {
 
   private extractTextContent(content: unknown): string {
     if (typeof content === 'string') {
+      const parsed = this.tryParseJson(content);
+      if (this.isRecord(parsed)) {
+        const text = this.readString(parsed, ['Summary', 'summary', 'content', 'text', 'description', 'body', 'overview']);
+        if (text) return text;
+      }
       return content.trim();
     }
 
