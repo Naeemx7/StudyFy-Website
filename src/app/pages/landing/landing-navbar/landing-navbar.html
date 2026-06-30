@@ -12,14 +12,16 @@
       <nav class="hidden md:flex items-center gap-8">
         <a href="#" class="text-[15px] font-semibold text-[#4f46e5] hover:opacity-80 transition">Home</a>
         <a href="#features" class="text-[15px] font-medium text-[#596061] hover:text-[#2d3435] transition">Features</a>
-        <a routerLink="/login" class="text-[15px] font-medium text-[#596061] hover:text-[#2d3435] transition">Login</a>
       </nav>
 
       <!-- CTA -->
-      <a routerLink="/signup"
-         class="hidden md:inline-flex items-center gap-2 bg-[#4f46e5] hover:bg-[#3d34d3] text-white text-[15px] font-bold px-6 py-[10px] rounded-full transition">
-        Get Started
-      </a>
+      <div class="hidden md:flex items-center gap-3">
+        <a routerLink="/login" class="text-[15px] font-medium text-[#596061] hover:text-[#2d3435] transition px-2">Login</a>
+        <a routerLink="/signup"
+           class="inline-flex items-center gap-2 bg-[#4f46e5] hover:bg-[#3d34d3] text-white text-[15px] font-bold px-6 py-[10px] rounded-full transition">
+          Get Started
+        </a>
+      </div>
 
       <!-- Mobile menu button -->
       <button (click)="toggleMenu()" class="md:hidden p-2 text-[#596061]">
