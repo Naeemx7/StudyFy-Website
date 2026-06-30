@@ -558,6 +558,15 @@
                         </div>
                         <!-- Actions -->
                         <div class="flex items-center gap-1 shrink-0">
+                          @if (file.postId) {
+                            <button (click)="goToFileDiscussion(file)"
+                                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-[12px] font-semibold text-[#4e45e4] bg-[#eef2ff] hover:bg-[#e0e7ff] transition-colors" title="View Discussion">
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                              </svg>
+                              Discuss
+                            </button>
+                          }
                           <button (click)="downloadFile(file)"
                              class="p-2 rounded-[8px] hover:bg-[#f2f4f4] transition-colors" title="Download">
                             <img src="assets/communities/icon-file-download.svg" alt="Download" class="w-4 h-4">
@@ -658,7 +667,15 @@
 
                         <!-- Footer -->
                         <div class="border-t border-[rgba(172,179,180,0.1)] pt-2.5 flex items-center justify-between">
-                          <span class="text-[12px] font-medium text-[#757c7d]">{{ post.replyCount || post.replies.length }} replies</span>
+                          <div class="flex items-center gap-2">
+                            <span class="text-[12px] font-medium text-[#757c7d]">{{ post.replyCount || post.replies.length }} replies</span>
+                            @if (isSharedFilePost(post.content)) {
+                              <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-[#4e45e4] bg-[#eef2ff] px-2 py-0.5 rounded-full">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+                                Ask AI
+                              </span>
+                            }
+                          </div>
                           <span class="text-[14px] font-semibold text-[#4e45e4]">View Discussion</span>
                         </div>
                       </div>
@@ -758,6 +775,11 @@
                         <p class="text-[12px] text-[#757c7d]">{{ formatFileSize(fileData.size) }}</p>
                       }
                     </div>
+                    <button (click)="downloadFileFromPost(selectedPost)"
+                            class="flex items-center gap-1.5 px-3 py-2 rounded-[8px] text-[13px] font-semibold text-[#596061] hover:bg-[#e9eaeb] transition-colors" title="Download">
+                      <img src="assets/communities/icon-file-download.svg" alt="Download" class="w-4 h-4">
+                      Download
+                    </button>
                   </div>
                 }
               } @else {
@@ -783,13 +805,43 @@
             </div>
           </div>
 
+          <!-- ── ASK AI PANEL (shared-file posts only) ── -->
+          @if (isSharedFilePost(selectedPost.content)) {
+            <div class="bg-[#f5f3ff] border border-[#e0e7ff] rounded-[12px] p-[24px] flex flex-col gap-[12px]">
+              <div class="flex items-center gap-2">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#4e45e4"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+                <h3 class="text-[15px] font-bold text-[#4e45e4]">Ask AI about this file</h3>
+              </div>
+              <div class="flex gap-3">
+                <input type="text"
+                       [(ngModel)]="aiQuestion"
+                       [disabled]="aiReplyLoading"
+                       placeholder="What would you like to know about this file?"
+                       (keydown.enter)="submitAiQuestion()"
+                       class="flex-1 text-[14px] text-[#2d3435] border border-[rgba(172,179,180,0.4)] rounded-[10px] px-4 py-3 outline-none focus:border-[#4e45e4] bg-white placeholder:text-[#9ca3af] disabled:opacity-60"/>
+                <button (click)="submitAiQuestion()"
+                        [disabled]="!aiQuestion.trim() || aiReplyLoading"
+                        class="bg-[#4e45e4] hover:bg-[#3d34d3] text-white text-[14px] font-semibold px-5 py-3 rounded-[10px] transition-colors disabled:opacity-50 flex items-center gap-2 shrink-0">
+                  @if (aiReplyLoading) {
+                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Thinking...
+                  } @else {
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    Ask AI
+                  }
+                </button>
+              </div>
+              <p class="text-[12px] text-[#6b7280]">You can also type <span class="font-mono bg-white border border-[#e5e7eb] px-1 rounded">@ai your question</span> in the reply box below.</p>
+            </div>
+          }
+
           <!-- ── REPLY INPUT SECTION — Figma 238:1994 ── -->
           <div class="flex flex-col gap-[16px]">
             <h3 class="text-[16px] font-semibold text-[#2d3435]">Post a Reply</h3>
             <div class="bg-white rounded-[12px] p-[24px] flex flex-col gap-[6px]">
               <form [formGroup]="replyForm" (ngSubmit)="createReply()" class="flex flex-col gap-0">
                 <textarea formControlName="content"
-                          placeholder="Join the scholarly discussion..."
+                          [placeholder]="isSharedFilePost(selectedPost.content) ? 'Reply or type @ai <question> to ask the AI...' : 'Join the scholarly discussion...'"
                           rows="4"
                           class="w-full min-h-[120px] text-[16px] text-[#2d3435] placeholder:text-[#6b7280] outline-none resize-none bg-transparent leading-[24px]"></textarea>
                 <div class="flex justify-end pt-[16px]">
