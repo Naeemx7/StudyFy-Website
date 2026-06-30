@@ -9,6 +9,6 @@ import { LandingNavbar } from './landing-navbar/landing-navbar';
   templateUrl: './landing.html',
   styleUrl: './landing.css',
 })
-export class LandingComponent  {
-currentYear: any;
+export class LandingComponent {
+  currentYear = new Date().getFullYear();
 }
