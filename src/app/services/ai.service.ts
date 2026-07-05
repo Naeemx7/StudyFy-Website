@@ -128,14 +128,11 @@ export class AiService {
       numberOfQuestions: Math.max(1, Math.min(30, numberOfQuestions)),
     };
 
-    console.log('📝 Generating quiz with:', { spaceId, filesId, difficulty, numberOfQuestions, body });
-
     return this.http.post<ApiResponse<QuizResponse>>(
       `${this.getBasePath(spaceId)}/quiz`,
       body
     ).pipe(
       map(response => {
-        console.log('✅ Quiz response:', response);
         if (!response.isSuccess) {
           throw new Error(this.extractApiMessage(response) || 'Failed to generate quiz');
         }
@@ -147,11 +144,11 @@ export class AiService {
         return response.data;
       }),
       catchError(err => {
-        console.error('❌ Quiz generation error:', err);
         return this.handleError(err);
       })
     );
   }
+
 
   /**
    * SUBMIT QUIZ
@@ -244,8 +241,6 @@ export class AiService {
       fallbackJson
     };
 
-    console.log('🔗 Sharing content:', { cacheKey, title, contentType });
-
     return this.http.post<ApiResponse<ShareResponse>>(
       `${this.getBasePath(spaceId)}/share`,
       body
@@ -306,13 +301,10 @@ export class AiService {
    * ENDPOINT: GET /shared/{id}
    */
   getSharedContent(id: string): Observable<any> {
-    console.log('📂 Fetching shared content:', id);
-
     return this.http.get<ApiResponse<any>>(
       `${environment.apiUrl}/shared/${id}`
     ).pipe(
       map(response => {
-        console.log('✅ Shared content received:', response);
         if (!response.isSuccess) {
           throw new Error(response.message || 'Failed to load shared content');
         }
@@ -321,6 +313,7 @@ export class AiService {
       catchError(this.handleError)
     );
   }
+
 
   private extractApiMessage<T>(response: ApiResponse<T>): string {
     if (response.message?.trim()) {

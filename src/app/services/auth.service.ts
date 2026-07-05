@@ -422,9 +422,6 @@ export class AuthService {
     const body: ValidateOTPRequest = { email, otp };
     return this.http.post<GeneralResponse>(`${environment.apiUrl}/ValidateOTP`, body)
       .pipe(
-        tap(response => {
-          console.log('ValidateOTP raw response:', JSON.stringify(response, null, 2));
-        }),
         map(response => {
           if (!response.isSuccess) {
             const errorMsg = response.errors?.join(', ') || response.message || 'Invalid OTP';
@@ -575,9 +572,6 @@ export class AuthService {
       // ASP.NET will decode these back to the original characters.
       url += `?token=${encodeURIComponent(token)}`;
     }
-
-    console.log('ResetPassword token being sent:', token);
-    console.log('ResetPassword full URL:', url);
 
     return this.http.post<GeneralResponse>(url, body)
       .pipe(

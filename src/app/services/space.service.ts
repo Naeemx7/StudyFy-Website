@@ -84,8 +84,6 @@ export class SpaceService {
       .pipe(
         // Extract data from wrapped response and convert to frontend model
         map(response => {
-          console.log('Load spaces response:', response);
-          // Handle wrapped response {isSuccess, data: [...]}
           if (!response.isSuccess) {
             throw new Error(response.message || 'Failed to load spaces');
           }
@@ -93,16 +91,10 @@ export class SpaceService {
           if (!Array.isArray(spacesData)) {
             return [];
           }
-          // DEBUG: Log raw data from backend
-          console.log('Raw spaces from backend:', spacesData);
-          console.log('First space raw:', spacesData[0]);
-          
           const mappedSpaces = spacesData.map(mapSpaceResponseToSpace);
-          console.log('Mapped spaces:', mappedSpaces);
-          console.log('First space mapped:', mappedSpaces[0]);
-          
           return mappedSpaces;
         }),
+
         // Update local state
         tap(spaces => {
           this.spacesSubject.next(spaces);
@@ -141,12 +133,12 @@ export class SpaceService {
       .pipe(
         // Extract data from wrapped response and convert to frontend model
         map(response => {
-          console.log('Create space response:', response);
           if (!response.isSuccess) {
             throw new Error(response.message || 'Failed to create space');
           }
           return mapSpaceResponseToSpace(response.data);
         }),
+
         // Add to local state (optimistic update)
         tap(newSpace => {
           const currentSpaces = this.spacesSubject.value;
@@ -172,18 +164,13 @@ export class SpaceService {
       return throwError(() => new Error('User not logged in'));
     }
 
-    // DEBUG: Log exactly what we're sending
     const url = `${environment.apiUrl}/users/${userId}/spaces/${spaceId}`;
-    console.log('DELETE request - spaceId:', spaceId);
-    console.log('DELETE request - userId:', userId);
-    console.log('DELETE request - full URL:', url);
 
     return this.http.delete<ApiResponse<void>>(url)
       .pipe(
-        // Check if delete was successful
         map(response => {
-          console.log('Delete space response:', response);
           if (!response.isSuccess) {
+
             // Check for known backend bug: container doesn't exist
             if (response.message?.includes('ContainerNotFound') || 
                 response.message?.includes('container does not exist')) {

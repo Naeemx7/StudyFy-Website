@@ -66,11 +66,8 @@ export class StorageService {
     const request: GetSasRequest = { fileNames };
     const url = `${environment.apiUrl}/users/${userId}/spaces/${spaceId}/storage/sas`;
 
-    console.log('Getting SAS URLs for files:', fileNames);
-
     return this.http.post<SasResponse>(url, request).pipe(
       map(response => {
-        console.log('SAS response:', response);
         if (!response.isSuccess) {
           throw new Error(response.message || 'Failed to get upload URLs');
         }
@@ -79,6 +76,7 @@ export class StorageService {
       catchError(this.handleError)
     );
   }
+
 
   /**
    * UPLOAD FILE TO AZURE
@@ -95,8 +93,6 @@ export class StorageService {
    * - Content-Type: the actual file type
    */
   uploadToAzure(file: File, sasUrl: string): Observable<void> {
-    console.log('Uploading to Azure:', file.name, 'URL:', sasUrl.substring(0, 50) + '...');
-
     // Azure Blob Storage requires these headers for PUT upload
     const headers = new HttpHeaders({
       'x-ms-blob-type': 'BlockBlob',
@@ -105,7 +101,6 @@ export class StorageService {
 
     return this.http.put(sasUrl, file, { headers }).pipe(
       map(() => {
-        console.log('Upload complete:', file.name);
         return;
       }),
       catchError(error => {
@@ -114,6 +109,7 @@ export class StorageService {
       })
     );
   }
+
 
   /**
    * UPLOAD MULTIPLE FILES
@@ -204,13 +200,10 @@ export class StorageService {
 
     const url = `${environment.apiUrl}/users/${userId}/spaces/${spaceId}/storage/content`;
     
-    console.log('Getting file content:', fileName);
-
     return this.http.get<FileContentResponse>(url, {
       params: { fileName }
     }).pipe(
       map(response => {
-        console.log('File content response:', response);
         if (!response.isSuccess) {
           throw new Error(response.message || 'Failed to get file content');
         }
@@ -219,6 +212,7 @@ export class StorageService {
       catchError(this.handleError)
     );
   }
+
 
   /**
    * GET READ URL FOR FILE
