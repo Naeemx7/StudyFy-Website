@@ -228,8 +228,8 @@ npm install -g @angular/cli
 
 ```bash
 # Clone the repository
-git clone https://github.com/Naeemx7/ai-study-companion-frontend.git
-cd ai-study-companion-frontend
+git clone https://github.com/Naeemx7/StudyFy-Website.git
+cd StudyFy-Website
 
 # Install dependencies
 npm install
