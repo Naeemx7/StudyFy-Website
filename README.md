@@ -1,86 +1,224 @@
 <div align="center">
 
-# 🎓 AI Study Companion
+<img src="readme-assets/studyfy%20cropped.png" width="300" alt="StudyFy Logo" />
 
-**An intelligent, AI-powered study platform designed to supercharge your learning journey.**
+<br/><br/>
 
-[![Angular](https://img.shields.io/badge/Angular-20.x-DD0031?style=for-the-badge&logo=angular&logoColor=white)](https://angular.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
-[![OpenAI](https://img.shields.io/badge/OpenAI-API-412991?style=for-the-badge&logo=openai&logoColor=white)](https://openai.com)
-[![License](https://img.shields.io/badge/License-ISC-green?style=for-the-badge)](LICENSE)
+### An AI-Integrated Educational Ecosystem for Academic Workspaces
 
-> 🏆 **Graduation Project — Awarded A+**
+*Empowering students with intelligent workspace organization, AI-powered study tools, and synchronized group libraries.*
 
-[📖 API Documentation](#api-documentation) · [🚀 Getting Started](#getting-started) · [👥 Team](#team)
+<br/>
+
+[![Angular](https://img.shields.io/badge/Angular_20-DD0031?style=for-the-badge&logo=angular&logoColor=white)](https://angular.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript_5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org)
+[![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS_3.4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![Figma](https://img.shields.io/badge/Figma-F24E1E?style=for-the-badge&logo=figma&logoColor=white)](https://figma.com)
+[![Azure](https://img.shields.io/badge/Azure_Blob_Storage-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white)](https://azure.microsoft.com)
+[![Gemini](https://img.shields.io/badge/Gemini_AI-8E75B2?style=for-the-badge&logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
+[![dotNET](https://img.shields.io/badge/.NET_REST_API-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com)
+
+<br/>
+
+<img src="https://img.shields.io/badge/Graduation_Project_Grade-A%2B_Excellent-7c3aed?style=for-the-badge&logo=data:image/svg%2Bxml;base64,PHN2ZwogIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICB3aWR0aD0iMjQiCiAgaGVpZ2h0PSIyNCIKICB2aWV3Qm94PSIwIDAgMjQgMjQiCiAgZmlsbD0ibm9uZSIKICBzdHJva2U9IiNmZmZmZmYiCiAgc3Ryb2tlLXdpZHRoPSIyIgogIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIKICBzdHJva2UtbGluZWpvaW49InJvdW5kIgo+CiAgPHBhdGggZD0iTTIxLjQyIDEwLjkyMmExIDEgMCAwIDAtLjAxOS0xLjgzOEwxMi44MyA1LjE4YTIgMiAwIDAgMC0xLjY2IDBMMi42IDkuMDhhMSAxIDAgMCAwIDAgMS44MzJsOC41NyAzLjkwOGEyIDIgMCAwIDAgMS42NiAweiIgLz4KICA8cGF0aCBkPSJNMjIgMTB2NiIgLz4KICA8cGF0aCBkPSJNNiAxMi41VjE2YTYgMyAwIDAgMCAxMiAwdi0zLjUiIC8+Cjwvc3ZnPgo=" alt="Graduation Project Grade: A+ Excellent" />
+
+<br/><br/>
+
+<img src="readme-assets/cover.jpg" width="100%" alt="StudyFy Graduation Defense Presentation" />
 
 </div>
 
 ---
 
-## 📌 Overview
+## Overview
 
-**AI Study Companion** is a full-featured web platform that combines artificial intelligence with collaborative learning tools to help students study smarter. Built as a graduation project, it provides a rich, interactive experience — from AI-powered chat and auto-generated quizzes, to community study groups and personalized learning roadmaps.
-
----
-
-## ✨ Features
-
-| Feature | Description |
-|--------|-------------|
-| 🤖 **AI Chat Assistant** | Chat with an AI tutor powered by OpenAI to get instant explanations and study help |
-| 📝 **Quiz Generation** | Auto-generate quizzes from your study materials to test your understanding |
-| 🗺️ **Learning Roadmaps** | Personalized step-by-step learning paths for any topic or subject |
-| 🏘️ **Study Communities** | Join or create community groups to study and share resources with others |
-| 📊 **Analytics Dashboard** | Track your learning progress with visual analytics and performance metrics |
-| 📄 **Document Reader** | Upload and read PDFs directly in the platform with AI-assisted reading |
-| 🏠 **Dashboard** | A central hub showing your activity, progress, and quick access to all features |
-| 🔐 **Authentication** | Secure login and registration system with session management |
-| 👤 **Profile & Settings** | Manage your personal profile, preferences, and account settings |
-| 📚 **Shared Content** | Discover and share study resources with the wider community |
+**StudyFy** is a high-performance, responsive Single Page Application designed to serve as an intelligent study companion. It solves the fragmentation of student study workflows by unifying AI-powered reading assistants, custom quiz generation, collaborative study communities, personalized learning roadmaps, and comprehensive performance analytics — all in one platform.
 
 ---
 
-## 🖥️ Screenshots
+## Features
 
-> _Screenshots coming soon!_
-
-<!-- Add screenshots below once available -->
-<!-- ![Dashboard](screenshots/dashboard.png) -->
-<!-- ![Quiz](screenshots/quiz.png) -->
-<!-- ![AI Chat](screenshots/chat.png) -->
-<!-- ![Roadmap](screenshots/roadmap.png) -->
+<table width="100%">
+  <tr>
+    <td width="50%" valign="top">
+      <h3>
+        <img src="https://api.iconify.design/lucide:brain-circuit.svg?color=%237c3aed" width="22" align="absmiddle" />
+        &nbsp;Smart AI Workspace
+      </h3>
+      <p>Upload lecture notes and generate multi-file summaries or run context-aware chat sessions side-by-side with your PDF viewer. Powered by Gemini AI.</p>
+    </td>
+    <td width="50%" valign="top">
+      <h3>
+        <img src="https://api.iconify.design/lucide:list-checks.svg?color=%237c3aed" width="22" align="absmiddle" />
+        &nbsp;Custom Quiz Engine
+      </h3>
+      <p>Instantly generate quizzes from your uploaded files. Features tag-based weak-point tracking, difficulty customization, and direct-to-backend mastery logging.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>
+        <img src="https://api.iconify.design/lucide:map.svg?color=%237c3aed" width="22" align="absmiddle" />
+        &nbsp;Learning Roadmaps
+      </h3>
+      <p>Generate step-by-step learning plans for complex topics. Track your completion progress with state synchronized across sessions and devices.</p>
+    </td>
+    <td width="50%" valign="top">
+      <h3>
+        <img src="https://api.iconify.design/lucide:users-round.svg?color=%237c3aed" width="22" align="absmiddle" />
+        &nbsp;Collaborative Communities
+      </h3>
+      <p>Create or join academic study rooms. Upload shared files, start discussion threads, and collaborate with classmates in real time.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>
+        <img src="https://api.iconify.design/lucide:bar-chart-3.svg?color=%237c3aed" width="22" align="absmiddle" />
+        &nbsp;Performance Analytics
+      </h3>
+      <p>Visualize your progress through detailed metrics: daily streaks, XP goals, quiz success ratios, badge achievements, and consistency scorecards.</p>
+    </td>
+    <td width="50%" valign="top">
+      <h3>
+        <img src="https://api.iconify.design/lucide:file-text.svg?color=%237c3aed" width="22" align="absmiddle" />
+        &nbsp;Inline PDF Workspace
+      </h3>
+      <p>Render PDFs natively in the browser with full page navigation and AI-assisted contextual parsing on the active page.</p>
+    </td>
+  </tr>
+</table>
 
 ---
 
-## 🛠️ Tech Stack
+## Screenshots
 
-### Frontend
-- **[Angular 20](https://angular.dev)** — Main framework (standalone components)
-- **[TypeScript 5.9](https://www.typescriptlang.org)** — Type-safe development
-- **[TailwindCSS 3.4](https://tailwindcss.com)** — Utility-first CSS styling
-- **[ng2-pdf-viewer](https://github.com/VadimDez/ng2-pdf-viewer)** — PDF rendering inside the app
-- **[RxJS 7.8](https://rxjs.dev)** — Reactive programming and async data handling
+<div align="center">
 
-### AI & API
-- **[OpenAI API](https://openai.com)** — AI chat and content generation
-- **Custom REST API** — Backend services for auth, storage, communities, roadmaps, quizzes, and analytics
+<table width="100%">
+  <tr>
+    <td width="50%" align="center">
+      <img src="readme-assets/Dashboard.png" width="100%" alt="Dashboard" />
+      <br/>
+      <sub><b>Dashboard</b> — spaces overview</sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="readme-assets/AI%20Workspace.png" width="100%" alt="AI Workspace" />
+      <br/>
+      <sub><b>AI Workspace</b> — PDF viewer with context-aware chat</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <img src="readme-assets/Quiz%20Question.png" width="100%" alt="Quiz Engine" />
+      <br/>
+      <sub><b>Quiz Engine</b> — AI-generated questions</sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="readme-assets/Roadmap.png" width="100%" alt="Learning Roadmap" />
+      <br/>
+      <sub><b>Learning Roadmap</b> — upload your study material into a space</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <img src="readme-assets/Community.png" width="100%" alt="Community" />
+      <br/>
+      <sub><b>Community</b> — group study rooms</sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="readme-assets/Analytics.png" width="100%" alt="Analytics" />
+      <br/>
+      <sub><b>Analytics</b> — streaks, XP, and mastery breakdown</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center" colspan="2">
+      <img src="readme-assets/Summary.png" width="60%" alt="AI Summary" />
+      <br/>
+      <sub><b>AI Summary</b> — lecture summarization</sub>
+    </td>
+  </tr>
+</table>
 
-### Tooling
-- **Angular CLI 20** — Project scaffolding and build system
-- **Prettier** — Code formatting
-- **Karma + Jasmine** — Unit testing
+</div>
 
 ---
 
-## 🚀 Getting Started
+## Architecture — Direct-to-Azure Upload Flow
+
+StudyFy uses a **Direct-to-Cloud** file architecture via Shared Access Signatures (SAS) to handle large academic files efficiently without overloading the backend:
+
+```
+┌─────────────────┐          ┌──────────────────┐          ┌─────────────────┐
+│  StudyFy Client │─(1)SAS──▶│  Backend (.NET)  │          │  Azure Blob     │
+│   (Angular 20)  │◀─(2)URL──│   REST API       │          │  Storage        │
+└─────────────────┘          └──────────────────┘          └─────────────────┘
+        │                                                           ▲
+        └───────────────── (3) Direct PUT Upload ───────────────────┘
+```
+
+**1. SAS Handshake** — Client requests a short-lived upload token from the backend
+**2. Direct Upload** — File streams directly to Azure Blob, bypassing backend load
+**3. Registration** — Client registers the file ID with the API to index it for Gemini AI
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Angular 20 (Standalone Components) |
+| Language | TypeScript 5.9 |
+| Styling | Tailwind CSS 3.4 |
+| Design | Figma |
+| AI Integration | Google Gemini API |
+| File Storage | Azure Blob Storage (Direct SAS Upload) |
+| Authentication | JWT Bearer Tokens + Google OAuth 2.0 |
+| Backend | ASP.NET Core REST API |
+| Reactive Layer | RxJS + Angular Signals |
+
+---
+
+## Project Structure
+
+```
+src/
+├── app/
+│   ├── components/        # Shared UI components (Navbar, modals, loaders)
+│   ├── guards/            # Route protection (AuthGuard)
+│   ├── interceptors/      # HTTP interceptors (automatic JWT injection)
+│   ├── models/            # TypeScript interfaces (AI, Auth, Space, Community)
+│   ├── services/
+│   │   ├── ai.service.ts           # Gemini AI (summaries, quizzes, flashcards)
+│   │   ├── auth.service.ts         # Authentication & Google OAuth
+│   │   ├── space.service.ts        # Workspace CRUD operations
+│   │   ├── storage.service.ts      # Azure SAS tokens & direct upload
+│   │   ├── community.service.ts    # Communities, posts, replies, files
+│   │   ├── analytics.service.ts    # Progress tracking & badge system
+│   │   └── chat.service.ts         # AI chat session management
+│   └── pages/
+│       ├── auth/           # Login, signup, OTP, password recovery
+│       ├── dashboard/      # Spaces overview and recent activity
+│       ├── workspace/      # Core study area — PDF viewer + AI chat
+│       ├── roadmap/        # AI-generated learning roadmaps
+│       ├── communities/    # Group study rooms and shared files
+│       ├── analytics/      # Progress charts and achievements
+│       ├── profile/        # User profile and statistics
+│       └── settings/       # Account preferences
+├── environments/           # Dev and production API configuration
+└── proxy.conf.json         # CORS proxy for local development
+```
+
+---
+
+## Getting Started
 
 ### Prerequisites
 
-Make sure you have the following installed:
-- [Node.js](https://nodejs.org/) (v18 or higher)
-- [npm](https://www.npmjs.com/) (v9 or higher)
-- [Angular CLI](https://angular.dev/tools/cli)
+- Node.js v18+
+- npm v9+
+- Angular CLI
 
 ```bash
 npm install -g @angular/cli
@@ -88,122 +226,101 @@ npm install -g @angular/cli
 
 ### Installation
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/Naeemx7/ai-study-companion-frontend.git
-   cd ai-study-companion-frontend
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Configure environment variables**
-
-   Update `src/environments/environment.ts`:
-   ```typescript
-   export const environment = {
-     production: false,
-     apiUrl: 'YOUR_BACKEND_API_URL',
-     openAiKey: 'YOUR_OPENAI_API_KEY'
-   };
-   ```
-
-4. **Start the development server**
-   ```bash
-   npm start
-   ```
-
-   The app will be available at `http://localhost:4200/`
-
-### Build for Production
-
 ```bash
-npm run build
+# Clone the repository
+git clone https://github.com/Naeemx7/ai-study-companion-frontend.git
+cd ai-study-companion-frontend
+
+# Install dependencies
+npm install
+
+# Start the development server
+npm start
 ```
 
-Output will be in the `dist/` directory.
+The app will be available at `http://localhost:4200` with the API proxy active.
 
----
+### Environment Configuration
 
-## 📁 Project Structure
+Open `src/environments/environment.ts` and configure your API base URL:
 
-```
-src/
-├── app/
-│   ├── components/         # Reusable UI components
-│   ├── pages/
-│   │   ├── auth/           # Login & Registration
-│   │   ├── dashboard/      # Main dashboard
-│   │   ├── workspace/      # Study workspace & AI chat
-│   │   ├── quiz/           # Quiz generation & taking
-│   │   ├── roadmap/        # Learning roadmaps
-│   │   ├── communities/    # Study groups & communities
-│   │   ├── analytics/      # Progress tracking
-│   │   ├── profile/        # User profile
-│   │   ├── settings/       # Account settings
-│   │   ├── shared-content/ # Shared resources
-│   │   └── landing/        # Landing page
-│   ├── services/           # API & business logic services
-│   ├── models/             # TypeScript interfaces & models
-│   ├── guards/             # Route guards (auth protection)
-│   └── interceptors/       # HTTP interceptors (auth headers)
-└── environments/           # Environment configuration
+```typescript
+export const environment = {
+  production: false,
+  apiUrl: '/api',
+  googleClientId: 'YOUR_GOOGLE_CLIENT_ID'
+};
 ```
 
 ---
 
-## 📡 API Documentation
+## Frontend Team
 
-The full REST API specification is included in this repository:
+<br/>
 
-📄 **[`Prefinal-Graduation Api.openapi.json`](./Prefinal-Graduation%20Api.openapi%20.json)**
-
-You can import this OpenAPI spec into tools like:
-- [Swagger UI](https://swagger.io/tools/swagger-ui/)
-- [Postman](https://www.postman.com/)
-- [Apidog](https://apidog.com/)
-
----
-
-## 👥 Team
-
-This project was built with ❤️ by:
-
-<table>
+<table align="center" border="0">
   <tr>
-    <td align="center">
+    <td align="center" width="260">
       <a href="https://github.com/Naeemx7">
-        <img src="https://github.com/Naeemx7.png" width="100px" style="border-radius:50%" alt="Naeemx7"/>
-        <br />
-        <sub><b>Naeemx7</b></sub>
+        <img src="https://github.com/Naeemx7.png" width="110" alt="Mohammed Naeem Shousha" style="border-radius:50%;" />
+        <br/><br/>
+        <strong>Mohammed Naeem Shousha</strong>
       </a>
-      <br />
-      🎨 Frontend Developer &amp; UI/UX Designer
+      <br/>
+      <sub>Frontend Developer &nbsp;·&nbsp; Product Designer</sub>
+      <br/><br/>
+      <a href="https://github.com/Naeemx7">
+        <img src="https://img.shields.io/badge/GitHub-Naeemx7-181717?style=flat-square&logo=github&logoColor=white" />
+      </a>
     </td>
-    <td align="center">
+    <td width="80"></td>
+    <td align="center" width="260">
       <a href="https://github.com/SAKR102">
-        <img src="https://github.com/SAKR102.png" width="100px" style="border-radius:50%" alt="SAKR102"/>
-        <br />
-        <sub><b>SAKR102</b></sub>
+        <img src="https://github.com/SAKR102.png" width="110" alt="Youssef Hany Sakr" style="border-radius:50%;" />
+        <br/><br/>
+        <strong>Youssef Hany Sakr</strong>
       </a>
-      <br />
-      💻 Frontend Developer
+      <br/>
+      <sub>Frontend Developer</sub>
+      <br/><br/>
+      <a href="https://github.com/SAKR102">
+        <img src="https://img.shields.io/badge/GitHub-SAKR102-181717?style=flat-square&logo=github&logoColor=white" />
+      </a>
     </td>
   </tr>
 </table>
 
+<br/>
+
 ---
 
-## 📜 License
+<h2 align="center">Institution</h2>
 
-This project is licensed under the **ISC License**.
+<br/>
+
+<div align="center">
+
+<img src="readme-assets/uniLogo_whiteFinal.png" width="110" alt="Suez Canal University" />
+
+### Suez Canal University
+
+Faculty of Computers & Informatics<br/>
+Department of Computer Science
+
+<sub>Class of 2025 / 2026</sub>
+
+</div>
+
+<br/>
+
+---
+
+## License
+
+All rights reserved. This project was built as a graduation project for academic purposes at Suez Canal University. The source code may not be copied, redistributed, or reused without explicit permission from the authors.
 
 ---
 
 <div align="center">
-
-Made with ☕ and lots of late nights &nbsp;·&nbsp; Graduation Project 2026 &nbsp;·&nbsp; **A+ Grade** 🏆
-
+  <sub>Coded, caffeinated, and barely on time. &nbsp;·&nbsp; StudyFy © 2026</sub>
 </div>
