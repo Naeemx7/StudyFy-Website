@@ -44,6 +44,16 @@ Thumbs.db
 
 # AI Assistant private context files (not for git)
 AI_CONTEXT.md
+CLAUDE.md
 *.openapi.json
 *.openapi .json
 *.Prefinal-Graduation Api.openapi .json
+
+# Environment secret files (never commit these)
+.env
+.env.*
+.env.local
+.env.development
+.env.production
+.env.staging
+.env.test
