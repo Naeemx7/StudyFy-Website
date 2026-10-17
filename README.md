@@ -307,7 +307,7 @@ export const environment = {
 Faculty of Computers & Informatics<br/>
 Department of Computer Science
 
-<sub>Class of 2025 / 2026</sub>
+<sub>Class of 2026</sub>
 
 </div>
 
