@@ -42,14 +42,14 @@
   <tr>
     <td width="50%" valign="top">
       <h3>
-        <img src="https://api.iconify.design/lucide:brain-circuit.svg?color=%237c3aed" width="22" align="absmiddle" />
+        <img src="readme-assets/brain-circuit.svg" width="22" align="absmiddle" />
         &nbsp;Smart AI Workspace
       </h3>
       <p>Upload lecture notes and generate multi-file summaries or run context-aware chat sessions side-by-side with your PDF viewer. Powered by Gemini AI.</p>
     </td>
     <td width="50%" valign="top">
       <h3>
-        <img src="https://api.iconify.design/lucide:list-checks.svg?color=%237c3aed" width="22" align="absmiddle" />
+        <img src="readme-assets/list-checks.svg" width="22" align="absmiddle" />
         &nbsp;Custom Quiz Engine
       </h3>
       <p>Instantly generate quizzes from your uploaded files. Features tag-based weak-point tracking, difficulty customization, and direct-to-backend mastery logging.</p>
@@ -58,14 +58,14 @@
   <tr>
     <td width="50%" valign="top">
       <h3>
-        <img src="https://api.iconify.design/lucide:map.svg?color=%237c3aed" width="22" align="absmiddle" />
+        <img src="readme-assets/map.svg" width="22" align="absmiddle" />
         &nbsp;Learning Roadmaps
       </h3>
       <p>Generate step-by-step learning plans for complex topics. Track your completion progress with state synchronized across sessions and devices.</p>
     </td>
     <td width="50%" valign="top">
       <h3>
-        <img src="https://api.iconify.design/lucide:users-round.svg?color=%237c3aed" width="22" align="absmiddle" />
+        <img src="readme-assets/users-round.svg" width="22" align="absmiddle" />
         &nbsp;Collaborative Communities
       </h3>
       <p>Create or join academic study rooms. Upload shared files, start discussion threads, and collaborate with classmates in real time.</p>
@@ -74,14 +74,14 @@
   <tr>
     <td width="50%" valign="top">
       <h3>
-        <img src="https://api.iconify.design/lucide:bar-chart-3.svg?color=%237c3aed" width="22" align="absmiddle" />
+        <img src="readme-assets/bar-chart-3.svg" width="22" align="absmiddle" />
         &nbsp;Performance Analytics
       </h3>
       <p>Visualize your progress through detailed metrics: daily streaks, XP goals, quiz success ratios, badge achievements, and consistency scorecards.</p>
     </td>
     <td width="50%" valign="top">
       <h3>
-        <img src="https://api.iconify.design/lucide:file-text.svg?color=%237c3aed" width="22" align="absmiddle" />
+        <img src="readme-assets/file-text.svg" width="22" align="absmiddle" />
         &nbsp;Inline PDF Workspace
       </h3>
       <p>Render PDFs natively in the browser with full page navigation and AI-assisted contextual parsing on the active page.</p>
